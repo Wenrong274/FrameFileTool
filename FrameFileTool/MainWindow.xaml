@@ -224,7 +224,7 @@
 
                 <Button Grid.Column="3"
                         Content="重新掃描"
-                        Command="{Binding ScanCommand}" />
+                        Command="{Binding ScanFilesCommand}" />
             </Grid>
         </Border>
 
