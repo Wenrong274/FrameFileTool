@@ -7,6 +7,6 @@ namespace FrameFileTool.Services.Interfaces;
 /// </summary>
 public interface IFileOperationExecutor
 {
-    OperationResult DeleteToRecycleBin(IEnumerable<OperationPreviewItem> previewItems);
-    OperationResult RenameFiles(IEnumerable<OperationPreviewItem> previewItems);
+    public OperationResult DeleteToRecycleBin(IEnumerable<OperationPreviewItem> previewItems);
+    public OperationResult RenameFiles(IEnumerable<OperationPreviewItem> previewItems);
 }

@@ -5,5 +5,5 @@ namespace FrameFileTool.Services.Interfaces;
 /// </summary>
 public interface IFolderPickerService
 {
-    string? PickFolder(string? initialFolder);
+    public string? PickFolder(string? initialFolder);
 }

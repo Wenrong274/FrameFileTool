@@ -27,5 +27,8 @@ TestResults/
 *.coveragexml
 coverage*/
 
+# ===== 一次性維護腳本（本機工具，不納入版控）=====
+scripts/
+
 # ===== 測試資料（本機） =====
 TestData/

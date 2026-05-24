@@ -7,5 +7,5 @@ namespace FrameFileTool.Services.Interfaces;
 /// </summary>
 public interface IFrameDeletePlanner
 {
-    IReadOnlyList<OperationPreviewItem> Plan(IReadOnlyList<FileItem> files, int interval);
+    public IReadOnlyList<OperationPreviewItem> Plan(IReadOnlyList<FileItem> files, int interval);
 }

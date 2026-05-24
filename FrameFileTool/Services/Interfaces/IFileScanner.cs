@@ -7,5 +7,5 @@ namespace FrameFileTool.Services.Interfaces;
 /// </summary>
 public interface IFileScanner
 {
-    IReadOnlyList<FileItem> Scan(string folder, IEnumerable<string> extensions, bool includeSubfolders);
+    public IReadOnlyList<FileItem> Scan(string folder, IEnumerable<string> extensions, bool includeSubfolders);
 }

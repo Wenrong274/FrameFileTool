@@ -7,7 +7,7 @@ namespace FrameFileTool.Services.Interfaces;
 /// </summary>
 public interface IRenamePlanner
 {
-    IReadOnlyList<OperationPreviewItem> Plan(
+    public IReadOnlyList<OperationPreviewItem> Plan(
         IReadOnlyList<FileItem> files,
         string prefix,
         int startIndex,

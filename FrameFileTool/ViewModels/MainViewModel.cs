@@ -191,11 +191,16 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var extensions = new List<string>(5);
 
-        if (IncludePng)  extensions.Add(".png");
-        if (IncludeJpg)  extensions.Add(".jpg");
-        if (IncludeJpeg) extensions.Add(".jpeg");
-        if (IncludeWebp) extensions.Add(".webp");
-        if (IncludeBmp)  extensions.Add(".bmp");
+        if (IncludePng)
+            extensions.Add(".png");
+        if (IncludeJpg)
+            extensions.Add(".jpg");
+        if (IncludeJpeg)
+            extensions.Add(".jpeg");
+        if (IncludeWebp)
+            extensions.Add(".webp");
+        if (IncludeBmp)
+            extensions.Add(".bmp");
 
         return extensions;
     }

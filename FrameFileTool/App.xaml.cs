@@ -1,9 +1,9 @@
 using System.Windows;
-using WpfApplication = System.Windows.Application;
 using FrameFileTool.Services;
 using FrameFileTool.Services.Interfaces;
 using FrameFileTool.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using WpfApplication = System.Windows.Application;
 
 namespace FrameFileTool;
 
