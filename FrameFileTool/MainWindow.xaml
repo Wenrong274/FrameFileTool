@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:FrameFileTool.Models"
         Title="FrameFileTool"
+        Icon="Assets/AppIcon.ico"
         Background="#F1F5F9"
         FontFamily="Segoe UI"
         Width="1280"
