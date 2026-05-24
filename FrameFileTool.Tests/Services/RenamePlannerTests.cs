@@ -68,23 +68,14 @@ public sealed class RenamePlannerTests
     // ---- 衝突偵測 ----
 
     [Fact]
-    public void Plan_目標檔名重複_應標記錯誤()
+    public void Plan_正常改名_目標檔名不應重複()
     {
-        // 兩個不同副檔名但補零後目標相同（同前綴、同編號、同副檔名）
-        // 這裡用 padding 製造重複：startIndex=1, 兩個檔案都會是 F_1.png?
-        // 更直接：兩個 .png 檔案都會 rename 到 F_1.png，F_2.png
-        // 無法輕易用公開 API 製造重複；改用相同目標的情境：
-        // 一個資料夾有 F_1.png 已存在，且計畫要 rename 另一個檔到 F_1.png
-        // → 測試「目標檔名在計畫中重複」
         var files = new[]
         {
             MakeFile("a.png"),
             MakeFile("b.png"),
         };
 
-        // 只有 1 個槽位：startIndex=1, 但我們讓 padding 造成兩個都對應相同名稱
-        // 實際上 RenamePlanner 永遠遞增，不可能直接重複。
-        // 改測：計畫輸出中不應有重複的 TargetName（驗反面：正常情況無重複）
         var result = _sut.Plan(files, prefix: "F_", startIndex: 1, padding: 0);
 
         var targets = result.Select(r => r.TargetName).ToList();

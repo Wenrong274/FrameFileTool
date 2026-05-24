@@ -11,7 +11,8 @@ namespace FrameFileTool.Services;
 ///   <item>計畫內重複目標檔名（兩個檔案改名到同一個名稱）</item>
 ///   <item>計畫外已存在的目標檔案（會覆蓋非計畫中的檔案）</item>
 /// </list>
-/// Pure planner：不讀寫檔案、不修改任何 shared state。
+/// 目前會查詢目標檔案是否已存在，用於避免覆蓋計畫外檔案；
+/// 其餘規劃邏輯不修改 shared state，也不執行任何改名副作用。
 /// </summary>
 public sealed class RenamePlanner : IRenamePlanner
 {

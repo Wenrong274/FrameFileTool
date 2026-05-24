@@ -574,9 +574,12 @@
                         <!-- 有錯誤的列：淡紅底 -->
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
+                                <Setter Property="ToolTip" Value="{Binding Status}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="False" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HasError}" Value="True">
                                         <Setter Property="Background" Value="#FEF2F2" />
+                                        <Setter Property="ToolTipService.IsEnabled" Value="True" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
