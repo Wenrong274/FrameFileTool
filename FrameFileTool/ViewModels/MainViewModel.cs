@@ -66,6 +66,10 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _fileSummary = "尚未掃描";
 
+    /// <summary>預覽摘要，顯示於預覽表格上方，說明計畫筆數與錯誤數。</summary>
+    [ObservableProperty]
+    private string _previewSummary = "選擇操作並點擊預覽";
+
     public MainViewModel(
         IFileScanner scanner,
         IFrameDeletePlanner frameDeletePlanner,
@@ -110,6 +114,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         Files.Clear();
         PreviewItems.Clear();
+        PreviewSummary = "選擇操作並點擊預覽";
 
         var extensions = GetSelectedExtensions();
         var files = _scanner.Scan(SelectedFolder, extensions, IncludeSubfolders);
@@ -137,6 +142,11 @@ public sealed partial class MainViewModel : ObservableObject
 
         var deleteCount = PreviewItems.Count(item =>
             item.Action == OperationAction.Delete && !item.HasError);
+        var errorCount = PreviewItems.Count(item => item.HasError);
+
+        PreviewSummary = errorCount > 0
+            ? $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個，{errorCount} 個錯誤"
+            : $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個";
 
         AddLog($"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {deleteCount} 個檔案。");
         RefreshCommands();
@@ -167,6 +177,10 @@ public sealed partial class MainViewModel : ObservableObject
         var renameCount = PreviewItems.Count(item =>
             item.Action == OperationAction.Rename && !item.HasError);
         var errorCount = PreviewItems.Count(item => item.HasError);
+
+        PreviewSummary = errorCount > 0
+            ? $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個，{errorCount} 個錯誤（執行已停用）"
+            : $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個";
 
         AddLog($"改名預覽完成：預計改名 {renameCount} 個檔案，錯誤 {errorCount} 個。");
         RefreshCommands();
