@@ -22,10 +22,16 @@ public sealed class FrameDeletePlanner
                 .ToList();
         }
 
+        var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
         return files
             .Select((file, index) =>
             {
-                var shouldDelete = (index + 1) % interval == 0;
+                folderCounters.TryGetValue(file.DirectoryPath, out var folderIndex);
+                folderIndex++;
+                folderCounters[file.DirectoryPath] = folderIndex;
+
+                var shouldDelete = folderIndex % interval == 0;
                 return new OperationPreviewItem
                 {
                     Index = index + 1,
@@ -33,7 +39,7 @@ public sealed class FrameDeletePlanner
                     OriginalName = file.Name,
                     Action = shouldDelete ? "刪除" : "保留",
                     TargetName = shouldDelete ? "移到回收桶" : string.Empty,
-                    Status = shouldDelete ? $"第 {index + 1} 張符合每 {interval} 張刪除 1 張" : "不處理",
+                    Status = shouldDelete ? $"資料夾內第 {folderIndex} 張符合每 {interval} 張刪除 1 張" : "不處理",
                     HasError = false
                 };
             })

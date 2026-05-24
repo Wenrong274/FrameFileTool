@@ -15,11 +15,15 @@ public sealed class RenamePlanner
         var sourcePaths = files
             .Select(file => file.FullPath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < files.Count; i++)
         {
             var file = files[i];
-            var number = startIndex + i;
+            folderCounters.TryGetValue(file.DirectoryPath, out var folderIndex);
+            folderCounters[file.DirectoryPath] = folderIndex + 1;
+
+            var number = startIndex + folderIndex;
             var numberText = padding > 0
                 ? number.ToString().PadLeft(padding, '0')
                 : number.ToString();
