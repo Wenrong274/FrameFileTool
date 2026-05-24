@@ -189,17 +189,12 @@ ViewModels 不應：
 
 ## Git 規則
 
-使用聚焦的小型 commits。
+Commit message 格式、type 清單、七大黃金規則與範例，請以 [Git_Commit.md](./Git_Commit.md) 為唯一依據。
 
-commit messages 應簡短並描述行為，例如：
+額外注意事項：
 
-```text
-Add frame delete planner tests
-Detect duplicate rename targets
-Move file execution behind service
-```
-
-不要提交產生的 build output，例如 `bin/`、`obj/`、`.vs/` 或 packaged executables，除非使用者明確要求。
+- 使用聚焦的小型 commits，每個 commit 只做一件事。
+- 不要提交產生的 build output，例如 `bin/`、`obj/`、`.vs/` 或 packaged executables，除非使用者明確要求。
 
 ## 目前限制
 
