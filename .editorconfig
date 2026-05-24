@@ -9,96 +9,265 @@ indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# ================================================================
 # C# 原始碼
+# ================================================================
 [*.cs]
 indent_size = 4
 
-# 命名慣例：介面以 I 開頭
-dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = warning
-dotnet_naming_rule.interface_should_be_prefixed_with_i.symbols = interface
-dotnet_naming_rule.interface_should_be_prefixed_with_i.style = prefix_interface_with_i
+# ----------------------------------------------------------------
+# 存取修飾詞
+# ----------------------------------------------------------------
+
+# 所有成員必須明確標示存取修飾詞
+dotnet_style_require_accessibility_modifiers = always:warning
+
+# ----------------------------------------------------------------
+# 命名慣例
+# ----------------------------------------------------------------
+
+# 介面以 I 開頭（PascalCase）
+dotnet_naming_rule.interface_prefix.severity = warning
+dotnet_naming_rule.interface_prefix.symbols = interface
+dotnet_naming_rule.interface_prefix.style = prefix_i
 
 dotnet_naming_symbols.interface.applicable_kinds = interface
 dotnet_naming_symbols.interface.applicable_accessibilities = public, internal
 
-dotnet_naming_style.prefix_interface_with_i.required_prefix = I
-dotnet_naming_style.prefix_interface_with_i.capitalization = pascal_case
+dotnet_naming_style.prefix_i.required_prefix = I
+dotnet_naming_style.prefix_i.capitalization = pascal_case
 
-# 命名慣例：私有欄位以底線開頭
-dotnet_naming_rule.private_fields_should_use_underscore.severity = warning
-dotnet_naming_rule.private_fields_should_use_underscore.symbols = private_fields
-dotnet_naming_rule.private_fields_should_use_underscore.style = prefix_private_with_underscore
+# 私有欄位以底線開頭（camelCase）
+dotnet_naming_rule.private_field_underscore.severity = warning
+dotnet_naming_rule.private_field_underscore.symbols = private_fields
+dotnet_naming_rule.private_field_underscore.style = prefix_underscore
 
 dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
-dotnet_naming_style.prefix_private_with_underscore.required_prefix = _
-dotnet_naming_style.prefix_private_with_underscore.capitalization = camel_case
+dotnet_naming_style.prefix_underscore.required_prefix = _
+dotnet_naming_style.prefix_underscore.capitalization = camel_case
 
-# 排序：using System.* 優先，其次按字母排序
+# 型別、方法、屬性、事件、公開欄位使用 PascalCase
+dotnet_naming_rule.types_and_members.severity = warning
+dotnet_naming_rule.types_and_members.symbols = types_and_public_members
+dotnet_naming_rule.types_and_members.style = pascal_case_style
+
+dotnet_naming_symbols.types_and_public_members.applicable_kinds = class, struct, enum, interface, delegate, property, event, method, field
+dotnet_naming_symbols.types_and_public_members.applicable_accessibilities = public, internal, protected, protected_internal
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# 參數與區域變數使用 camelCase
+dotnet_naming_rule.parameters_and_locals.severity = warning
+dotnet_naming_rule.parameters_and_locals.symbols = parameters_and_locals
+dotnet_naming_rule.parameters_and_locals.style = camel_case_style
+
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+
+# ----------------------------------------------------------------
+# using 指示詞
+# ----------------------------------------------------------------
+
+# System.* 優先排序
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-# 移除不必要的 using
+# 移除未使用的 using
 dotnet_diagnostic.IDE0005.severity = warning
 
-# 使用語言關鍵字取代型別名稱（string 取代 String）
+# ----------------------------------------------------------------
+# 語言關鍵字 vs 型別名稱
+# ----------------------------------------------------------------
+
+# 使用語言關鍵字（string 取代 String、int 取代 Int32）
 dotnet_style_predefined_type_for_locals_parameters_members = true:warning
 dotnet_style_predefined_type_for_member_access = true:warning
 
-# 使用 var（型別明確時）
-csharp_style_var_for_built_in_types = false:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = false:suggestion
+# ----------------------------------------------------------------
+# var 使用規則
+# ----------------------------------------------------------------
 
-# 大括號風格：Allman（另起一行）
+# 型別明確時使用 var（new List<int>() → var）
+csharp_style_var_when_type_is_apparent = true:suggestion
+# 內建型別不用 var（int、string 等明確標示）
+csharp_style_var_for_built_in_types = false:suggestion
+# 其餘情況不強制
+csharp_style_var_elsewhere = false:silent
+
+# ----------------------------------------------------------------
+# 大括號風格（Allman：另起一行）
+# ----------------------------------------------------------------
+
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
 
-# 縮排與空白
+# ----------------------------------------------------------------
+# 縮排
+# ----------------------------------------------------------------
+
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
+csharp_indent_labels = flush_left
+
+# ----------------------------------------------------------------
+# 空白規則
+# ----------------------------------------------------------------
+
 csharp_space_after_cast = false
 csharp_space_before_colon_in_inheritance_clause = true
 csharp_space_after_colon_in_inheritance_clause = true
 csharp_space_around_binary_operators = before_and_after
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_parentheses = false
 
-# 偏好使用 expression body（只在適合場合）
-csharp_style_expression_bodied_methods = false:silent
+# ----------------------------------------------------------------
+# Expression-bodied 成員
+# ----------------------------------------------------------------
+
+# 單行屬性允許 expression body（=> 語法）
 csharp_style_expression_bodied_properties = true:suggestion
+# 存取子不強制
+csharp_style_expression_bodied_accessors = true:silent
+# 方法不強制（保持可讀性）
+csharp_style_expression_bodied_methods = false:silent
+# 建構子不強制
 csharp_style_expression_bodied_constructors = false:silent
+# Lambda 與運算子使用 expression body
+csharp_style_expression_bodied_lambdas = true:suggestion
+csharp_style_expression_bodied_operators = false:silent
 
-# 偏好使用 null 合併運算子
+# ----------------------------------------------------------------
+# Pattern Matching
+# ----------------------------------------------------------------
+
+# 用 pattern matching 取代 is + cast
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+# 用 pattern matching 取代 as + null check
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+# 使用 switch expression
+csharp_style_prefer_switch_expression = true:suggestion
+# 使用 not pattern（is not null）
+csharp_style_prefer_not_pattern = true:warning
+# 使用 extended property pattern
+csharp_style_prefer_extended_property_pattern = true:suggestion
+
+# ----------------------------------------------------------------
+# Null 安全
+# ----------------------------------------------------------------
+
+# 偏好 null 合併運算子（?? 與 ??=）
 dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_prefer_compound_assignment = true:suggestion
+# 偏好 null 條件運算子（?.）
 dotnet_style_null_propagation = true:suggestion
+# 使用 is null 取代 == null
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
 
-# 使用 collection initializer
-dotnet_style_collection_initializer = true:suggestion
-dotnet_style_object_initializer = true:suggestion
+# ----------------------------------------------------------------
+# 物件與集合初始化
+# ----------------------------------------------------------------
 
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+# 偏好使用 collection expression（C# 12）
+dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+
+# ----------------------------------------------------------------
+# 自動屬性
+# ----------------------------------------------------------------
+
+dotnet_style_prefer_auto_properties = true:warning
+
+# ----------------------------------------------------------------
 # readonly 欄位
+# ----------------------------------------------------------------
+
 dotnet_style_readonly_field = true:warning
 
+# ----------------------------------------------------------------
+# using 宣告（C# 8+）
+# ----------------------------------------------------------------
+
+# 使用 using 宣告取代 using 區塊（減少巢狀）
+csharp_prefer_simple_using_statement = true:suggestion
+
+# ----------------------------------------------------------------
+# Primary Constructor（C# 12 / .NET 8+）
+# ----------------------------------------------------------------
+
+csharp_style_prefer_primary_constructors = true:suggestion
+
+# ----------------------------------------------------------------
+# Tuple 與解構
+# ----------------------------------------------------------------
+
+# 明確 tuple 名稱優於 Item1、Item2
+dotnet_style_explicit_tuple_names = true:warning
+# 偏好推斷的 tuple 元素名稱
+dotnet_style_prefer_inferred_tuple_names = true:suggestion
+# 偏好推斷的匿名型別成員名稱
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
+
+# ----------------------------------------------------------------
+# 條件式表達式
+# ----------------------------------------------------------------
+
+dotnet_style_prefer_conditional_expression_over_assignment = true:silent
+dotnet_style_prefer_conditional_expression_over_return = true:silent
+
+# ----------------------------------------------------------------
+# 不必要的程式碼
+# ----------------------------------------------------------------
+
+# 移除不必要的轉型
+dotnet_diagnostic.IDE0004.severity = warning
+# 移除不必要的 pragma
+dotnet_diagnostic.IDE0079.severity = warning
+# 使用簡化的布林表達式
+dotnet_diagnostic.IDE0075.severity = suggestion
+
+# ----------------------------------------------------------------
+# 換行控制
+# ----------------------------------------------------------------
+
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+# ================================================================
 # XAML
+# ================================================================
 [*.xaml]
 indent_size = 4
 
+# ================================================================
 # XML 專案與設定檔
+# ================================================================
 [*.{csproj,props,targets,config,resx}]
 indent_size = 2
 
+# ================================================================
 # JSON
+# ================================================================
 [*.json]
 indent_size = 2
 
+# ================================================================
 # Markdown
+# ================================================================
 [*.md]
 trim_trailing_whitespace = false
 insert_final_newline = true
 
+# ================================================================
 # 方案檔
+# ================================================================
 [*.sln]
 indent_style = tab
