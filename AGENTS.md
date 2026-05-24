@@ -23,6 +23,9 @@ FrameFileTool 是一個 Windows WPF 桌面應用程式，用於處理序列圖�
 
 文件、使用者說明與程式註解應以繁體中文為主要語言。
 
+專案內所有 Markdown 文件（`.md`）必須通過 markdownlint 檢查。
+設定規則定義於根目錄的 `.markdownlint.json`。
+
 以下情況可以使用英文作為輔助：
 
 - 使用英文更清楚的技術詞，例如 `ViewModel`、`Service`、`pure function`、`executor`、`binding`。
