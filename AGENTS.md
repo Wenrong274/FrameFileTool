@@ -189,7 +189,7 @@ ViewModels 不應：
 
 ## Git 規則
 
-Commit message 格式、type 清單、七大黃金規則與範例，請以 [Git_Commit.md](./Git_Commit.md) 為唯一依據。
+Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMMIT_CONVENTION.md](./COMMIT_CONVENTION.md) 為唯一依據。
 
 額外注意事項：
 
