@@ -168,6 +168,42 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <!-- ── 副檔名 toggle：比原生 checkbox 更適合密集工具列 ── -->
+        <Style x:Key="PillCheckBox" TargetType="CheckBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="MinWidth" Value="58" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Pill"
+                                Background="{StaticResource SurfaceSubtleBrush}"
+                                BorderBrush="{StaticResource GhostBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="15"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Pill" Property="Background" Value="#EAF2FF" />
+                                <Setter TargetName="Pill" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Pill" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ── TextBlock（全域）──────────────────────────────── -->
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -280,7 +316,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="170" />
         </Grid.RowDefinitions>
@@ -315,12 +350,16 @@
             </DockPanel>
         </Border>
 
-        <!-- ── 資料夾列 ─────────────────────────────────────── -->
+        <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
         <Border Grid.Row="1"
                 Style="{StaticResource Card}"
-                Padding="12,8"
-                Margin="0,0,0,8">
+                Padding="14,12"
+                Margin="0,0,0,12">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -328,47 +367,62 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="資料夾"
+                <TextBlock Grid.Row="0"
+                           Text="來源資料夾"
                            FontWeight="SemiBold"
                            Margin="0,0,10,0" />
 
-                <TextBox Grid.Column="1"
+                <TextBox Grid.Row="0"
+                         Grid.Column="1"
                          Margin="0,0,8,0"
                          Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Button Grid.Column="2"
+                <Button Grid.Row="0"
+                        Grid.Column="2"
                         Content="選擇資料夾"
                         Margin="0,0,6,0"
                         Command="{Binding BrowseFolderCommand}" />
 
-                <Button Grid.Column="3"
+                <Button Grid.Row="0"
+                        Grid.Column="3"
                         Content="重新掃描"
                         Command="{Binding ScanFilesCommand}" />
+
+                <TextBlock Grid.Row="1"
+                           Text="掃描格式"
+                           FontWeight="SemiBold"
+                           Margin="0,8,10,0" />
+
+                <WrapPanel Grid.Row="1"
+                           Grid.Column="1"
+                           Grid.ColumnSpan="3"
+                           Margin="0,8,0,0"
+                           VerticalAlignment="Center">
+                    <CheckBox Content=".png"
+                              Style="{StaticResource PillCheckBox}"
+                              IsChecked="{Binding IncludePng}" />
+                    <CheckBox Content=".jpg"
+                              Style="{StaticResource PillCheckBox}"
+                              IsChecked="{Binding IncludeJpg}" />
+                    <CheckBox Content=".jpeg"
+                              Style="{StaticResource PillCheckBox}"
+                              IsChecked="{Binding IncludeJpeg}" />
+                    <CheckBox Content=".webp"
+                              Style="{StaticResource PillCheckBox}"
+                              IsChecked="{Binding IncludeWebp}" />
+                    <CheckBox Content=".bmp"
+                              Style="{StaticResource PillCheckBox}"
+                              IsChecked="{Binding IncludeBmp}" />
+                    <CheckBox Content="包含子資料夾"
+                              Style="{StaticResource PillCheckBox}"
+                              MinWidth="110"
+                              IsChecked="{Binding IncludeSubfolders}" />
+                </WrapPanel>
             </Grid>
         </Border>
 
-        <!-- ── 篩選列 ────────────────────────────────────────── -->
-        <Border Grid.Row="2"
-                Style="{StaticResource Card}"
-                Padding="12,8"
-                Margin="0,0,0,10">
-            <DockPanel LastChildFill="False">
-                <TextBlock Text="副檔名"
-                           FontWeight="SemiBold"
-                           Margin="0,0,10,0" />
-                <CheckBox Content=".png"  IsChecked="{Binding IncludePng}" />
-                <CheckBox Content=".jpg"  IsChecked="{Binding IncludeJpg}" />
-                <CheckBox Content=".jpeg" IsChecked="{Binding IncludeJpeg}" />
-                <CheckBox Content=".webp" IsChecked="{Binding IncludeWebp}" />
-                <CheckBox Content=".bmp"  IsChecked="{Binding IncludeBmp}" />
-                <CheckBox Content="包含子資料夾"
-                          IsChecked="{Binding IncludeSubfolders}"
-                          Margin="24,0,6,0" />
-            </DockPanel>
-        </Border>
-
         <!-- ── 主內容：左側工具 + 右側預覽 ─────────────────── -->
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="245" />
                 <ColumnDefinition Width="12" />
@@ -641,7 +695,7 @@
         </Grid>
 
         <!-- ── Log（深色面板）────────────────────────────────── -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="3"
                 Background="#1E293B"
                 CornerRadius="6"
                 Margin="0,10,0,0"
