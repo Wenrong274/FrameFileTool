@@ -1,0 +1,104 @@
+root = true
+
+# 所有檔案的基本規則
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# 原始碼
+[*.cs]
+indent_size = 4
+
+# 命名慣例：介面以 I 開頭
+dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = warning
+dotnet_naming_rule.interface_should_be_prefixed_with_i.symbols = interface
+dotnet_naming_rule.interface_should_be_prefixed_with_i.style = prefix_interface_with_i
+
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_symbols.interface.applicable_accessibilities = public, internal
+
+dotnet_naming_style.prefix_interface_with_i.required_prefix = I
+dotnet_naming_style.prefix_interface_with_i.capitalization = pascal_case
+
+# 命名慣例：私有欄位以底線開頭
+dotnet_naming_rule.private_fields_should_use_underscore.severity = warning
+dotnet_naming_rule.private_fields_should_use_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_should_use_underscore.style = prefix_private_with_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.prefix_private_with_underscore.required_prefix = _
+dotnet_naming_style.prefix_private_with_underscore.capitalization = camel_case
+
+# 排序：using System.* 優先，其次按字母排序
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# 移除不必要的 using
+dotnet_diagnostic.IDE0005.severity = warning
+
+# 使用語言關鍵字取代型別名稱（string 取代 String）
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning
+dotnet_style_predefined_type_for_member_access = true:warning
+
+# 使用 var（型別明確時）
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# 大括號風格：Allman（另起一行）
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# 縮排與空白
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_space_after_cast = false
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_around_binary_operators = before_and_after
+
+# 偏好使用 expression body（只在適合場合）
+csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_constructors = false:silent
+
+# 偏好使用 null 合併運算子
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+
+# 使用 collection initializer
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_object_initializer = true:suggestion
+
+# readonly 欄位
+dotnet_style_readonly_field = true:warning
+
+# XAML
+[*.xaml]
+indent_size = 4
+
+# XML 專案與設定檔
+[*.{csproj,props,targets,config,resx}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+# 方案檔
+[*.sln]
+indent_style = tab
