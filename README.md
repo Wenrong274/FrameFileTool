@@ -1,6 +1,7 @@
-# FrameFileTool
+# 影格整理工具（FrameFileTool）
 
-FrameFileTool 是一個 Windows WPF 桌面工具，用於處理序列圖檔的抽幀刪除與批次改名。
+影格整理工具（FrameFileTool）是一個 Windows WPF 桌面工具，
+用於處理序列圖檔的抽幀刪除與批次改名。
 
 ## 功能
 
