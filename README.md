@@ -17,7 +17,7 @@ FrameFileTool 是一個 Windows WPF 桌面工具，用於處理序列圖檔的�
 ## 開發環境
 
 - Windows 10/11
-- .NET 8 SDK
+- .NET 10 SDK
 - Visual Studio 2022 或 `dotnet` CLI
 
 ## 執行方式

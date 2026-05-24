@@ -1,9 +1,31 @@
+# ===== 建置輸出 =====
 bin/
 obj/
+publish/
+*.nupkg
+
+# ===== Visual Studio =====
 .vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# ===== JetBrains Rider =====
+.idea/
+*.DotSettings
+
+# ===== 暫存與快取 =====
 *.cache
-*.log
 *.tmp
+*.log
+
+# ===== 測試結果 =====
+TestResults/
+*.coverage
+*.coveragexml
+coverage*/
+
+# ===== 測試資料（本機） =====
 TestData/
