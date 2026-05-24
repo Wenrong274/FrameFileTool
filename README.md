@@ -2,7 +2,7 @@
 
 FrameFileTool 是一個 Windows WPF 桌面工具，用於處理序列圖檔的抽幀刪除與批次改名。
 
-## 初版功能
+## 功能
 
 - 選擇資料夾並掃描序列圖檔
 - 支援副檔名：PNG、JPG、JPEG、WEBP、BMP
@@ -14,24 +14,48 @@ FrameFileTool 是一個 Windows WPF 桌面工具，用於處理序列圖檔的�
 - 改名使用暫存檔名中轉，降低撞名風險
 - 勾選包含子資料夾時，每個資料夾會各自重新計數
 
-## 開發環境
+## 開發環境需求
 
-- Windows 10/11
+- Windows 10 / 11
 - .NET 10 SDK
-- Visual Studio 2022 或 `dotnet` CLI
+- Visual Studio 2022 或 JetBrains Rider（或 `dotnet` CLI）
 
-## 執行方式
+## 執行
 
 ```powershell
 dotnet run --project .\FrameFileTool\FrameFileTool.csproj
 ```
 
+## 測試
+
+```powershell
+dotnet test
+```
+
+## 程式碼品質檢查
+
+```powershell
+# 自動修正格式（空白、換行、命名）
+dotnet format
+
+# 驗證格式是否符合 .editorconfig（有違規則失敗，適合 CI）
+dotnet format --verify-no-changes --severity warn
+
+# 檢查所有 Markdown 文件
+npx markdownlint-cli2 "*.md"
+```
+
 ## 發佈單一 exe
 
 ```powershell
-dotnet publish .\FrameFileTool\FrameFileTool.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+dotnet publish .\FrameFileTool\FrameFileTool.csproj `
+  -c Release -r win-x64 --self-contained true `
+  /p:PublishSingleFile=true
 ```
 
 ## 開發規範
 
-本專案的開發規範請見 [AGENTS.md](AGENTS.md)。
+本專案的開發規範、架構說明、套件清單與 commit 規則，請見：
+
+- [AGENTS.md](AGENTS.md) — 開發規範總覽（唯一依據）
+- [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md) — Commit message 格式與範例

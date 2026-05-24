@@ -202,6 +202,47 @@ Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMM
 - 使用聚焦的小型 commits，每個 commit 只做一件事。
 - 不要提交產生的 build output，例如 `bin/`、`obj/`、`.vs/` 或 packaged executables，除非使用者明確要求。
 
+## 套件與工具
+
+### 主專案 NuGet 套件
+
+| 套件 | 版本 | 用途 |
+| --- | --- | --- |
+| `CommunityToolkit.Mvvm` | 8.4.2 | `ObservableObject`、`[ObservableProperty]`、`[RelayCommand]` source generator |
+| `Microsoft.Extensions.DependencyInjection` | 10.0.8 | DI 容器，於 `App.xaml.cs` 注冊所有 service 與 ViewModel |
+
+### 測試專案 NuGet 套件
+
+| 套件 | 版本 | 用途 |
+| --- | --- | --- |
+| `xUnit` | 2.9.3 | 單元測試框架 |
+| `FluentAssertions` | 8.10.0 | 可讀性高的斷言語法（`result.Should().Be(...)` 等） |
+| `NSubstitute` | 5.3.0 | Mock 框架，用於隔離 service 依賴 |
+| `coverlet.collector` | 6.0.4 | 測試覆蓋率收集 |
+
+### 程式碼品質工具
+
+| 工具 | 設定檔 | 說明 |
+| --- | --- | --- |
+| `dotnet format` | `.editorconfig` | 自動修正空白、換行、命名等格式違規 |
+| `markdownlint-cli2` | `.markdownlint.json` | 檢查所有 `.md` 文件的格式規範 |
+
+常用指令：
+
+```powershell
+# 自動修正所有格式問題
+dotnet format
+
+# 驗證格式（CI 用，有違規時回傳非零退出碼）
+dotnet format --verify-no-changes --severity warn
+
+# 執行所有單元測試
+dotnet test
+
+# 檢查 Markdown 文件
+npx markdownlint-cli2 "*.md"
+```
+
 ## 目前限制
 
 這個專案目標平台：
