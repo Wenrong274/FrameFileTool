@@ -4,10 +4,10 @@
         xmlns:models="clr-namespace:FrameFileTool.Models"
         Title="FrameFileTool"
         Icon="Assets/AppIcon.ico"
-        Background="#F1F5F9"
+        Background="#EEF2F7"
         FontFamily="Segoe UI"
-        Width="1280"
-        Height="820"
+        Width="1240"
+        Height="800"
         MinWidth="1000"
         MinHeight="680"
         WindowStartupLocation="CenterScreen">
@@ -21,28 +21,32 @@
         <SolidColorBrush x:Key="DangerHoverBrush"    Color="#B91C1C" />
         <SolidColorBrush x:Key="DangerDisabledBrush" Color="#FCA5A5" />
         <SolidColorBrush x:Key="SurfaceBrush"        Color="#FFFFFF" />
-        <SolidColorBrush x:Key="CardBorderBrush"     Color="#E2E8F0" />
+        <SolidColorBrush x:Key="SurfaceSubtleBrush"  Color="#F8FAFC" />
+        <SolidColorBrush x:Key="CardBorderBrush"     Color="#DDE5F0" />
         <SolidColorBrush x:Key="GhostBorderBrush"    Color="#CBD5E1" />
+        <SolidColorBrush x:Key="InputFocusBrush"     Color="#93C5FD" />
         <SolidColorBrush x:Key="TextPrimary"         Color="#0F172A" />
         <SolidColorBrush x:Key="TextSecondary"       Color="#64748B" />
-        <SolidColorBrush x:Key="HeaderBrush"         Color="#1E293B" />
+        <SolidColorBrush x:Key="TextMuted"           Color="#94A3B8" />
+        <SolidColorBrush x:Key="HeaderBrush"         Color="#EAF0F7" />
 
         <!-- ── Button：ghost（預設，用於選擇資料夾等次要動作）─── -->
         <Style TargetType="Button">
-            <Setter Property="Height"          Value="32" />
+            <Setter Property="Height"          Value="34" />
             <Setter Property="Padding"         Value="14,0" />
             <Setter Property="Cursor"          Value="Hand" />
             <Setter Property="Foreground"      Value="{StaticResource TextPrimary}" />
             <Setter Property="Background"      Value="{StaticResource SurfaceBrush}" />
             <Setter Property="BorderBrush"     Value="{StaticResource GhostBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize"        Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -64,18 +68,19 @@
 
         <!-- ── Button：primary 藍色（預覽動作）────────────────── -->
         <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Height"          Value="32" />
+            <Setter Property="Height"          Value="34" />
             <Setter Property="Padding"         Value="14,0" />
             <Setter Property="Cursor"          Value="Hand" />
             <Setter Property="Foreground"      Value="White" />
             <Setter Property="Background"      Value="{StaticResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontWeight"      Value="SemiBold" />
+            <Setter Property="FontSize"        Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="4"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -95,18 +100,19 @@
 
         <!-- ── Button：execute 紅色（執行破壞性動作）───────────── -->
         <Style x:Key="ExecuteButton" TargetType="Button">
-            <Setter Property="Height"          Value="32" />
+            <Setter Property="Height"          Value="34" />
             <Setter Property="Padding"         Value="14,0" />
             <Setter Property="Cursor"          Value="Hand" />
             <Setter Property="Foreground"      Value="White" />
             <Setter Property="Background"      Value="{StaticResource DangerBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontWeight"      Value="SemiBold" />
+            <Setter Property="FontSize"        Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="4"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -126,13 +132,34 @@
 
         <!-- ── TextBox ───────────────────────────────────────── -->
         <Style TargetType="TextBox">
-            <Setter Property="Height"                   Value="30" />
+            <Setter Property="Height"                   Value="32" />
             <Setter Property="Padding"                  Value="8,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="BorderBrush"              Value="{StaticResource GhostBorderBrush}" />
             <Setter Property="BorderThickness"          Value="1" />
             <Setter Property="Background"               Value="White" />
             <Setter Property="Margin"                   Value="0,2,0,4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Border"
+                                        Property="BorderBrush"
+                                        Value="{StaticResource InputFocusBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- ── CheckBox ──────────────────────────────────────── -->
@@ -174,32 +201,122 @@
             <Setter Property="Background"      Value="{StaticResource SurfaceBrush}" />
             <Setter Property="BorderBrush"     Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius"    Value="6" />
+            <Setter Property="CornerRadius"    Value="8" />
         </Style>
 
-        <!-- ── DataGrid 欄標頭：深色 ─────────────────────────── -->
-        <Style x:Key="DarkColumnHeader" TargetType="DataGridColumnHeader">
+        <!-- ── Tab：工具切換 ─────────────────────────────────── -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10" />
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Margin" Value="0,0,6,10" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Background="Transparent"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#EAF2FF" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource SurfaceSubtleBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── DataGrid ──────────────────────────────────────── -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource SurfaceSubtleBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EDF2F7" />
+            <Setter Property="RowHeight" Value="46" />
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#DBEAFE" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TableColumnHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background"      Value="{StaticResource HeaderBrush}" />
-            <Setter Property="Foreground"      Value="White" />
+            <Setter Property="Foreground"      Value="{StaticResource TextSecondary}" />
             <Setter Property="FontSize"        Value="11" />
             <Setter Property="FontWeight"      Value="SemiBold" />
-            <Setter Property="Padding"         Value="10,7" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding"         Value="10,8" />
+            <Setter Property="BorderBrush"     Value="#DDE5F0" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="SeparatorVisibility" Value="Collapsed" />
         </Style>
 
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="170" />
         </Grid.RowDefinitions>
 
-        <!-- ── 資料夾列 ─────────────────────────────────────── -->
+        <!-- ── 頁首：產品識別與當前狀態 ─────────────────────── -->
         <Border Grid.Row="0"
+                Style="{StaticResource Card}"
+                Padding="14,10"
+                Margin="0,0,0,10">
+            <DockPanel LastChildFill="True">
+                <Image DockPanel.Dock="Left"
+                       Source="Assets/AppIcon.png"
+                       Width="34"
+                       Height="34"
+                       Margin="0,0,12,0" />
+
+                <TextBlock DockPanel.Dock="Right"
+                           Text="{Binding FileSummary}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="12"
+                           Margin="16,0,0,0" />
+
+                <StackPanel>
+                    <TextBlock Text="FrameFileTool"
+                               FontSize="17"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="序列圖片抽幀刪除與批次改名工具"
+                               Foreground="{StaticResource TextSecondary}"
+                               FontSize="12"
+                               Margin="0,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ── 資料夾列 ─────────────────────────────────────── -->
+        <Border Grid.Row="1"
                 Style="{StaticResource Card}"
                 Padding="12,8"
                 Margin="0,0,0,8">
@@ -231,7 +348,7 @@
         </Border>
 
         <!-- ── 篩選列 ────────────────────────────────────────── -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="2"
                 Style="{StaticResource Card}"
                 Padding="12,8"
                 Margin="0,0,0,10">
@@ -247,18 +364,14 @@
                 <CheckBox Content="包含子資料夾"
                           IsChecked="{Binding IncludeSubfolders}"
                           Margin="24,0,6,0" />
-                <TextBlock Text="{Binding FileSummary}"
-                           Foreground="{StaticResource TextSecondary}"
-                           FontStyle="Italic"
-                           Margin="24,0,0,0" />
             </DockPanel>
         </Border>
 
         <!-- ── 主內容：左側工具 + 右側預覽 ─────────────────── -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="245" />
+                <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -402,7 +515,7 @@
                               SelectionMode="Single"
                               BorderThickness="0"
                               RowBackground="White"
-                              ColumnHeaderStyle="{StaticResource DarkColumnHeader}">
+                              ColumnHeaderStyle="{StaticResource TableColumnHeader}">
 
                         <!-- 有錯誤的列：淡紅底 -->
                         <DataGrid.RowStyle>
@@ -528,7 +641,7 @@
         </Grid>
 
         <!-- ── Log（深色面板）────────────────────────────────── -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 Background="#1E293B"
                 CornerRadius="6"
                 Margin="0,10,0,0"
