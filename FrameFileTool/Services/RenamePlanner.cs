@@ -1,8 +1,10 @@
+using System.IO;
 using FrameFileTool.Models;
+using FrameFileTool.Services.Interfaces;
 
 namespace FrameFileTool.Services;
 
-public sealed class RenamePlanner
+public sealed class RenamePlanner : IRenamePlanner
 {
     public IReadOnlyList<OperationPreviewItem> Plan(
         IReadOnlyList<FileItem> files,

@@ -1,9 +1,11 @@
+using System.IO;
 using FrameFileTool.Models;
+using FrameFileTool.Services.Interfaces;
 using Microsoft.VisualBasic.FileIO;
 
 namespace FrameFileTool.Services;
 
-public sealed class FileOperationExecutor
+public sealed class FileOperationExecutor : IFileOperationExecutor
 {
     public OperationResult DeleteToRecycleBin(IEnumerable<OperationPreviewItem> previewItems)
     {
@@ -85,8 +87,3 @@ public sealed class FileOperationExecutor
     }
 }
 
-public sealed class OperationResult
-{
-    public int SuccessCount { get; set; }
-    public List<string> Errors { get; } = new();
-}

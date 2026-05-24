@@ -1,8 +1,9 @@
 using FrameFileTool.Models;
+using FrameFileTool.Services.Interfaces;
 
 namespace FrameFileTool.Services;
 
-public sealed class FrameDeletePlanner
+public sealed class FrameDeletePlanner : IFrameDeletePlanner
 {
     public IReadOnlyList<OperationPreviewItem> Plan(IReadOnlyList<FileItem> files, int interval)
     {

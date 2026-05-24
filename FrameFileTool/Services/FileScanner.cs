@@ -1,8 +1,10 @@
+using System.IO;
 using FrameFileTool.Models;
+using FrameFileTool.Services.Interfaces;
 
 namespace FrameFileTool.Services;
 
-public sealed class FileScanner
+public sealed class FileScanner : IFileScanner
 {
     private readonly NaturalStringComparer _naturalStringComparer = new();
 

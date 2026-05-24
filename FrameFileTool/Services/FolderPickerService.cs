@@ -1,8 +1,10 @@
+using System.IO;
 using Forms = System.Windows.Forms;
+using FrameFileTool.Services.Interfaces;
 
 namespace FrameFileTool.Services;
 
-public sealed class FolderPickerService
+public sealed class FolderPickerService : IFolderPickerService
 {
     public string? PickFolder(string? initialFolder)
     {
