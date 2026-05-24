@@ -2,8 +2,7 @@
 
 > 參考來源：<https://hackmd.io/@howhow/git_commit>
 
-文件、說明與規則以繁體中文為主。Commit message 本體（type、subject、body、footer）
-以英文撰寫，符合 [AGENTS.md](./AGENTS.md) 語言規則。
+文件、說明與規則以繁體中文為主，符合 [AGENTS.md](./AGENTS.md) 語言規則。
 
 ---
 
@@ -22,6 +21,18 @@
 | **Header** | ✅ | type + 選填 scope + subject |
 | **Body** | 選填 | 說明做了什麼、為什麼這樣做 |
 | **Footer** | 選填 | Breaking change 或關閉 issue |
+
+---
+
+## 語言規則
+
+| 區段 | 語言 | 原因 |
+| --- | --- | --- |
+| `type` | 英文 | Conventional Commits 國際標準，工具整合需要 |
+| `scope` | 英文 | 對應程式碼識別符（類別、模組名稱） |
+| `subject` | **繁體中文** | 與專案語言規則一致 |
+| `body` | **繁體中文** | 與專案語言規則一致 |
+| `footer` | 混合 | `BREAKING CHANGE`、`Closes` 保持英文，說明用中文 |
 
 ---
 
@@ -48,21 +59,20 @@
 
 1. 標題與 body 之間**空一行**
 2. 標題限制 **50 字元**以內
-3. 標題**首字大寫**
-4. 標題結尾**不加句號**
-5. 標題使用**祈使現在式**（`Add` 而非 `Added`、`Fix` 而非 `Fixed`）
-6. Body 每行不超過 **72 字元**
-7. Body 說明 **what** 與 **why**，不需說明 how
+3. 標題結尾**不加句號**
+4. Subject 使用**動詞開頭**（新增、修正、移除、重構⋯）
+5. Body 每行不超過 **72 字元**
+6. Body 說明 **做了什麼** 與 **為什麼**，不需說明怎麼做
+7. 每個 commit 只做**一件事**
 
 ---
 
 ## Subject 撰寫規則
 
-- 以英文撰寫
-- 首字大寫
+- 以繁體中文撰寫
+- 動詞開頭（新增、修正、移除、重構、升級⋯）
 - 不超過 50 字元
 - 結尾無句號
-- 使用祈使現在式動詞開頭
 
 ---
 
@@ -70,14 +80,14 @@
 
 - 與 header 之間空一行
 - 每行不超過 72 字元
-- 說明「做了什麼」與「為什麼」，不需說明怎麼做
+- 說明「做了什麼」與「為什麼」
 - 可使用項目符號
 
 ---
 
 ## Footer 撰寫規則
 
-- `BREAKING CHANGE`：標記不向下相容的變動，並說明影響範圍
+- `BREAKING CHANGE`：標記不向下相容的變動，說明以繁體中文補充
 - `Closes #123`：關閉對應的 issue 編號
 
 ---
@@ -87,50 +97,50 @@
 ### 單行（無 body）
 
 ```text
-feat(RenamePlanner): add zero-padding support
+feat(RenamePlanner): 新增補零位數支援
 ```
 
 ```text
-fix(FileOperationExecutor): handle missing file on rename
+fix(FileOperationExecutor): 修正改名時檔案不存在的處理
 ```
 
 ```text
-docs: update AGENTS.md target framework to net10
+docs: 更新 AGENTS.md 目標框架為 net10
 ```
 
 ```text
-test(FrameDeletePlanner): add per-folder counter edge cases
+test(FrameDeletePlanner): 新增子資料夾各自計數的邊界測試
 ```
 
 ```text
-refactor(MainViewModel): migrate to CommunityToolkit.Mvvm source generators
+refactor(MainViewModel): 改用 CommunityToolkit.Mvvm source generator
 ```
 
 ### 含 body
 
 ```text
-feat(FileScanner): support .webp and .bmp extensions
+feat(FileScanner): 支援 .webp 與 .bmp 副檔名
 
-Previously only png/jpg/jpeg were enabled by default.
-Users can now opt-in to webp and bmp via checkboxes
-without modifying source code.
+原本預設只啟用 png/jpg/jpeg。
+使用者現在可透過勾選框選擇 webp 與 bmp，
+不需修改原始碼。
 ```
 
 ### 含 footer
 
 ```text
-refactor!: replace custom ObservableObject with CommunityToolkit.Mvvm
+refactor!: 以 CommunityToolkit.Mvvm 取代自訂 ObservableObject
 
-BREAKING CHANGE: ObservableObject and RelayCommand are removed.
-All ViewModels must now inherit from
-CommunityToolkit.Mvvm.ComponentModel.ObservableObject.
+BREAKING CHANGE: ObservableObject 與 RelayCommand 已移除。
+所有 ViewModel 必須改為繼承
+CommunityToolkit.Mvvm.ComponentModel.ObservableObject。
 ```
 
 ---
 
 ## 禁止事項
 
-- ❌ 標題使用過去式（`Added`、`Fixed`）
+- ❌ subject 使用過去式動詞（已新增、已修正）
 - ❌ 單一 commit 混合多個無關變更
 - ❌ 沒有說明原因的大型 commit
 - ❌ 提交 build output（`bin/`、`obj/`、`.vs/`）

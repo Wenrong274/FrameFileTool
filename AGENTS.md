@@ -33,7 +33,7 @@ C# 程式碼風格遵循 Microsoft Code Style Guide，規則定義於根目錄�
 
 - 使用英文更清楚的技術詞，例如 `ViewModel`、`Service`、`pure function`、`executor`、`binding`。
 - 類別、方法、屬性、命令與檔案名稱。
-- commit message、套件名稱、framework 名稱與 CLI 指令。
+- commit message 的 `type` 與 `scope`、套件名稱、framework 名稱與 CLI 指令。
 
 良好範例：
 
