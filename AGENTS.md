@@ -206,9 +206,9 @@ Move file execution behind service
 這個專案目標平台：
 
 ```text
-.NET 8
+.NET 10
 WPF
 Windows
 ```
 
-開發機必須安裝 .NET 8 SDK，才能 build、run 與 test 專案。
+開發機必須安裝 .NET 10 SDK，才能 build、run 與 test 專案。
