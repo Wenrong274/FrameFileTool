@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 發佈版本，例如 v1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-windows:
+    name: Publish Windows x64
+    runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore FrameFileTool.sln
+
+      - name: Build
+        run: dotnet build FrameFileTool.sln --no-restore -v quiet
+
+      - name: Test
+        run: dotnet test FrameFileTool.Tests/FrameFileTool.Tests.csproj --no-build -v quiet
+
+      - name: Publish single-file app
+        shell: pwsh
+        run: |
+          dotnet publish .\FrameFileTool\FrameFileTool.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            /p:PublishSingleFile=true `
+            /p:EnableCompressionInSingleFile=true `
+            /p:IncludeNativeLibrariesForSelfExtract=true `
+            -o .\artifacts\publish\win-x64
+
+      - name: Create release archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path .\artifacts\release | Out-Null
+          $archivePath = ".\artifacts\release\FrameFileTool-${env:RELEASE_VERSION}-win-x64.zip"
+          Compress-Archive -Path .\artifacts\publish\win-x64\* -DestinationPath $archivePath -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: FrameFileTool-${{ env.RELEASE_VERSION }}-win-x64
+          path: artifacts/release/*.zip
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$env:RELEASE_VERSION" .\artifacts\release\*.zip `
+            --title "FrameFileTool $env:RELEASE_VERSION" `
+            --notes "Windows x64 self-contained 單檔發佈包。"

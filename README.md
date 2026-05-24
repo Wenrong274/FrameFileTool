@@ -46,6 +46,24 @@ dotnet format --verify-no-changes --severity warn
 npx markdownlint-cli2 "*.md"
 ```
 
+## CI/CD
+
+本專案使用 GitHub Actions 執行 CI/CD。
+
+| Workflow  | 觸發條件                            | 用途                                                   |
+| --------- | ----------------------------------- | ------------------------------------------------------ |
+| `CI`      | push、pull request、手動執行        | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
+| `Release` | 推送 `v*` tag、手動執行             | 發佈 Windows x64 self-contained 單檔 zip               |
+
+建立 GitHub Release 的建議方式是推送 `v*` tag：
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+也可以從 GitHub Actions 手動執行 `Release` workflow，並輸入 `version`，例如 `v1.0.0`。
+
 ## 發佈單一 exe
 
 ```powershell

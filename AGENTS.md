@@ -244,6 +244,24 @@ dotnet test
 npx markdownlint-cli2 "*.md"
 ```
 
+## CI/CD
+
+GitHub Actions workflow 定義於 `.github/workflows/`。
+
+| Workflow  | 觸發條件                     | 用途                                                   |
+| --------- | ---------------------------- | ------------------------------------------------------ |
+| `CI`      | push、pull request、手動執行 | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
+| `Release` | 推送 `v*` tag、手動執行      | 發佈 Windows x64 self-contained 單檔 zip               |
+
+Release workflow 的建議使用方式：
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+手動執行 `Release` workflow 時，必須輸入 `version`，例如 `v1.0.0`。
+
 ## 目前限制
 
 這個專案目標平台：
