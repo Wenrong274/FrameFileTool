@@ -45,12 +45,12 @@ public sealed partial class MainViewModel : ObservableObject
     // ── 抽幀設定 ──────────────────────────────────────────────
 
     [ObservableProperty]
-    private int _frameDeleteInterval = 3;
+    private int _frameDeleteInterval = 2;
 
     // ── 改名設定 ──────────────────────────────────────────────
 
     [ObservableProperty]
-    private string _renamePrefix = "F_";
+    private string _renamePrefix = "Symbol_";
 
     [ObservableProperty]
     private int _renameStartIndex;
@@ -68,7 +68,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>預覽摘要，顯示於預覽表格上方，說明計畫筆數與錯誤數。</summary>
     [ObservableProperty]
-    private string _previewSummary = "選擇操作並點擊預覽";
+    private string _previewSummary = "預覽修改";
 
     /// <summary>是否已產生預覽（true 代表預覽摘要列應顯示顏色狀態）。</summary>
     [ObservableProperty]
@@ -211,6 +211,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ClearLog() => Logs.Clear();
+
+    [ObservableProperty]
+    private bool _isLogExpanded = false;
+
+    [RelayCommand]
+    private void ToggleLog() => IsLogExpanded = !IsLogExpanded;
 
     // ── 私有輔助方法 ──────────────────────────────────────────
 
