@@ -520,23 +520,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- 驗證欄保留 Status，但弱化正常狀態，錯誤時才突出。 -->
-                            <DataGridTextColumn Header="驗證"
-                                                Binding="{Binding Status}"
-                                                Width="2*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasError}" Value="True">
-                                                <Setter Property="Foreground" Value="#DC2626" />
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
