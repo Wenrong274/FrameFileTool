@@ -25,6 +25,7 @@ FrameFileTool 是一個 Windows WPF 桌面應用程式，用於處理序列圖�
 
 專案內所有 Markdown 文件（`.md`）必須通過 markdownlint 檢查。
 設定規則定義於根目錄的 `.markdownlint.json`。
+MD060（表格欄位對齊）已停用，因為繁體中文全形字元的顯示寬度難以與 ASCII 空白精確對齊。
 
 C# 程式碼風格遵循 Microsoft Code Style Guide，規則定義於根目錄的 `.editorconfig`，
 由 IDE 與 `dotnet format` 強制執行，不另開說明文件。
