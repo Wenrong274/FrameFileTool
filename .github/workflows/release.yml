@@ -58,6 +58,25 @@ jobs:
           $archivePath = ".\artifacts\release\FrameFileTool-${env:RELEASE_VERSION}-win-x64.zip"
           Compress-Archive -Path .\artifacts\publish\win-x64\* -DestinationPath $archivePath -Force
 
+      - name: Prepare release notes
+        shell: pwsh
+        run: |
+          $notesSource = ".\.github\release-notes\$env:RELEASE_VERSION.md"
+          $notesTarget = ".\artifacts\release\release-notes.md"
+
+          if (Test-Path $notesSource) {
+            Copy-Item -Path $notesSource -Destination $notesTarget -Force
+          }
+          else {
+            $defaultNotes = @(
+              "## 發佈內容",
+              "",
+              "- Windows x64 self-contained 單檔發佈包。",
+              "- 下載 zip 後解壓縮，執行 ``FrameFileTool.exe``。"
+            )
+            $defaultNotes | Set-Content -Path $notesTarget -Encoding utf8
+          }
+
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v6
         with:
@@ -71,4 +90,4 @@ jobs:
         run: |
           gh release create "$env:RELEASE_VERSION" .\artifacts\release\*.zip `
             --title "FrameFileTool $env:RELEASE_VERSION" `
-            --notes "Windows x64 self-contained 單檔發佈包。"
+            --notes-file .\artifacts\release\release-notes.md

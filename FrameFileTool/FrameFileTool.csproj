@@ -10,7 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\AppIcon.ico" />
+    <None Remove="Assets\AppIcon.png" />
     <Resource Include="Assets\AppIcon.ico" />
+    <Resource Include="Assets\AppIcon.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

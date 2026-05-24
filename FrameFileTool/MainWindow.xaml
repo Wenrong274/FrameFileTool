@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:FrameFileTool.Models"
         Title="影格整理工具"
-        Icon="Assets/AppIcon.ico"
+        Icon="pack://application:,,,/Assets/AppIcon.ico"
         Background="#EEF2F7"
         FontFamily="Segoe UI"
         Width="1240"
@@ -327,7 +327,7 @@
                 Margin="0,0,0,10">
             <DockPanel LastChildFill="True">
                 <Image DockPanel.Dock="Left"
-                       Source="Assets/AppIcon.png"
+                       Source="pack://application:,,,/Assets/AppIcon.png"
                        Width="34"
                        Height="34"
                        Margin="0,0,12,0" />
