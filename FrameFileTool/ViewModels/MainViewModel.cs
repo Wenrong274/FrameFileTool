@@ -70,6 +70,14 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _previewSummary = "選擇操作並點擊預覽";
 
+    /// <summary>是否已產生預覽（true 代表預覽摘要列應顯示顏色狀態）。</summary>
+    [ObservableProperty]
+    private bool _hasPreview;
+
+    /// <summary>當前預覽是否含有錯誤項目，供摘要列切換紅色警示。</summary>
+    [ObservableProperty]
+    private bool _hasPreviewErrors;
+
     public MainViewModel(
         IFileScanner scanner,
         IFrameDeletePlanner frameDeletePlanner,
@@ -115,6 +123,8 @@ public sealed partial class MainViewModel : ObservableObject
         Files.Clear();
         PreviewItems.Clear();
         PreviewSummary = "選擇操作並點擊預覽";
+        HasPreview = false;
+        HasPreviewErrors = false;
 
         var extensions = GetSelectedExtensions();
         var files = _scanner.Scan(SelectedFolder, extensions, IncludeSubfolders);
@@ -144,6 +154,8 @@ public sealed partial class MainViewModel : ObservableObject
             item.Action == OperationAction.Delete && !item.HasError);
         var errorCount = PreviewItems.Count(item => item.HasError);
 
+        HasPreview = true;
+        HasPreviewErrors = errorCount > 0;
         PreviewSummary = errorCount > 0
             ? $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個，{errorCount} 個錯誤"
             : $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個";
@@ -178,6 +190,8 @@ public sealed partial class MainViewModel : ObservableObject
             item.Action == OperationAction.Rename && !item.HasError);
         var errorCount = PreviewItems.Count(item => item.HasError);
 
+        HasPreview = true;
+        HasPreviewErrors = errorCount > 0;
         PreviewSummary = errorCount > 0
             ? $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個，{errorCount} 個錯誤（執行已停用）"
             : $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個";
