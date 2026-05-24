@@ -17,6 +17,29 @@ Use these rules for every change in this repository:
 - Keep file-system side effects isolated.
 - Do not put business logic in event handlers or code-behind.
 - Do not add broad abstractions until there are at least two real use cases.
+- Write documents and code comments primarily in Traditional Chinese, with English as supporting terminology where useful.
+
+## Language Rules
+
+Documents, user-facing notes, and code comments should use Traditional Chinese as the primary language.
+
+English may be used as supporting text for:
+
+- Technical terms that are clearer in English, such as `ViewModel`, `Service`, `pure function`, `executor`, and `binding`.
+- Class, method, property, command, and file names.
+- Commit messages, package names, framework names, and CLI commands.
+
+Good examples:
+
+```csharp
+// 先用暫存檔名中轉，避免 A->B、B->C 這類互相撞名的 rename chain。
+```
+
+```text
+抽幀規則使用 pure planner：輸入 files + options，輸出 preview plan，不直接操作檔案。
+```
+
+Avoid English-only explanations in project documents unless the content is a quoted command, API name, or external tool output.
 
 ## Architecture
 
