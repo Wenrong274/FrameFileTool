@@ -105,7 +105,7 @@ code-behind 可以初始化相依物件並設定 `DataContext`。code-behind 不
 - 批次縮放規劃（百分比驗證、絕對尺寸驗證、目標尺寸計算、等比縮放、fit-within-box）。
 - 衝突偵測。
 - 勾選包含子資料夾時，每個資料夾各自計數的行為。
-- ViewModel 的 CanExecute 邏輯（HasExecutable*Preview 依 CurrentPreview 型別判斷）。
+- ViewModel 的 CanExecute 邏輯（HasExecutable\*Preview 依 CurrentPreview 型別判斷）。
 - 邊界案例，例如空資料夾、無效間隔、重複目標檔名、目標檔案已存在。
 
 建議工作流程：
@@ -232,7 +232,7 @@ Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMM
 | ------------------------------------------ | ------- | ----------------------------------------------------------------------------- |
 | `CommunityToolkit.Mvvm`                    | 8.4.2   | `ObservableObject`、`[ObservableProperty]`、`[RelayCommand]` source generator |
 | `Microsoft.Extensions.DependencyInjection` | 10.0.8  | DI 容器，於 `App.xaml.cs` 注冊所有 service 與 ViewModel                       |
-| `Magick.NET-Q8-AnyCPU`                     | 14.13.1 | 批次縮放圖片，支援 PNG/JPG/JPEG/WebP/BMP，提供 Lanczos/Mitchell 等演算法       |
+| `Magick.NET-Q8-AnyCPU`                     | 14.13.1 | 批次縮放圖片，支援 PNG/JPG/JPEG/WebP/BMP，提供 Lanczos/Mitchell 等演算法      |
 
 ### 測試專案 NuGet 套件
 
@@ -270,10 +270,10 @@ npx markdownlint-cli2 "*.md"
 
 GitHub Actions workflow 定義於 `.github/workflows/`。
 
-| Workflow  | 觸發條件                     | 用途                                                   |
-| --------- | ---------------------------- | ------------------------------------------------------ |
+| Workflow  | 觸發條件                     | 用途                                                    |
+| --------- | ---------------------------- | ------------------------------------------------------- |
 | `CI`      | push、pull request、手動執行 | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
-| `Release` | 推送 `v*` tag、手動執行      | 發佈 Windows x64 self-contained 單檔 zip               |
+| `Release` | 推送 `v*` tag、手動執行      | 發佈 Windows x64 self-contained 單檔 zip                |
 
 Release workflow 的建議使用方式：
 
