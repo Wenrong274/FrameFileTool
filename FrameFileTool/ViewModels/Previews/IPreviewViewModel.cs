@@ -8,8 +8,8 @@ namespace FrameFileTool.ViewModels.Previews;
 public interface IPreviewViewModel
 {
     /// <summary>顯示於預覽摘要列的說明文字。</summary>
-    string Summary { get; }
+    public string Summary { get; }
 
     /// <summary>是否含有任何錯誤項目。</summary>
-    bool HasErrors { get; }
+    public bool HasErrors { get; }
 }
