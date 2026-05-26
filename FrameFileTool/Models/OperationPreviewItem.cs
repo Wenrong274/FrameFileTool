@@ -33,4 +33,16 @@ public sealed class OperationPreviewItem
     /// 是否有錯誤。為 <see langword="true"/> 時，executor 會略過此項目。
     /// </summary>
     public bool HasError { get; init; }
+
+    /// <summary>
+    /// 原始圖片尺寸字串，格式如「1920×1080」。
+    /// 僅縮放預覽時有值，其他操作留空。
+    /// </summary>
+    public string OriginalDimensions { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 縮放後尺寸字串，格式如「960×540」。
+    /// 僅縮放預覽且來源有讀到尺寸時有值，其他操作留空。
+    /// </summary>
+    public string TargetDimensions { get; init; } = string.Empty;
 }

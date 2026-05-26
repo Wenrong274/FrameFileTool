@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:FrameFileTool.Models"
+        xmlns:converters="clr-namespace:FrameFileTool.Converters"
         Title="影格整理工具"
         Icon="pack://application:,,,/Assets/AppIcon.ico"
         Background="#EEF2F7"
@@ -32,6 +33,9 @@
 
         <!-- ── Converters ──────────────────────────────────────── -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:EnumToBoolConverter       x:Key="EnumToBoolConverter" />
+        <converters:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
+        <converters:ResamplerDisplayNameConverter x:Key="ResamplerDisplayNameConverter" />
 
         <!-- ── Button：ghost（預設，用於選擇資料夾等次要動作）─── -->
         <Style TargetType="Button">
@@ -241,6 +245,36 @@
             <Setter Property="BorderBrush"     Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius"    Value="8" />
+        </Style>
+
+        <!-- ── ProgressBar：縮放進度專用 ────────────────────── -->
+        <Style x:Key="ResizeProgressBar" TargetType="ProgressBar">
+            <Setter Property="Height"     Value="8" />
+            <Setter Property="Margin"     Value="0,0,0,4" />
+            <Setter Property="Background" Value="#E2E8F0" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <Border x:Name="PART_Track" CornerRadius="4">
+                                <Border x:Name="PART_Indicator"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="4"
+                                        HorizontalAlignment="Left" />
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Setter TargetName="PART_Indicator"
+                                        Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- ── Tab：工具切換 ─────────────────────────────────── -->
@@ -495,6 +529,167 @@
                         </StackPanel>
                     </TabItem>
 
+                    <!-- ── 批次縮放 Tab ────────────────────────── -->
+                    <TabItem Header="批次縮放" Margin="0,0,6,1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="14,12">
+
+                                <TextBlock Text="批次縮放"
+                                           Style="{StaticResource SectionTitle}" />
+
+                                <!-- 縮放模式 -->
+                                <TextBlock Text="縮放模式"
+                                           Style="{StaticResource FieldLabel}" />
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,2,0,8">
+                                    <RadioButton Content="百分比"
+                                                 GroupName="ResizeMode"
+                                                 Margin="0,0,14,0"
+                                                 IsChecked="{Binding ResizeMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=Percentage}" />
+                                    <RadioButton Content="絕對尺寸"
+                                                 GroupName="ResizeMode"
+                                                 IsChecked="{Binding ResizeMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=Absolute}" />
+                                </StackPanel>
+
+                                <!-- 百分比模式區塊 -->
+                                <StackPanel Visibility="{Binding ResizeMode,
+                                                Converter={StaticResource EnumToVisibilityConverter},
+                                                ConverterParameter=Percentage}">
+                                    <TextBlock Text="縮放比例（%）"
+                                               Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding ScalePercent, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <!-- 絕對尺寸模式區塊 -->
+                                <StackPanel Visibility="{Binding ResizeMode,
+                                                Converter={StaticResource EnumToVisibilityConverter},
+                                                ConverterParameter=Absolute}">
+                                    <TextBlock Text="目標寬度（px，0 = 等比自動）"
+                                               Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding TargetWidth, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="目標高度（px，0 = 等比自動）"
+                                               Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding TargetHeight, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <CheckBox Content="維持原始比例"
+                                              IsChecked="{Binding KeepAspectRatio}"
+                                              Margin="0,4,0,0" />
+                                </StackPanel>
+
+                                <!-- 輸出位置 -->
+                                <TextBlock Text="輸出位置"
+                                           Style="{StaticResource FieldLabel}" />
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,2,0,4">
+                                    <RadioButton Content="另存子資料夾"
+                                                 GroupName="ResizeOutputMode"
+                                                 Margin="0,0,14,0"
+                                                 IsChecked="{Binding ResizeOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=Subfolder}" />
+                                    <RadioButton Content="覆寫原始"
+                                                 GroupName="ResizeOutputMode"
+                                                 IsChecked="{Binding ResizeOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=Overwrite}" />
+                                </StackPanel>
+
+                                <!-- 子資料夾名稱（覆寫模式時隱藏） -->
+                                <StackPanel Visibility="{Binding ResizeOutputMode,
+                                                Converter={StaticResource EnumToVisibilityConverter},
+                                                ConverterParameter=Subfolder}">
+                                    <TextBlock Text="子資料夾名稱"
+                                               Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding ResizeSubfolderName, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <!-- 覆寫警示 -->
+                                <Border Background="#FEF9C3"
+                                        BorderBrush="#FDE047"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8,6"
+                                        Margin="0,4,0,4"
+                                        Visibility="{Binding ResizeOutputMode,
+                                            Converter={StaticResource EnumToVisibilityConverter},
+                                            ConverterParameter=Overwrite}">
+                                    <TextBlock Text="⚠ 覆寫模式：執行後原始圖片將被取代，無法還原"
+                                               FontSize="11"
+                                               Foreground="#92400E"
+                                               TextWrapping="Wrap" />
+                                </Border>
+
+                                <!-- 縮放演算法 -->
+                                <TextBlock Text="縮放演算法"
+                                           Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding ResamplerOptions}"
+                                          SelectedItem="{Binding SelectedResampler}"
+                                          Margin="0,2,0,2"
+                                          Height="32">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource ResamplerDisplayNameConverter}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Text="{Binding ResamplerHint}"
+                                           Style="{StaticResource HintText}" />
+
+                                <!-- 執行按鈕 -->
+                                <Button Content="預覽縮放"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding PreviewResizeCommand}"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,6,0,6" />
+
+                                <Button Content="執行縮放"
+                                        Style="{StaticResource ExecuteButton}"
+                                        Command="{Binding ExecuteResizeCommand}"
+                                        HorizontalAlignment="Stretch" />
+
+                                <!-- ── 執行進度區塊（執行中才顯示）──── -->
+                                <Border Visibility="{Binding IsResizing, Converter={StaticResource BoolToVis}}"
+                                        Background="#EFF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="0,10,0,0"
+                                        Margin="0,10,0,0">
+                                    <StackPanel>
+
+                                        <!-- 進度條 -->
+                                        <ProgressBar Style="{StaticResource ResizeProgressBar}"
+                                                     Value="{Binding ResizeProgressCurrent}"
+                                                     Maximum="{Binding ResizeProgressTotal}" />
+
+                                        <!-- 目前處理的檔名 -->
+                                        <TextBlock Text="{Binding ResizeProgressText}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,0,8" />
+
+                                        <!-- 取消按鈕 -->
+                                        <Button Content="取消縮放"
+                                                Command="{Binding CancelResizeCommand}"
+                                                HorizontalAlignment="Stretch"
+                                                Height="30"
+                                                FontSize="12"
+                                                Foreground="{StaticResource TextSecondary}"
+                                                Background="White"
+                                                BorderBrush="{StaticResource GhostBorderBrush}"
+                                                BorderThickness="1" />
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
                 </TabControl>
             </Border>
 
@@ -619,6 +814,11 @@
                                                                 <Setter Property="Foreground" Value="#2563EB" />
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Action}"
+                                                                         Value="{x:Static models:OperationAction.Resize}">
+                                                                <Setter Property="Text" Value="⤢" />
+                                                                <Setter Property="Foreground" Value="#7C3AED" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Action}"
                                                                          Value="{x:Static models:OperationAction.Error}">
                                                                 <Setter Property="Text" Value="⚠" />
                                                                 <Setter Property="Foreground" Value="#D97706" />
@@ -647,6 +847,11 @@
                                                                 <DataTrigger Binding="{Binding Action}"
                                                                              Value="{x:Static models:OperationAction.Rename}">
                                                                     <Setter Property="Foreground" Value="#2563EB" />
+                                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Action}"
+                                                                             Value="{x:Static models:OperationAction.Resize}">
+                                                                    <Setter Property="Foreground" Value="#7C3AED" />
                                                                     <Setter Property="FontWeight" Value="SemiBold" />
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Action}"
@@ -683,6 +888,46 @@
                                                                      Value="{x:Static models:OperationAction.Delete}">
                                                             <Setter Property="Foreground" Value="#DC2626" />
                                                             <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 原始尺寸：縮放預覽時顯示來源像素尺寸，其他操作留空 -->
+                            <DataGridTemplateColumn Header="原始尺寸"
+                                                    Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding OriginalDimensions}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   FontSize="12" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 縮放後尺寸：縮放預覽時顯示輸出像素尺寸，其他操作留空 -->
+                            <DataGridTemplateColumn Header="縮放後尺寸"
+                                                    Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding TargetDimensions}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="#7C3AED"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#7C3AED" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TargetDimensions}" Value="">
+                                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                                                            <Setter Property="FontWeight" Value="Normal" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
