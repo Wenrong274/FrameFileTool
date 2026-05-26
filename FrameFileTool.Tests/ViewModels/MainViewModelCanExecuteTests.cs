@@ -1,0 +1,197 @@
+using FluentAssertions;
+using FrameFileTool.Models;
+using FrameFileTool.Services.Interfaces;
+using FrameFileTool.ViewModels;
+using FrameFileTool.ViewModels.Previews;
+using NSubstitute;
+
+namespace FrameFileTool.Tests.ViewModels;
+
+/// <summary>
+/// 測試 MainViewModel 三個執行指令（抽幀刪除、批次改名、批次縮放）的
+/// CanExecute 邏輯，驗證 CurrentPreview 型別判斷與 IsResizing 保護機制。
+/// </summary>
+public sealed class MainViewModelCanExecuteTests
+{
+    // ── 共用工廠 ──────────────────────────────────────────────
+
+    private static MainViewModel CreateSut() => new(
+        Substitute.For<IFileScanner>(),
+        Substitute.For<IFrameDeletePlanner>(),
+        Substitute.For<IRenamePlanner>(),
+        Substitute.For<IFileOperationExecutor>(),
+        Substitute.For<IFolderPickerService>(),
+        Substitute.For<IResizePlanner>(),
+        Substitute.For<IImageResizeExecutor>(),
+        Substitute.For<IImageDimensionReader>());
+
+    // ── 預覽 ViewModel 建立輔助 ───────────────────────────────
+
+    private static FrameDeletePreviewViewModel DeletePreview(bool withError = false) =>
+        new(new List<OperationPreviewItem>
+        {
+            new() { Action = withError ? OperationAction.Error : OperationAction.Delete, HasError = withError },
+        });
+
+    private static RenamePreviewViewModel RenamePreview(bool withError = false) =>
+        new(new List<OperationPreviewItem>
+        {
+            new() { Action = withError ? OperationAction.Error : OperationAction.Rename, HasError = withError },
+        });
+
+    private static ResizePreviewViewModel ResizePreview(bool withError = false) =>
+        new(new List<ResizePreviewItem>
+        {
+            new() { Action = withError ? OperationAction.Error : OperationAction.Resize, HasError = withError },
+        });
+
+    // ════════════════════════════════════════════════════════
+    // ExecuteFrameDelete CanExecute
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ExecuteFrameDelete_預覽為null_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = null;
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteFrameDelete_預覽為改名型別_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteFrameDelete_預覽有錯誤_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview(withError: true);
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteFrameDelete_預覽正確且無錯誤_CanExecute應為true()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteFrameDelete_縮放進行中且預覽正確_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+        sut.IsResizing = true;
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ExecuteRename CanExecute
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ExecuteRename_預覽為null_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = null;
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteRename_預覽為抽幀刪除型別_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteRename_預覽有錯誤_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview(withError: true);
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteRename_預覽正確且無錯誤_CanExecute應為true()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteRename_縮放進行中且預覽正確_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+        sut.IsResizing = true;
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ExecuteResize CanExecute
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ExecuteResize_預覽為null_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = null;
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteResize_預覽為改名型別_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteResize_預覽有錯誤_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview(withError: true);
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ExecuteResize_預覽正確且無錯誤_CanExecute應為true()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview();
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteResize_縮放進行中且預覽正確_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview();
+        sut.IsResizing = true;
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+}
