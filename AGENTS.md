@@ -59,14 +59,38 @@ Views
 ViewModels
   管理 UI 狀態、commands、驗證，以及呼叫 services。
 
+  ViewModels/Previews/
+    每個工具的預覽結果對應一個獨立的 PreviewViewModel，
+    實作 IPreviewViewModel（Summary / HasErrors）。
+    MainViewModel 持有 CurrentPreview: IPreviewViewModel?，
+    MainWindow 的 ContentControl 依型別自動選對應的 DataTemplate。
+
 Services
   負責檔案掃描、操作規劃與實際執行。
 
 Models
   放置 services 與 view models 共用的 immutable 或簡單資料物件。
+  OperationPreviewItem 為所有工具共用的預覽項目基底類別；
+  需要額外欄位的工具（如縮放的尺寸資訊）應建立繼承子類別（如 ResizePreviewItem），
+  不應在基底類別累積工具專屬欄位。
 ```
 
 code-behind 可以初始化相依物件並設定 `DataContext`。code-behind 不應包含檔案操作規則、改名規則或抽幀規則。
+
+### 新增工具的標準流程
+
+每新增一個工具，應依序完成以下項目：
+
+1. **Service 層**：新增 `I*Planner` 介面與 `*Planner` 實作（pure function）。
+   若需要工具專屬的預覽欄位，建立繼承自 `OperationPreviewItem` 的子類別。
+2. **PreviewViewModel**：新增 `ViewModels/Previews/*PreviewViewModel.cs`，
+   實作 `IPreviewViewModel`，持有清單並計算 `Summary` / `HasErrors`。
+3. **MainViewModel**：在對應的 `Preview*()` 方法中建立 PreviewViewModel 並指派給 `CurrentPreview`；
+   新增 `HasExecutable*Preview()` CanExecute 方法。
+4. **MainWindow.xaml**：在 `ContentControl.Resources` 裡加入對應型別的 `DataTemplate`，
+   只需定義該工具需要的欄位，不影響其他工具的 DataTemplate。
+5. **DI 註冊**：在 `App.xaml.cs` 的 `ConfigureServices` 中加入新 service。
+6. **測試**：新增 `*PlannerTests.cs`，涵蓋正常路徑、邊界案例與錯誤路徑。
 
 ## TDD 要求
 
@@ -78,8 +102,10 @@ code-behind 可以初始化相依物件並設定 `DataContext`。code-behind 不
 - 依副檔名過濾檔案。
 - 抽幀刪除規劃。
 - 批次改名規劃。
+- 批次縮放規劃（百分比驗證、絕對尺寸驗證、目標尺寸計算、等比縮放、fit-within-box）。
 - 衝突偵測。
 - 勾選包含子資料夾時，每個資料夾各自計數的行為。
+- ViewModel 的 CanExecute 邏輯（HasExecutable*Preview 依 CurrentPreview 型別判斷）。
 - 邊界案例，例如空資料夾、無效間隔、重複目標檔名、目標檔案已存在。
 
 建議工作流程：
