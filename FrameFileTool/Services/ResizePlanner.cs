@@ -11,7 +11,7 @@ namespace FrameFileTool.Services;
 public sealed class ResizePlanner : IResizePlanner
 {
     /// <inheritdoc/>
-    public IReadOnlyList<OperationPreviewItem> Plan(
+    public IReadOnlyList<ResizePreviewItem> Plan(
         IReadOnlyList<FileItem> files,
         ResizeOptions options)
     {
@@ -31,7 +31,7 @@ public sealed class ResizePlanner : IResizePlanner
                 var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
                 var targetDimensions = BuildTargetDimensions(file, options);
 
-                return new OperationPreviewItem
+                return new ResizePreviewItem
                 {
                     Index = index + 1,
                     FullPath = file.FullPath,
@@ -194,7 +194,7 @@ public sealed class ResizePlanner : IResizePlanner
 
     // ── 輔助：建立錯誤項目 ───────────────────────────────────────
 
-    private static OperationPreviewItem MakeError(FileItem file, int index, string message) =>
+    private static ResizePreviewItem MakeError(FileItem file, int index, string message) =>
         new()
         {
             Index = index,

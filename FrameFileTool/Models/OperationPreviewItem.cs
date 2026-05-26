@@ -4,7 +4,7 @@ namespace FrameFileTool.Models;
 /// 代表單一檔案的操作預覽項目，供 DataGrid 顯示與 executor 執行使用。
 /// 所有屬性為 init-only，建立後不可變更。
 /// </summary>
-public sealed class OperationPreviewItem
+public class OperationPreviewItem
 {
     /// <summary>在預覽清單中的序號（從 1 開始）。</summary>
     public int Index { get; init; }
@@ -33,16 +33,4 @@ public sealed class OperationPreviewItem
     /// 是否有錯誤。為 <see langword="true"/> 時，executor 會略過此項目。
     /// </summary>
     public bool HasError { get; init; }
-
-    /// <summary>
-    /// 原始圖片尺寸字串，格式如「1920×1080」。
-    /// 僅縮放預覽時有值，其他操作留空。
-    /// </summary>
-    public string OriginalDimensions { get; init; } = string.Empty;
-
-    /// <summary>
-    /// 縮放後尺寸字串，格式如「960×540」。
-    /// 僅縮放預覽且來源有讀到尺寸時有值，其他操作留空。
-    /// </summary>
-    public string TargetDimensions { get; init; } = string.Empty;
 }
