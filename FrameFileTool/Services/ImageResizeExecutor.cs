@@ -40,6 +40,43 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         return result;
     }
 
+    /// <inheritdoc/>
+    public async Task<OperationResult> ExecuteAsync(
+        IEnumerable<OperationPreviewItem> previewItems,
+        ResizeOptions options,
+        IProgress<ResizeProgressReport>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new OperationResult();
+
+        var targets = previewItems
+            .Where(item => item.Action == OperationAction.Resize && !item.HasError)
+            .ToList();
+
+        // 在背景執行緒上跑 CPU/IO 密集的縮放迴圈，Progress<T> 會自動 marshal 回 UI 執行緒
+        await Task.Run(() =>
+        {
+            for (var i = 0; i < targets.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var item = targets[i];
+                progress?.Report(new ResizeProgressReport(i + 1, targets.Count, item.OriginalName));
+
+                try
+                {
+                    ProcessItem(item, options, result);
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"{item.OriginalName}: 未預期的錯誤，{ex.Message}");
+                }
+            }
+        }, cancellationToken);
+
+        return result;
+    }
+
     // ── 單一項目處理 ─────────────────────────────────────────────
 
     private static void ProcessItem(

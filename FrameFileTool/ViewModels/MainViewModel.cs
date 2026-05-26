@@ -107,6 +107,34 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasPreviewErrors;
 
+    // ── 縮放執行進度 ─────────────────────────────────────────
+
+    /// <summary>
+    /// 縮放正在執行中。為 true 時禁用所有非取消操作，防止 UI 衝突。
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(BrowseFolderCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ScanFilesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteFrameDeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteRenameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteResizeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelResizeCommand))]
+    private bool _isResizing;
+
+    /// <summary>目前已完成的縮放筆數，供進度條的 Value 繫結。</summary>
+    [ObservableProperty]
+    private int _resizeProgressCurrent;
+
+    /// <summary>本次縮放的總筆數，供進度條的 Maximum 繫結。</summary>
+    [ObservableProperty]
+    private int _resizeProgressTotal = 1;
+
+    /// <summary>進度條下方的文字描述，例如「3 / 10  frame003.png」。</summary>
+    [ObservableProperty]
+    private string _resizeProgressText = string.Empty;
+
+    private CancellationTokenSource? _resizeCts;
+
     /// <summary>
     /// 依選取的演算法顯示對應的使用建議說明，供 UI HintText 繫結。
     /// </summary>
@@ -152,7 +180,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── Commands ──────────────────────────────────────────────
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanBrowseOrScan))]
     private void BrowseFolder()
     {
         var folder = _folderPicker.PickFolder(SelectedFolder);
@@ -166,7 +194,7 @@ public sealed partial class MainViewModel : ObservableObject
         ScanFiles();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanBrowseOrScan))]
     private void ScanFiles()
     {
         Files.Clear();
@@ -286,7 +314,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableResizePreview))]
-    private void ExecuteResize()
+    private async Task ExecuteResize()
     {
         var options = BuildResizeOptions();
 
@@ -295,10 +323,51 @@ public sealed partial class MainViewModel : ObservableObject
             AddLog("⚠ 覆寫模式：原始圖片將被取代，無法還原。");
         }
 
-        var result = _resizeExecutor.Execute(PreviewItems, options);
-        AddLog($"縮放執行完成：成功 {result.SuccessCount} 個檔案。");
-        AddErrors(result);
+        // 拍下執行時的預覽快照，避免背景執行期間 PreviewItems 被修改
+        var snapshot = PreviewItems.ToList();
+        var total = snapshot.Count(item => item.Action == OperationAction.Resize && !item.HasError);
+
+        IsResizing = true;
+        ResizeProgressCurrent = 0;
+        ResizeProgressTotal = total > 0 ? total : 1;
+        ResizeProgressText = $"準備縮放 {total} 個檔案…";
+
+        _resizeCts = new CancellationTokenSource();
+
+        var progress = new Progress<ResizeProgressReport>(report =>
+        {
+            ResizeProgressCurrent = report.Current;
+            ResizeProgressTotal = report.Total;
+            ResizeProgressText = $"{report.Current} / {report.Total}　{report.CurrentFileName}";
+        });
+
+        try
+        {
+            var result = await _resizeExecutor.ExecuteAsync(snapshot, options, progress, _resizeCts.Token);
+            AddLog($"縮放執行完成：成功 {result.SuccessCount} 個檔案。");
+            AddErrors(result);
+        }
+        catch (OperationCanceledException)
+        {
+            AddLog("縮放已由使用者取消。");
+        }
+        finally
+        {
+            IsResizing = false;
+            ResizeProgressCurrent = 0;
+            ResizeProgressText = string.Empty;
+            _resizeCts.Dispose();
+            _resizeCts = null;
+        }
+
         ScanFiles();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanCancelResize))]
+    private void CancelResize()
+    {
+        _resizeCts?.Cancel();
+        AddLog("正在取消縮放…");
     }
 
     [RelayCommand]
@@ -333,16 +402,24 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool HasFiles() => Files.Count > 0;
 
+    /// <summary>縮放執行期間禁止瀏覽資料夾與重新掃描，避免 UI 資料衝突。</summary>
+    private bool CanBrowseOrScan() => !IsResizing;
+
     private bool HasExecutableDeletePreview() =>
+        !IsResizing &&
         PreviewItems.Any(item => item.Action == OperationAction.Delete && !item.HasError);
 
     private bool HasExecutableRenamePreview() =>
+        !IsResizing &&
         PreviewItems.Any(item => item.Action == OperationAction.Rename && !item.HasError) &&
         PreviewItems.All(item => !item.HasError);
 
     private bool HasExecutableResizePreview() =>
+        !IsResizing &&
         PreviewItems.Any(item => item.Action == OperationAction.Resize && !item.HasError) &&
         PreviewItems.All(item => !item.HasError);
+
+    private bool CanCancelResize() => IsResizing;
 
     /// <summary>從 ViewModel 目前的縮放設定建立 ResizeOptions。</summary>
     private ResizeOptions BuildResizeOptions() =>
@@ -368,14 +445,21 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>明確通知所有帶 CanExecute 的 command 重新評估狀態。</summary>
+    /// <summary>
+    /// 明確通知所有帶 CanExecute 的 command 重新評估狀態。
+    /// IsResizing 相關的 command 已由 [NotifyCanExecuteChangedFor] 自動處理，
+    /// 此處補足掃描結果或預覽清單異動後需要重新評估的指令。
+    /// </summary>
     private void RefreshCommands()
     {
+        BrowseFolderCommand.NotifyCanExecuteChanged();
+        ScanFilesCommand.NotifyCanExecuteChanged();
         PreviewFrameDeleteCommand.NotifyCanExecuteChanged();
         ExecuteFrameDeleteCommand.NotifyCanExecuteChanged();
         PreviewRenameCommand.NotifyCanExecuteChanged();
         ExecuteRenameCommand.NotifyCanExecuteChanged();
         PreviewResizeCommand.NotifyCanExecuteChanged();
         ExecuteResizeCommand.NotifyCanExecuteChanged();
+        CancelResizeCommand.NotifyCanExecuteChanged();
     }
 }

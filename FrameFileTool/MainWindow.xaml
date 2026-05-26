@@ -247,6 +247,36 @@
             <Setter Property="CornerRadius"    Value="8" />
         </Style>
 
+        <!-- ── ProgressBar：縮放進度專用 ────────────────────── -->
+        <Style x:Key="ResizeProgressBar" TargetType="ProgressBar">
+            <Setter Property="Height"     Value="8" />
+            <Setter Property="Margin"     Value="0,0,0,4" />
+            <Setter Property="Background" Value="#E2E8F0" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <Border x:Name="PART_Track" CornerRadius="4">
+                                <Border x:Name="PART_Indicator"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="4"
+                                        HorizontalAlignment="Left" />
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Setter TargetName="PART_Indicator"
+                                        Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ── Tab：工具切換 ─────────────────────────────────── -->
         <Style TargetType="TabControl">
             <Setter Property="Background" Value="Transparent" />
@@ -621,6 +651,40 @@
                                         Style="{StaticResource ExecuteButton}"
                                         Command="{Binding ExecuteResizeCommand}"
                                         HorizontalAlignment="Stretch" />
+
+                                <!-- ── 執行進度區塊（執行中才顯示）──── -->
+                                <Border Visibility="{Binding IsResizing, Converter={StaticResource BoolToVis}}"
+                                        Background="#EFF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="0,10,0,0"
+                                        Margin="0,10,0,0">
+                                    <StackPanel>
+
+                                        <!-- 進度條 -->
+                                        <ProgressBar Style="{StaticResource ResizeProgressBar}"
+                                                     Value="{Binding ResizeProgressCurrent}"
+                                                     Maximum="{Binding ResizeProgressTotal}" />
+
+                                        <!-- 目前處理的檔名 -->
+                                        <TextBlock Text="{Binding ResizeProgressText}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,0,8" />
+
+                                        <!-- 取消按鈕 -->
+                                        <Button Content="取消縮放"
+                                                Command="{Binding CancelResizeCommand}"
+                                                HorizontalAlignment="Stretch"
+                                                Height="30"
+                                                FontSize="12"
+                                                Foreground="{StaticResource TextSecondary}"
+                                                Background="White"
+                                                BorderBrush="{StaticResource GhostBorderBrush}"
+                                                BorderThickness="1" />
+                                    </StackPanel>
+                                </Border>
 
                             </StackPanel>
                         </ScrollViewer>
