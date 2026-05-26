@@ -196,6 +196,47 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     // ════════════════════════════════════════════════════════
+    // Preview CanExecute
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void PreviewCommands_縮放進行中且有檔案_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        sut.IsResizing = true;
+
+        sut.PreviewFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewRenameCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void PreviewCommands_準備預覽中且有檔案_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        sut.IsPreparingPreview = true;
+
+        sut.PreviewFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewRenameCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void PreviewSummary_準備預覽中_應顯示忙碌文字()
+    {
+        var sut = CreateSut();
+
+        sut.PreviewBusyText = "正在讀取圖片尺寸…";
+        sut.IsPreparingPreview = true;
+
+        sut.PreviewSummary.Should().Be("正在讀取圖片尺寸…");
+    }
+
+    // ════════════════════════════════════════════════════════
     // Preview invalidation
     // ════════════════════════════════════════════════════════
 
@@ -245,5 +286,17 @@ public sealed class MainViewModelCanExecuteTests
 
         sut.CurrentPreview.Should().BeNull();
         sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void SelectedToolIndex_變更後_應清除既有預覽並停用執行()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+
+        sut.SelectedToolIndex = 1;
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
     }
 }
