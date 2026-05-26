@@ -11,6 +11,9 @@ public sealed class ResizePlannerTests
     private static FileItem MakeFile(string name, string folder = @"C:\imgs") =>
         new(Path.Combine(folder, name), folder, name, Path.GetExtension(name), 0);
 
+    private static FileItem MakeFileWithDimensions(string name, int width, int height, string folder = @"C:\imgs") =>
+        new(Path.Combine(folder, name), folder, name, Path.GetExtension(name), 0, width, height);
+
     private static ResizeOptions Percentage(
         int percent,
         ResizeOutputMode output = ResizeOutputMode.Subfolder,
@@ -264,5 +267,97 @@ public sealed class ResizePlannerTests
 
         result[0].FullPath.Should().Be(@"C:\imgs\a.png");
         result[0].OriginalName.Should().Be("a.png");
+    }
+
+    // ── 尺寸欄位 ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Plan_來源無尺寸資訊_OriginalDimensions與TargetDimensions應為空字串()
+    {
+        var files = new[] { MakeFile("a.png") }; // Width=0, Height=0
+
+        var result = _sut.Plan(files, Percentage(50));
+
+        result[0].OriginalDimensions.Should().BeEmpty();
+        result[0].TargetDimensions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Plan_百分比50且來源1920x1080_TargetDimensions應為960x540()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        var result = _sut.Plan(files, Percentage(50));
+
+        result[0].OriginalDimensions.Should().Be("1920×1080");
+        result[0].TargetDimensions.Should().Be("960×540");
+    }
+
+    [Fact]
+    public void Plan_百分比200且來源800x600_TargetDimensions應為1600x1200()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 800, 600) };
+
+        var result = _sut.Plan(files, Percentage(200));
+
+        result[0].OriginalDimensions.Should().Be("800×600");
+        result[0].TargetDimensions.Should().Be("1600×1200");
+    }
+
+    [Fact]
+    public void Plan_絕對模式不維持比例且來源1920x1080_TargetDimensions應為指定值()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        var result = _sut.Plan(files, Absolute(800, 600, keepAspect: false));
+
+        result[0].TargetDimensions.Should().Be("800×600");
+    }
+
+    [Fact]
+    public void Plan_絕對模式維持比例只指定寬度_TargetDimensions應依比例計算高度()
+    {
+        // 原始 1920×1080（16:9），指定寬 960 → 高應為 540
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        var result = _sut.Plan(files, Absolute(960, 0, keepAspect: true));
+
+        result[0].TargetDimensions.Should().Be("960×540");
+    }
+
+    [Fact]
+    public void Plan_絕對模式維持比例只指定高度_TargetDimensions應依比例計算寬度()
+    {
+        // 原始 1920×1080（16:9），指定高 540 → 寬應為 960
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        var result = _sut.Plan(files, Absolute(0, 540, keepAspect: true));
+
+        result[0].TargetDimensions.Should().Be("960×540");
+    }
+
+    [Fact]
+    public void Plan_絕對模式維持比例兩邊均指定_TargetDimensions應fit在框內()
+    {
+        // 原始 1920×1080（16:9），框 800×800 → scale = min(800/1920, 800/1080)
+        // = min(0.4167, 0.7407) = 0.4167 → 800×450
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        var result = _sut.Plan(files, Absolute(800, 800, keepAspect: true));
+
+        result[0].TargetDimensions.Should().Be("800×450");
+    }
+
+    [Fact]
+    public void Plan_有錯誤的項目_OriginalDimensions與TargetDimensions均應為空字串()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
+
+        // 百分比為 0 → 全部標記為錯誤
+        var result = _sut.Plan(files, Percentage(0));
+
+        result[0].HasError.Should().BeTrue();
+        result[0].OriginalDimensions.Should().BeEmpty();
+        result[0].TargetDimensions.Should().BeEmpty();
     }
 }

@@ -28,6 +28,7 @@ public partial class App : WpfApplication
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
         services.AddSingleton<IResizePlanner, ResizePlanner>();
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
+        services.AddSingleton<IImageDimensionReader, ImageDimensionReader>();
 
         // ViewModels
         services.AddSingleton<MainViewModel>();

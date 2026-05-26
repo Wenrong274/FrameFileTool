@@ -10,4 +10,6 @@ public sealed record FileItem(
     string DirectoryPath,
     string Name,
     string Extension,
-    long SizeBytes);
+    long SizeBytes,
+    int Width = 0,
+    int Height = 0);

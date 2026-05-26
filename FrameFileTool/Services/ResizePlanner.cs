@@ -28,6 +28,8 @@ public sealed class ResizePlanner : IResizePlanner
 
                 var targetName = BuildTargetName(file.Name, options);
                 var status = BuildStatus(options);
+                var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
+                var targetDimensions = BuildTargetDimensions(file, options);
 
                 return new OperationPreviewItem
                 {
@@ -38,6 +40,8 @@ public sealed class ResizePlanner : IResizePlanner
                     TargetName = targetName,
                     Status = status,
                     HasError = false,
+                    OriginalDimensions = originalDimensions,
+                    TargetDimensions = targetDimensions,
                 };
             })
             .ToList();
@@ -124,6 +128,59 @@ public sealed class ResizePlanner : IResizePlanner
             (false, true) => $"高 {options.TargetHeight}px（等比）",
             _ => "未指定尺寸",
         };
+    }
+
+    // ── 目標尺寸計算 ─────────────────────────────────────────────
+
+    /// <summary>
+    /// 依縮放設定與來源圖片尺寸計算預期輸出尺寸字串。
+    /// 若來源尺寸未知（Width/Height == 0）則回傳空字串。
+    /// </summary>
+    private static string BuildTargetDimensions(FileItem file, ResizeOptions options)
+    {
+        var w = file.Width;
+        var h = file.Height;
+
+        if (w <= 0 || h <= 0)
+            return string.Empty;
+
+        int tw, th;
+
+        if (options.Mode == ResizeMode.Percentage)
+        {
+            tw = Math.Max(1, (int)Math.Round(w * options.ScalePercent / 100.0));
+            th = Math.Max(1, (int)Math.Round(h * options.ScalePercent / 100.0));
+        }
+        else
+        {
+            var hasW = options.TargetWidth > 0;
+            var hasH = options.TargetHeight > 0;
+
+            if (!options.KeepAspectRatio)
+            {
+                tw = options.TargetWidth;
+                th = options.TargetHeight;
+            }
+            else if (hasW && !hasH)
+            {
+                tw = options.TargetWidth;
+                th = Math.Max(1, (int)Math.Round(h * (double)options.TargetWidth / w));
+            }
+            else if (!hasW && hasH)
+            {
+                th = options.TargetHeight;
+                tw = Math.Max(1, (int)Math.Round(w * (double)options.TargetHeight / h));
+            }
+            else
+            {
+                // 兩邊都有指定，維持比例置入框內（fit within box）
+                var scale = Math.Min((double)options.TargetWidth / w, (double)options.TargetHeight / h);
+                tw = Math.Max(1, (int)Math.Round(w * scale));
+                th = Math.Max(1, (int)Math.Round(h * scale));
+            }
+        }
+
+        return $"{tw}×{th}";
     }
 
     private static string ResamplerDescription(ResamplerType resampler) => resampler switch

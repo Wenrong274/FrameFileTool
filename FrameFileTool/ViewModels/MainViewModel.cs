@@ -20,6 +20,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IFolderPickerService _folderPicker;
     private readonly IResizePlanner _resizePlanner;
     private readonly IImageResizeExecutor _resizeExecutor;
+    private readonly IImageDimensionReader _dimensionReader;
 
     // ── 掃描選項 ──────────────────────────────────────────────
 
@@ -154,7 +155,8 @@ public sealed partial class MainViewModel : ObservableObject
         IFileOperationExecutor executor,
         IFolderPickerService folderPicker,
         IResizePlanner resizePlanner,
-        IImageResizeExecutor resizeExecutor)
+        IImageResizeExecutor resizeExecutor,
+        IImageDimensionReader dimensionReader)
     {
         _scanner = scanner;
         _frameDeletePlanner = frameDeletePlanner;
@@ -163,6 +165,7 @@ public sealed partial class MainViewModel : ObservableObject
         _folderPicker = folderPicker;
         _resizePlanner = resizePlanner;
         _resizeExecutor = resizeExecutor;
+        _dimensionReader = dimensionReader;
     }
 
     /// <summary>掃描結果檔案清單，繫結到 DataGrid。</summary>
@@ -287,12 +290,32 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(HasFiles))]
-    private void PreviewResize()
+    private async Task PreviewResize()
     {
         PreviewItems.Clear();
 
         var options = BuildResizeOptions();
-        var preview = _resizePlanner.Plan(Files.ToList(), options);
+        var files = Files.ToList();
+
+        // 在背景執行緒讀取圖片標頭尺寸，避免 UI 凍結
+        // MagickImageInfo 只讀標頭，不解碼像素，速度接近純 I/O
+        var enrichedFiles = await Task.Run(() =>
+            files.Select(f =>
+            {
+                try
+                {
+                    var (w, h) = _dimensionReader.Read(f.FullPath);
+                    return f with { Width = w, Height = h };
+                }
+                catch
+                {
+                    // 讀取失敗（檔案不存在或格式不支援）保持 Width=0, Height=0
+                    return f;
+                }
+            }).ToList()
+        );
+
+        var preview = _resizePlanner.Plan(enrichedFiles, options);
 
         foreach (var item in preview)
         {

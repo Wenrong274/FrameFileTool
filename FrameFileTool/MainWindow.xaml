@@ -814,6 +814,11 @@
                                                                 <Setter Property="Foreground" Value="#2563EB" />
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Action}"
+                                                                         Value="{x:Static models:OperationAction.Resize}">
+                                                                <Setter Property="Text" Value="⤢" />
+                                                                <Setter Property="Foreground" Value="#7C3AED" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Action}"
                                                                          Value="{x:Static models:OperationAction.Error}">
                                                                 <Setter Property="Text" Value="⚠" />
                                                                 <Setter Property="Foreground" Value="#D97706" />
@@ -842,6 +847,11 @@
                                                                 <DataTrigger Binding="{Binding Action}"
                                                                              Value="{x:Static models:OperationAction.Rename}">
                                                                     <Setter Property="Foreground" Value="#2563EB" />
+                                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Action}"
+                                                                             Value="{x:Static models:OperationAction.Resize}">
+                                                                    <Setter Property="Foreground" Value="#7C3AED" />
                                                                     <Setter Property="FontWeight" Value="SemiBold" />
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Action}"
@@ -878,6 +888,46 @@
                                                                      Value="{x:Static models:OperationAction.Delete}">
                                                             <Setter Property="Foreground" Value="#DC2626" />
                                                             <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 原始尺寸：縮放預覽時顯示來源像素尺寸，其他操作留空 -->
+                            <DataGridTemplateColumn Header="原始尺寸"
+                                                    Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding OriginalDimensions}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   FontSize="12" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 縮放後尺寸：縮放預覽時顯示輸出像素尺寸，其他操作留空 -->
+                            <DataGridTemplateColumn Header="縮放後尺寸"
+                                                    Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding TargetDimensions}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="#7C3AED"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#7C3AED" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TargetDimensions}" Value="">
+                                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                                                            <Setter Property="FontWeight" Value="Normal" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
