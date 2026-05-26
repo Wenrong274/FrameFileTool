@@ -1,7 +1,7 @@
 # 影格整理工具（FrameFileTool）
 
 影格整理工具（FrameFileTool）是一個 Windows WPF 桌面工具，
-用於處理序列圖檔的抽幀刪除與批次改名。
+用於處理序列圖檔的抽幀刪除、批次改名與批次縮放。
 
 ## 功能
 
@@ -10,6 +10,8 @@
 - 自然排序檔名，例如 `1.png, 2.png, 10.png`
 - 抽幀：每 N 張刪除 1 張
 - 批次改名：例如 `A.png, B.png, C.png` 改成 `F_0.png, F_1.png, F_2.png`
+- 批次縮放：支援百分比、絕對尺寸、等比縮放與置入指定範圍
+- 縮放輸出可選擇覆寫原檔或輸出到子資料夾
 - 所有操作都必須先預覽再執行
 - 抽幀刪除預設移到回收桶
 - 改名使用暫存檔名中轉，降低撞名風險
@@ -77,4 +79,5 @@ dotnet publish .\FrameFileTool\FrameFileTool.csproj `
 本專案的開發規範、架構說明、套件清單與 commit 規則，請見：
 
 - [AGENTS.md](AGENTS.md) — 開發規範總覽（唯一依據）
+- [UI_UX_DESIGN_RULES.md](UI_UX_DESIGN_RULES.md) — UI/UX 設計規則
 - [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md) — Commit message 格式與範例
