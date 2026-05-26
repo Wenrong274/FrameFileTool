@@ -15,6 +15,9 @@ public static class OperationAction
     /// <summary>批次改名。</summary>
     public const string Rename = "改名";
 
+    /// <summary>批次縮放尺寸。</summary>
+    public const string Resize = "縮放";
+
     /// <summary>參數或計畫本身有誤，無法執行。</summary>
     public const string Error = "錯誤";
 }
