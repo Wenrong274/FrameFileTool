@@ -140,6 +140,10 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>掃描結果檔案清單，繫結到 DataGrid。</summary>
     public ObservableCollection<FileItem> Files { get; } = [];
 
+    /// <summary>縮放演算法選項清單，供 ComboBox 繫結。</summary>
+    public IReadOnlyList<ResamplerType> ResamplerOptions { get; } =
+        Enum.GetValues<ResamplerType>().ToList();
+
     /// <summary>操作預覽清單，繫結到預覽 DataGrid。</summary>
     public ObservableCollection<OperationPreviewItem> PreviewItems { get; } = [];
 
