@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:FrameFileTool.Models"
         xmlns:converters="clr-namespace:FrameFileTool.Converters"
+        xmlns:previews="clr-namespace:FrameFileTool.ViewModels.Previews"
         Title="影格整理工具"
         Icon="pack://application:,,,/Assets/AppIcon.ico"
         Background="#EEF2F7"
@@ -750,195 +751,292 @@
                     </TextBlock>
                 </Border>
 
-                <!-- 預覽表格 -->
+                <!-- 預覽表格：ContentControl 依 CurrentPreview 型別自動選擇 DataTemplate -->
                 <Border Grid.Row="1"
                         Style="{StaticResource Card}"
                         ClipToBounds="True"
                         Padding="0">
-                    <DataGrid ItemsSource="{Binding PreviewItems}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column"
-                              SelectionMode="Single"
-                              BorderThickness="0"
-                              RowBackground="White"
-                              ColumnHeaderStyle="{StaticResource TableColumnHeader}">
+                    <ContentControl Content="{Binding CurrentPreview}">
+                        <ContentControl.Resources>
 
-                        <!-- 有錯誤的列：淡紅底 -->
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="ToolTip" Value="{Binding Status}" />
-                                <Setter Property="ToolTipService.IsEnabled" Value="False" />
+                            <!-- 共用 DataGrid 樣式 -->
+                            <Style x:Key="PreviewDataGrid" TargetType="DataGrid"
+                                   BasedOn="{StaticResource {x:Type DataGrid}}">
+                                <Setter Property="AutoGenerateColumns"  Value="False" />
+                                <Setter Property="IsReadOnly"           Value="True" />
+                                <Setter Property="CanUserAddRows"       Value="False" />
+                                <Setter Property="CanUserDeleteRows"    Value="False" />
+                                <Setter Property="GridLinesVisibility"  Value="Horizontal" />
+                                <Setter Property="HeadersVisibility"    Value="Column" />
+                                <Setter Property="SelectionMode"        Value="Single" />
+                                <Setter Property="BorderThickness"      Value="0" />
+                                <Setter Property="RowBackground"        Value="White" />
+                                <Setter Property="ColumnHeaderStyle"    Value="{StaticResource TableColumnHeader}" />
+                            </Style>
+
+                            <!-- 共用 DataGridRow Style（有錯誤列淡紅底） -->
+                            <Style x:Key="PreviewRowStyle" TargetType="DataGridRow">
+                                <Setter Property="ToolTip"                   Value="{Binding Status}" />
+                                <Setter Property="ToolTipService.IsEnabled"  Value="False" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HasError}" Value="True">
-                                        <Setter Property="Background" Value="#FEF2F2" />
-                                        <Setter Property="ToolTipService.IsEnabled" Value="True" />
+                                        <Setter Property="Background"                Value="#FEF2F2" />
+                                        <Setter Property="ToolTipService.IsEnabled"  Value="True" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </DataGrid.RowStyle>
 
-                        <DataGrid.Columns>
+                            <!-- ── 抽幀刪除 DataTemplate：# | 原始檔名/行為 | 目標 ── -->
+                            <DataTemplate DataType="{x:Type previews:FrameDeletePreviewViewModel}">
+                                <DataGrid ItemsSource="{Binding Items}"
+                                          Style="{StaticResource PreviewDataGrid}"
+                                          RowStyle="{StaticResource PreviewRowStyle}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="48" />
+                                        <DataGridTemplateColumn Header="原始檔名 / 行為" Width="3*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel LastChildFill="True">
+                                                        <TextBlock DockPanel.Dock="Left" Width="26"
+                                                                   FontFamily="Segoe UI Emoji" FontSize="15"
+                                                                   VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text"      Value="－" />
+                                                                    <Setter Property="Foreground" Value="#94A3B8" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                                                            <Setter Property="Text"      Value="❌" />
+                                                                            <Setter Property="Foreground" Value="#DC2626" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                            <Setter Property="Text"      Value="⚠" />
+                                                                            <Setter Property="Foreground" Value="#D97706" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding OriginalName}"
+                                                                       Foreground="{StaticResource TextPrimary}"
+                                                                       FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding Action}" FontSize="11" Margin="0,2,0,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                                                                <Setter Property="Foreground" Value="#DC2626" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                                <Setter Property="Foreground" Value="#D97706" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="目標" Width="2*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text"      Value="{Binding TargetName}" />
+                                                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Keep}">
+                                                                        <Setter Property="Text"      Value="不變更" />
+                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                                                        <Setter Property="Foreground" Value="#DC2626" />
+                                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DataTemplate>
 
-                            <DataGridTextColumn Header="#"
-                                                Binding="{Binding Index}"
-                                                Width="48" />
+                            <!-- ── 批次改名 DataTemplate：# | 原始檔名/行為 | 目標 ── -->
+                            <DataTemplate DataType="{x:Type previews:RenamePreviewViewModel}">
+                                <DataGrid ItemsSource="{Binding Items}"
+                                          Style="{StaticResource PreviewDataGrid}"
+                                          RowStyle="{StaticResource PreviewRowStyle}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="48" />
+                                        <DataGridTemplateColumn Header="原始檔名 / 行為" Width="3*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel LastChildFill="True">
+                                                        <TextBlock DockPanel.Dock="Left" Width="26"
+                                                                   FontFamily="Segoe UI Emoji" FontSize="15"
+                                                                   VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text"      Value="－" />
+                                                                    <Setter Property="Foreground" Value="#94A3B8" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Rename}">
+                                                                            <Setter Property="Text"      Value="✨" />
+                                                                            <Setter Property="Foreground" Value="#2563EB" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                            <Setter Property="Text"      Value="⚠" />
+                                                                            <Setter Property="Foreground" Value="#D97706" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding OriginalName}"
+                                                                       Foreground="{StaticResource TextPrimary}"
+                                                                       FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding Action}" FontSize="11" Margin="0,2,0,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Rename}">
+                                                                                <Setter Property="Foreground" Value="#2563EB" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                                <Setter Property="Foreground" Value="#D97706" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="目標" Width="2*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding TargetName}"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{StaticResource TextPrimary}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DataTemplate>
 
-                            <!-- 原始檔名與動作合併：保留順序欄，讓動作成為掃描時第一眼可見的訊號。 -->
-                            <DataGridTemplateColumn Header="原始檔名 / 行為"
-                                                    Width="3*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <DockPanel LastChildFill="True">
-                                            <TextBlock DockPanel.Dock="Left"
-                                                       Width="26"
-                                                       FontFamily="Segoe UI Emoji"
-                                                       FontSize="15"
-                                                       VerticalAlignment="Center">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="－" />
-                                                        <Setter Property="Foreground" Value="#94A3B8" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Action}"
-                                                                         Value="{x:Static models:OperationAction.Delete}">
-                                                                <Setter Property="Text" Value="❌" />
-                                                                <Setter Property="Foreground" Value="#DC2626" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Action}"
-                                                                         Value="{x:Static models:OperationAction.Rename}">
-                                                                <Setter Property="Text" Value="✨" />
-                                                                <Setter Property="Foreground" Value="#2563EB" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Action}"
-                                                                         Value="{x:Static models:OperationAction.Resize}">
-                                                                <Setter Property="Text" Value="⤢" />
+                            <!-- ── 批次縮放 DataTemplate：# | 原始檔名/行為 | 目標 | 原始尺寸 | 縮放後尺寸 ── -->
+                            <DataTemplate DataType="{x:Type previews:ResizePreviewViewModel}">
+                                <DataGrid ItemsSource="{Binding Items}"
+                                          Style="{StaticResource PreviewDataGrid}"
+                                          RowStyle="{StaticResource PreviewRowStyle}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="48" />
+                                        <DataGridTemplateColumn Header="原始檔名 / 行為" Width="3*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel LastChildFill="True">
+                                                        <TextBlock DockPanel.Dock="Left" Width="26"
+                                                                   FontFamily="Segoe UI Emoji" FontSize="15"
+                                                                   VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text"      Value="－" />
+                                                                    <Setter Property="Foreground" Value="#94A3B8" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Resize}">
+                                                                            <Setter Property="Text"      Value="⤢" />
+                                                                            <Setter Property="Foreground" Value="#7C3AED" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                            <Setter Property="Text"      Value="⚠" />
+                                                                            <Setter Property="Foreground" Value="#D97706" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding OriginalName}"
+                                                                       Foreground="{StaticResource TextPrimary}"
+                                                                       FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding Action}" FontSize="11" Margin="0,2,0,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Resize}">
+                                                                                <Setter Property="Foreground" Value="#7C3AED" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                                                <Setter Property="Foreground" Value="#D97706" />
+                                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="目標" Width="2*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding TargetName}"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{StaticResource TextPrimary}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="原始尺寸"
+                                                            Binding="{Binding OriginalDimensions}"
+                                                            Width="110" />
+                                        <DataGridTemplateColumn Header="縮放後尺寸" Width="110">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding TargetDimensions}"
+                                                               VerticalAlignment="Center" FontSize="12">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
                                                                 <Setter Property="Foreground" Value="#7C3AED" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Action}"
-                                                                         Value="{x:Static models:OperationAction.Error}">
-                                                                <Setter Property="Text" Value="⚠" />
-                                                                <Setter Property="Foreground" Value="#D97706" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding TargetDimensions}" Value="">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DataTemplate>
 
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding OriginalName}"
-                                                           Foreground="{StaticResource TextPrimary}"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Action}"
-                                                           FontSize="11"
-                                                           Margin="0,2,0,0">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#94A3B8" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Action}"
-                                                                             Value="{x:Static models:OperationAction.Delete}">
-                                                                    <Setter Property="Foreground" Value="#DC2626" />
-                                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Action}"
-                                                                             Value="{x:Static models:OperationAction.Rename}">
-                                                                    <Setter Property="Foreground" Value="#2563EB" />
-                                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Action}"
-                                                                             Value="{x:Static models:OperationAction.Resize}">
-                                                                    <Setter Property="Foreground" Value="#7C3AED" />
-                                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Action}"
-                                                                             Value="{x:Static models:OperationAction.Error}">
-                                                                    <Setter Property="Foreground" Value="#D97706" />
-                                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTemplateColumn Header="目標"
-                                                    Width="2*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="{Binding TargetName}" />
-                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Action}"
-                                                                     Value="{x:Static models:OperationAction.Keep}">
-                                                            <Setter Property="Text" Value="不變更" />
-                                                            <Setter Property="Foreground" Value="#94A3B8" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Action}"
-                                                                     Value="{x:Static models:OperationAction.Delete}">
-                                                            <Setter Property="Foreground" Value="#DC2626" />
-                                                            <Setter Property="FontWeight" Value="SemiBold" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- 原始尺寸：縮放預覽時顯示來源像素尺寸，其他操作留空 -->
-                            <DataGridTemplateColumn Header="原始尺寸"
-                                                    Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding OriginalDimensions}"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{StaticResource TextSecondary}"
-                                                   FontSize="12" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- 縮放後尺寸：縮放預覽時顯示輸出像素尺寸，其他操作留空 -->
-                            <DataGridTemplateColumn Header="縮放後尺寸"
-                                                    Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding TargetDimensions}"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="#7C3AED"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                    <Setter Property="Foreground" Value="#7C3AED" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding TargetDimensions}" Value="">
-                                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
-                                                            <Setter Property="FontWeight" Value="Normal" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        </ContentControl.Resources>
+                    </ContentControl>
                 </Border>
             </Grid>
         </Grid>

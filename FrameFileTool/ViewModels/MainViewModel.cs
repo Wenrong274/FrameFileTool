@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FrameFileTool.Models;
 using FrameFileTool.Services.Interfaces;
+using FrameFileTool.ViewModels.Previews;
 
 namespace FrameFileTool.ViewModels;
 
@@ -96,17 +97,27 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _fileSummary = "尚未掃描";
 
-    /// <summary>預覽摘要，顯示於預覽表格上方，說明計畫筆數與錯誤數。</summary>
+    /// <summary>
+    /// 當前預覽結果 ViewModel。null 代表尚未產生預覽。
+    /// ContentControl 依此屬性的實際型別自動選擇對應的 DataTemplate。
+    /// </summary>
     [ObservableProperty]
-    private string _previewSummary = "預覽修改";
+    [NotifyPropertyChangedFor(nameof(HasPreview))]
+    [NotifyPropertyChangedFor(nameof(HasPreviewErrors))]
+    [NotifyPropertyChangedFor(nameof(PreviewSummary))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteFrameDeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteRenameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteResizeCommand))]
+    private IPreviewViewModel? _currentPreview;
 
-    /// <summary>是否已產生預覽（true 代表預覽摘要列應顯示顏色狀態）。</summary>
-    [ObservableProperty]
-    private bool _hasPreview;
+    /// <summary>是否已產生預覽，供摘要列顏色狀態判斷。</summary>
+    public bool HasPreview => CurrentPreview != null;
 
     /// <summary>當前預覽是否含有錯誤項目，供摘要列切換紅色警示。</summary>
-    [ObservableProperty]
-    private bool _hasPreviewErrors;
+    public bool HasPreviewErrors => CurrentPreview?.HasErrors ?? false;
+
+    /// <summary>顯示於預覽摘要列的說明文字。</summary>
+    public string PreviewSummary => CurrentPreview?.Summary ?? "選擇操作並點擊預覽";
 
     // ── 縮放執行進度 ─────────────────────────────────────────
 
@@ -168,15 +179,12 @@ public sealed partial class MainViewModel : ObservableObject
         _dimensionReader = dimensionReader;
     }
 
-    /// <summary>掃描結果檔案清單，繫結到 DataGrid。</summary>
+    /// <summary>掃描結果檔案清單，繫結到掃描結果區塊。</summary>
     public ObservableCollection<FileItem> Files { get; } = [];
 
     /// <summary>縮放演算法選項清單，供 ComboBox 繫結。</summary>
     public IReadOnlyList<ResamplerType> ResamplerOptions { get; } =
         Enum.GetValues<ResamplerType>().ToList();
-
-    /// <summary>操作預覽清單，繫結到預覽 DataGrid。</summary>
-    public ObservableCollection<OperationPreviewItem> PreviewItems { get; } = [];
 
     /// <summary>操作 log，最新訊息在最上方。</summary>
     public ObservableCollection<string> Logs { get; } = [];
@@ -201,10 +209,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void ScanFiles()
     {
         Files.Clear();
-        PreviewItems.Clear();
-        PreviewSummary = "選擇操作並點擊預覽";
-        HasPreview = false;
-        HasPreviewErrors = false;
+        CurrentPreview = null;
 
         var extensions = GetSelectedExtensions();
         var files = _scanner.Scan(SelectedFolder, extensions, IncludeSubfolders);
@@ -222,32 +227,22 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasFiles))]
     private void PreviewFrameDelete()
     {
-        PreviewItems.Clear();
+        var items = _frameDeletePlanner.Plan(Files.ToList(), FrameDeleteInterval);
+        var vm = new FrameDeletePreviewViewModel(items);
 
-        var preview = _frameDeletePlanner.Plan(Files.ToList(), FrameDeleteInterval);
-        foreach (var item in preview)
-        {
-            PreviewItems.Add(item);
-        }
+        CurrentPreview = vm;
 
-        var deleteCount = PreviewItems.Count(item =>
-            item.Action == OperationAction.Delete && !item.HasError);
-        var errorCount = PreviewItems.Count(item => item.HasError);
-
-        HasPreview = true;
-        HasPreviewErrors = errorCount > 0;
-        PreviewSummary = errorCount > 0
-            ? $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個，{errorCount} 個錯誤"
-            : $"共 {PreviewItems.Count} 個項目，預計刪除 {deleteCount} 個";
-
-        AddLog($"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {deleteCount} 個檔案。");
+        AddLog($"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {items.Count(i => i.Action == OperationAction.Delete && !i.HasError)} 個檔案。");
         RefreshCommands();
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableDeletePreview))]
     private void ExecuteFrameDelete()
     {
-        var result = _executor.DeleteToRecycleBin(PreviewItems);
+        if (CurrentPreview is not FrameDeletePreviewViewModel vm)
+            return;
+
+        var result = _executor.DeleteToRecycleBin(vm.Items);
         AddLog($"抽幀執行完成：已移到回收桶 {result.SuccessCount} 個檔案。");
         AddErrors(result);
         ScanFiles();
@@ -256,34 +251,23 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasFiles))]
     private void PreviewRename()
     {
-        PreviewItems.Clear();
-
-        var preview = _renamePlanner.Plan(
+        var items = _renamePlanner.Plan(
             Files.ToList(), RenamePrefix, RenameStartIndex, RenamePadding);
+        var vm = new RenamePreviewViewModel(items);
 
-        foreach (var item in preview)
-        {
-            PreviewItems.Add(item);
-        }
+        CurrentPreview = vm;
 
-        var renameCount = PreviewItems.Count(item =>
-            item.Action == OperationAction.Rename && !item.HasError);
-        var errorCount = PreviewItems.Count(item => item.HasError);
-
-        HasPreview = true;
-        HasPreviewErrors = errorCount > 0;
-        PreviewSummary = errorCount > 0
-            ? $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個，{errorCount} 個錯誤（執行已停用）"
-            : $"共 {PreviewItems.Count} 個項目，預計改名 {renameCount} 個";
-
-        AddLog($"改名預覽完成：預計改名 {renameCount} 個檔案，錯誤 {errorCount} 個。");
+        AddLog($"改名預覽完成：預計改名 {items.Count(i => i.Action == OperationAction.Rename && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
         RefreshCommands();
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableRenamePreview))]
     private void ExecuteRename()
     {
-        var result = _executor.RenameFiles(PreviewItems);
+        if (CurrentPreview is not RenamePreviewViewModel vm)
+            return;
+
+        var result = _executor.RenameFiles(vm.Items);
         AddLog($"改名執行完成：成功 {result.SuccessCount} 個檔案。");
         AddErrors(result);
         ScanFiles();
@@ -292,13 +276,10 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasFiles))]
     private async Task PreviewResize()
     {
-        PreviewItems.Clear();
-
         var options = BuildResizeOptions();
         var files = Files.ToList();
 
         // 在背景執行緒讀取圖片標頭尺寸，避免 UI 凍結
-        // MagickImageInfo 只讀標頭，不解碼像素，速度接近純 I/O
         var enrichedFiles = await Task.Run(() =>
             files.Select(f =>
             {
@@ -309,36 +290,26 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 catch
                 {
-                    // 讀取失敗（檔案不存在或格式不支援）保持 Width=0, Height=0
                     return f;
                 }
             }).ToList()
         );
 
-        var preview = _resizePlanner.Plan(enrichedFiles, options);
+        var items = _resizePlanner.Plan(enrichedFiles, options);
+        var vm = new ResizePreviewViewModel(items);
 
-        foreach (var item in preview)
-        {
-            PreviewItems.Add(item);
-        }
+        CurrentPreview = vm;
 
-        var resizeCount = PreviewItems.Count(item =>
-            item.Action == OperationAction.Resize && !item.HasError);
-        var errorCount = PreviewItems.Count(item => item.HasError);
-
-        HasPreview = true;
-        HasPreviewErrors = errorCount > 0;
-        PreviewSummary = errorCount > 0
-            ? $"共 {PreviewItems.Count} 個項目，預計縮放 {resizeCount} 個，{errorCount} 個錯誤（執行已停用）"
-            : $"共 {PreviewItems.Count} 個項目，預計縮放 {resizeCount} 個";
-
-        AddLog($"縮放預覽完成：預計縮放 {resizeCount} 個檔案，錯誤 {errorCount} 個。");
+        AddLog($"縮放預覽完成：預計縮放 {items.Count(i => i.Action == OperationAction.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
         RefreshCommands();
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableResizePreview))]
     private async Task ExecuteResize()
     {
+        if (CurrentPreview is not ResizePreviewViewModel previewVm)
+            return;
+
         var options = BuildResizeOptions();
 
         if (options.OutputMode == ResizeOutputMode.Overwrite)
@@ -346,8 +317,7 @@ public sealed partial class MainViewModel : ObservableObject
             AddLog("⚠ 覆寫模式：原始圖片將被取代，無法還原。");
         }
 
-        // 拍下執行時的預覽快照，避免背景執行期間 PreviewItems 被修改
-        var snapshot = PreviewItems.ToList();
+        var snapshot = previewVm.Items;
         var total = snapshot.Count(item => item.Action == OperationAction.Resize && !item.HasError);
 
         IsResizing = true;
@@ -425,22 +395,22 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool HasFiles() => Files.Count > 0;
 
-    /// <summary>縮放執行期間禁止瀏覽資料夾與重新掃描，避免 UI 資料衝突。</summary>
     private bool CanBrowseOrScan() => !IsResizing;
 
     private bool HasExecutableDeletePreview() =>
         !IsResizing &&
-        PreviewItems.Any(item => item.Action == OperationAction.Delete && !item.HasError);
+        CurrentPreview is FrameDeletePreviewViewModel vm &&
+        !vm.HasErrors;
 
     private bool HasExecutableRenamePreview() =>
         !IsResizing &&
-        PreviewItems.Any(item => item.Action == OperationAction.Rename && !item.HasError) &&
-        PreviewItems.All(item => !item.HasError);
+        CurrentPreview is RenamePreviewViewModel vm &&
+        !vm.HasErrors;
 
     private bool HasExecutableResizePreview() =>
         !IsResizing &&
-        PreviewItems.Any(item => item.Action == OperationAction.Resize && !item.HasError) &&
-        PreviewItems.All(item => !item.HasError);
+        CurrentPreview is ResizePreviewViewModel vm &&
+        !vm.HasErrors;
 
     private bool CanCancelResize() => IsResizing;
 
@@ -470,8 +440,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// 明確通知所有帶 CanExecute 的 command 重新評估狀態。
-    /// IsResizing 相關的 command 已由 [NotifyCanExecuteChangedFor] 自動處理，
-    /// 此處補足掃描結果或預覽清單異動後需要重新評估的指令。
+    /// IsResizing / CurrentPreview 相關的 command 已由 [NotifyCanExecuteChangedFor] 自動處理，
+    /// 此處補足掃描結果異動後需要重新評估的指令。
     /// </summary>
     private void RefreshCommands()
     {
