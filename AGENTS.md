@@ -211,14 +211,8 @@ ViewModels 不應：
 
 ## UI 規則
 
-這是一個工具型應用程式。UI 應偏向密集、清楚、可預期，而不是行銷式版面。
-
-必要 UX 行為：
-
-- 使用者必須先掃描或選擇資料夾，才能預覽。
-- 使用者必須先預覽，才能執行。
-- 預覽表格必須顯示原始檔名、動作、目標檔名或刪除狀態，以及驗證狀態。
-- 錯誤必須顯示在 UI log。
+UI/UX 設計規則、使用者流程、版面、狀態、表格、log 與 WPF 實作規範，
+請以 [UI_UX_DESIGN_RULES.md](./UI_UX_DESIGN_RULES.md) 為唯一依據。
 
 ## Git 規則
 
@@ -227,6 +221,7 @@ Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMM
 額外注意事項：
 
 - 使用聚焦的小型 commits，每個 commit 只做一件事。
+- 每次建立 git commit 前，都必須重新檢視 [README.md](./README.md) 是否需要同步更新功能、限制、指令或文件連結。
 - 不要提交產生的 build output，例如 `bin/`、`obj/`、`.vs/` 或 packaged executables，除非使用者明確要求。
 
 ## 套件與工具
