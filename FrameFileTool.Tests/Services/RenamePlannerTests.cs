@@ -96,6 +96,22 @@ public sealed class RenamePlannerTests
         result[0].HasError.Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(@"..\F_")]
+    [InlineData(@"nested\F_")]
+    [InlineData("nested/F_")]
+    [InlineData(@"C:\F_")]
+    public void Plan_前綴包含路徑語意_應標記錯誤(string prefix)
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(files, prefix: prefix, startIndex: 1, padding: 0);
+
+        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].HasError.Should().BeTrue();
+        result[0].Status.Should().Contain("目標檔名");
+    }
+
     // ---- 子資料夾各自計數 ----
 
     [Fact]

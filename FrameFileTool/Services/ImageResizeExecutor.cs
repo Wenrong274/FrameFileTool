@@ -20,10 +20,17 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         ResizeOptions options)
     {
         var result = new OperationResult();
+        var items = previewItems.ToList();
 
-        var targets = previewItems
+        var targets = items
             .Where(item => item.Action == OperationAction.Resize && !item.HasError)
             .ToList();
+        result.SkippedCount = items.Count - targets.Count;
+
+        if (!ValidateOptions(options, targets, result))
+        {
+            return result;
+        }
 
         foreach (var item in targets)
         {
@@ -48,17 +55,29 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         CancellationToken cancellationToken = default)
     {
         var result = new OperationResult();
+        var items = previewItems.ToList();
 
-        var targets = previewItems
+        var targets = items
             .Where(item => item.Action == OperationAction.Resize && !item.HasError)
             .ToList();
+        result.SkippedCount = items.Count - targets.Count;
+
+        if (!ValidateOptions(options, targets, result))
+        {
+            return result;
+        }
 
         // 在背景執行緒上跑 CPU/IO 密集的縮放迴圈，Progress<T> 會自動 marshal 回 UI 執行緒
         await Task.Run(() =>
         {
             for (var i = 0; i < targets.Count; i++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    result.Canceled = true;
+                    result.SkippedCount += targets.Count - i;
+                    break;
+                }
 
                 var item = targets[i];
                 progress?.Report(new ResizeProgressReport(i + 1, targets.Count, item.OriginalName));
@@ -72,12 +91,28 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
                     result.Errors.Add($"{item.OriginalName}: 未預期的錯誤，{ex.Message}");
                 }
             }
-        }, cancellationToken);
+        });
 
         return result;
     }
 
     // ── 單一項目處理 ─────────────────────────────────────────────
+
+    private static bool ValidateOptions(
+        ResizeOptions options,
+        IReadOnlyCollection<OperationPreviewItem> targets,
+        OperationResult result)
+    {
+        if (options.OutputMode != ResizeOutputMode.Subfolder ||
+            PathSafetyValidator.IsSafeSingleDirectoryName(options.SubfolderName))
+        {
+            return true;
+        }
+
+        result.SkippedCount += targets.Count;
+        result.Errors.Add("子資料夾名稱不安全");
+        return false;
+    }
 
     private static void ProcessItem(
         OperationPreviewItem item,

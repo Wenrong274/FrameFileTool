@@ -194,4 +194,56 @@ public sealed class MainViewModelCanExecuteTests
 
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
     }
+
+    // ════════════════════════════════════════════════════════
+    // Preview invalidation
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void FrameDeleteInterval_變更後_應清除既有預覽並停用執行()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+
+        sut.FrameDeleteInterval = 3;
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void RenamePrefix_變更後_應清除既有預覽並停用執行()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+
+        sut.RenamePrefix = "New_";
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ScalePercent_變更後_應清除既有預覽並停用執行()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview();
+
+        sut.ScalePercent = 75;
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IncludeSubfolders_變更後_應清除既有預覽並停用執行()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+
+        sut.IncludeSubfolders = true;
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
 }

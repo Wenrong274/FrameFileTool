@@ -185,6 +185,23 @@ public sealed class ResizePlannerTests
     }
 
     [Fact]
+    public void Plan_子資料夾輸出目標檔已存在_應標記錯誤()
+    {
+        using var sandbox = TestDirectory.Create();
+        var resized = Path.Combine(sandbox.Path, "resized");
+        Directory.CreateDirectory(resized);
+        File.WriteAllText(Path.Combine(resized, "frame01.png"), "existing");
+
+        var files = new[] { MakeFile("frame01.png", sandbox.Path) };
+
+        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: "resized"));
+
+        result[0].HasError.Should().BeTrue();
+        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].Status.Should().Contain("目標檔案已存在");
+    }
+
+    [Fact]
     public void Plan_子資料夾名稱為空字串_所有項目應標記錯誤()
     {
         var files = new[] { MakeFile("a.png") };
@@ -193,6 +210,24 @@ public sealed class ResizePlannerTests
 
         result[0].HasError.Should().BeTrue();
         result[0].Action.Should().Be(OperationAction.Error);
+    }
+
+    [Theory]
+    [InlineData(@"..\out")]
+    [InlineData(@"nested\out")]
+    [InlineData("nested/out")]
+    [InlineData(@"C:\out")]
+    [InlineData(".")]
+    [InlineData("..")]
+    public void Plan_子資料夾名稱包含路徑語意_所有項目應標記錯誤(string subfolder)
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: subfolder));
+
+        result[0].HasError.Should().BeTrue();
+        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].Status.Should().Contain("子資料夾名稱");
     }
 
     [Fact]
@@ -359,5 +394,33 @@ public sealed class ResizePlannerTests
         result[0].HasError.Should().BeTrue();
         result[0].OriginalDimensions.Should().BeEmpty();
         result[0].TargetDimensions.Should().BeEmpty();
+    }
+
+    private sealed class TestDirectory : IDisposable
+    {
+        private TestDirectory(string path)
+        {
+            Path = path;
+        }
+
+        public string Path { get; }
+
+        public static TestDirectory Create()
+        {
+            var path = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                $"FrameFileToolTests_{Guid.NewGuid():N}");
+
+            Directory.CreateDirectory(path);
+            return new TestDirectory(path);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(Path))
+            {
+                Directory.Delete(Path, recursive: true);
+            }
+        }
     }
 }

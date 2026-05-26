@@ -30,6 +30,21 @@ public sealed class ResizePlanner : IResizePlanner
                 var status = BuildStatus(options);
                 var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
                 var targetDimensions = BuildTargetDimensions(file, options);
+                var targetExists = TargetFileExists(file, options);
+
+                if (targetExists)
+                {
+                    return new ResizePreviewItem
+                    {
+                        Index = index + 1,
+                        FullPath = file.FullPath,
+                        OriginalName = file.Name,
+                        Action = OperationAction.Error,
+                        TargetName = targetName,
+                        Status = "目標檔案已存在",
+                        HasError = true,
+                    };
+                }
 
                 return new ResizePreviewItem
                 {
@@ -60,6 +75,12 @@ public sealed class ResizePlanner : IResizePlanner
             string.IsNullOrWhiteSpace(options.SubfolderName))
         {
             return "子資料夾名稱不可為空";
+        }
+
+        if (options.OutputMode == ResizeOutputMode.Subfolder &&
+            !PathSafetyValidator.IsSafeSingleDirectoryName(options.SubfolderName))
+        {
+            return "子資料夾名稱不可包含路徑、上一層符號或不允許的字元";
         }
 
         return options.Mode switch
@@ -102,6 +123,17 @@ public sealed class ResizePlanner : IResizePlanner
         options.OutputMode == ResizeOutputMode.Subfolder
             ? Path.Combine(options.SubfolderName, originalName)
             : originalName;
+
+    private static bool TargetFileExists(FileItem file, ResizeOptions options)
+    {
+        if (options.OutputMode != ResizeOutputMode.Subfolder)
+        {
+            return false;
+        }
+
+        var targetPath = Path.Combine(file.DirectoryPath, options.SubfolderName, file.Name);
+        return File.Exists(targetPath);
+    }
 
     // ── Status 文字建立 ──────────────────────────────────────────
 

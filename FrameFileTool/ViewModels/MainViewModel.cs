@@ -212,15 +212,20 @@ public sealed partial class MainViewModel : ObservableObject
         CurrentPreview = null;
 
         var extensions = GetSelectedExtensions();
-        var files = _scanner.Scan(SelectedFolder, extensions, IncludeSubfolders);
+        var scanResult = _scanner.Scan(SelectedFolder, extensions, IncludeSubfolders);
 
-        foreach (var file in files)
+        foreach (var file in scanResult.Files)
         {
             Files.Add(file);
         }
 
         FileSummary = $"已掃描 {Files.Count} 個圖片檔";
         AddLog($"{FileSummary}。資料夾：{SelectedFolder}");
+        foreach (var error in scanResult.Errors)
+        {
+            AddLog($"掃描錯誤：{error}");
+        }
+
         RefreshCommands();
     }
 
@@ -337,7 +342,15 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var result = await _resizeExecutor.ExecuteAsync(snapshot, options, progress, _resizeCts.Token);
-            AddLog($"縮放執行完成：成功 {result.SuccessCount} 個檔案。");
+            if (result.Canceled)
+            {
+                AddLog($"縮放已由使用者取消：成功 {result.SuccessCount} 個檔案，略過 {result.SkippedCount} 個。");
+            }
+            else
+            {
+                AddLog($"縮放執行完成：成功 {result.SuccessCount} 個檔案，略過 {result.SkippedCount} 個。");
+            }
+
             AddErrors(result);
         }
         catch (OperationCanceledException)
@@ -372,7 +385,59 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ToggleLog() => IsLogExpanded = !IsLogExpanded;
 
+    // ── 預覽失效管理 ──────────────────────────────────────────
+
+    partial void OnSelectedFolderChanged(string value) => InvalidatePreview();
+
+    partial void OnIncludePngChanged(bool value) => InvalidatePreview();
+
+    partial void OnIncludeJpgChanged(bool value) => InvalidatePreview();
+
+    partial void OnIncludeJpegChanged(bool value) => InvalidatePreview();
+
+    partial void OnIncludeWebpChanged(bool value) => InvalidatePreview();
+
+    partial void OnIncludeBmpChanged(bool value) => InvalidatePreview();
+
+    partial void OnIncludeSubfoldersChanged(bool value) => InvalidatePreview();
+
+    partial void OnFrameDeleteIntervalChanged(int value) => InvalidatePreview();
+
+    partial void OnResizeModeChanged(ResizeMode value) => InvalidatePreview();
+
+    partial void OnScalePercentChanged(int value) => InvalidatePreview();
+
+    partial void OnTargetWidthChanged(int value) => InvalidatePreview();
+
+    partial void OnTargetHeightChanged(int value) => InvalidatePreview();
+
+    partial void OnKeepAspectRatioChanged(bool value) => InvalidatePreview();
+
+    partial void OnResizeOutputModeChanged(ResizeOutputMode value) => InvalidatePreview();
+
+    partial void OnResizeSubfolderNameChanged(string value) => InvalidatePreview();
+
+    partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreview();
+
+    partial void OnRenamePrefixChanged(string value) => InvalidatePreview();
+
+    partial void OnRenameStartIndexChanged(int value) => InvalidatePreview();
+
+    partial void OnRenamePaddingChanged(int value) => InvalidatePreview();
+
     // ── 私有輔助方法 ──────────────────────────────────────────
+
+    /// <summary>使用者變更任何會影響計畫的設定時，既有預覽不再可信。</summary>
+    private void InvalidatePreview()
+    {
+        if (CurrentPreview is null)
+        {
+            return;
+        }
+
+        CurrentPreview = null;
+        RefreshCommands();
+    }
 
     /// <summary>依勾選狀態收集目前啟用的副檔名清單。</summary>
     private IReadOnlyList<string> GetSelectedExtensions()

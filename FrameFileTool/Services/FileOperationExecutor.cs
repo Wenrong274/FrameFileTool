@@ -16,11 +16,13 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
     public OperationResult DeleteToRecycleBin(IEnumerable<OperationPreviewItem> previewItems)
     {
         var result = new OperationResult();
+        var items = previewItems.ToList();
 
         // 只處理標記為刪除且無錯誤的項目
-        var targets = previewItems
+        var targets = items
             .Where(item => item.Action == OperationAction.Delete && !item.HasError)
             .ToList();
+        result.SkippedCount = items.Count - targets.Count;
 
         foreach (var item in targets)
         {
@@ -53,11 +55,13 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
     public OperationResult RenameFiles(IEnumerable<OperationPreviewItem> previewItems)
     {
         var result = new OperationResult();
+        var items = previewItems.ToList();
 
         // 只處理標記為改名且無錯誤的項目
-        var targets = previewItems
+        var targets = items
             .Where(item => item.Action == OperationAction.Rename && !item.HasError)
             .ToList();
+        result.SkippedCount = items.Count - targets.Count;
 
         // 暫存改名清單：先全部移到暫存檔名，再一次移到最終檔名。
         // 這樣可避免 A→B、B→C 這類改名鏈造成的撞名問題。
@@ -76,6 +80,13 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
                 }
 
                 var directory = Path.GetDirectoryName(item.FullPath) ?? string.Empty;
+
+                if (!PathSafetyValidator.IsSafeFileName(item.TargetName))
+                {
+                    result.Errors.Add($"{item.OriginalName}: 目標檔名不安全");
+                    continue;
+                }
+
                 var finalPath = Path.Combine(directory, item.TargetName);
 
                 // 使用 GUID 確保暫存檔名唯一

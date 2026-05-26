@@ -26,6 +26,7 @@ public sealed class FileOperationExecutorTests
         var result = _sut.RenameFiles(items);
 
         result.SuccessCount.Should().Be(1);
+        result.SkippedCount.Should().Be(2);
         result.Errors.Should().BeEmpty();
         File.Exists(Path.Combine(sandbox.Path, "renamed.png")).Should().BeTrue();
         File.Exists(keep).Should().BeTrue();
@@ -46,6 +47,23 @@ public sealed class FileOperationExecutorTests
         result.SuccessCount.Should().Be(0);
         result.Errors.Should().ContainSingle()
             .Which.Should().Contain("檔案不存在");
+    }
+
+    [Fact]
+    public void RenameFiles_目標檔名包含路徑_應拒絕執行並保留原檔()
+    {
+        using var sandbox = TestDirectory.Create();
+        var source = sandbox.WriteFile("a.png");
+
+        var result = _sut.RenameFiles(
+        [
+            MakePreview(source, "a.png", OperationAction.Rename, @"..\evil.png"),
+        ]);
+
+        result.SuccessCount.Should().Be(0);
+        result.Errors.Should().ContainSingle()
+            .Which.Should().Contain("目標檔名不安全");
+        File.Exists(source).Should().BeTrue();
     }
 
     [Fact]
@@ -80,6 +98,7 @@ public sealed class FileOperationExecutorTests
         ]);
 
         result.SuccessCount.Should().Be(0);
+        result.SkippedCount.Should().Be(1);
         result.Errors.Should().BeEmpty();
         File.Exists(source).Should().BeTrue();
     }

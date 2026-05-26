@@ -49,6 +49,22 @@ public sealed class RenamePlanner : IRenamePlanner
                 ? number.ToString().PadLeft(padding, '0')
                 : number.ToString();
             var targetName = $"{prefix}{numberText}{file.Extension}";
+
+            if (!PathSafetyValidator.IsSafeFileName(targetName))
+            {
+                plannedItems.Add(new OperationPreviewItem
+                {
+                    Index = i + 1,
+                    FullPath = file.FullPath,
+                    OriginalName = file.Name,
+                    Action = OperationAction.Error,
+                    TargetName = targetName,
+                    Status = "目標檔名包含路徑或不允許的字元",
+                    HasError = true,
+                });
+                continue;
+            }
+
             var targetPath = Path.Combine(file.DirectoryPath, targetName);
 
             // 衝突偵測
