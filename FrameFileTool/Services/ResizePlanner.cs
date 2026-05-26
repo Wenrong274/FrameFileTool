@@ -31,13 +31,13 @@ public sealed class ResizePlanner : IResizePlanner
 
                 return new OperationPreviewItem
                 {
-                    Index      = index + 1,
-                    FullPath   = file.FullPath,
+                    Index = index + 1,
+                    FullPath = file.FullPath,
                     OriginalName = file.Name,
-                    Action     = OperationAction.Resize,
+                    Action = OperationAction.Resize,
                     TargetName = targetName,
-                    Status     = status,
-                    HasError   = false,
+                    Status = status,
+                    HasError = false,
                 };
             })
             .ToList();
@@ -61,8 +61,8 @@ public sealed class ResizePlanner : IResizePlanner
         return options.Mode switch
         {
             ResizeMode.Percentage => ValidatePercentage(options.ScalePercent),
-            ResizeMode.Absolute   => ValidateAbsolute(options),
-            _                     => null,
+            ResizeMode.Absolute => ValidateAbsolute(options),
+            _ => null,
         };
     }
 
@@ -79,7 +79,7 @@ public sealed class ResizePlanner : IResizePlanner
 
     private static string? ValidateAbsolute(ResizeOptions options)
     {
-        var hasWidth  = options.TargetWidth  > 0;
+        var hasWidth = options.TargetWidth > 0;
         var hasHeight = options.TargetHeight > 0;
 
         if (!hasWidth && !hasHeight)
@@ -114,25 +114,25 @@ public sealed class ResizePlanner : IResizePlanner
 
     private static string BuildAbsoluteSizeDesc(ResizeOptions options)
     {
-        var hasWidth  = options.TargetWidth  > 0;
+        var hasWidth = options.TargetWidth > 0;
         var hasHeight = options.TargetHeight > 0;
 
         return (hasWidth, hasHeight) switch
         {
-            (true, true)   => $"{options.TargetWidth}×{options.TargetHeight}",
-            (true, false)  => $"寬 {options.TargetWidth}px（等比）",
-            (false, true)  => $"高 {options.TargetHeight}px（等比）",
-            _              => "未指定尺寸",
+            (true, true) => $"{options.TargetWidth}×{options.TargetHeight}",
+            (true, false) => $"寬 {options.TargetWidth}px（等比）",
+            (false, true) => $"高 {options.TargetHeight}px（等比）",
+            _ => "未指定尺寸",
         };
     }
 
     private static string ResamplerDescription(ResamplerType resampler) => resampler switch
     {
-        ResamplerType.Lanczos3          => "高品質縮小（Lanczos3）",
-        ResamplerType.CatmullRom        => "高品質放大（CatmullRom）",
-        ResamplerType.NearestNeighbor   => "像素精準（NearestNeighbor）",
+        ResamplerType.Lanczos3 => "高品質縮小（Lanczos3）",
+        ResamplerType.CatmullRom => "高品質放大（CatmullRom）",
+        ResamplerType.NearestNeighbor => "像素精準（NearestNeighbor）",
         ResamplerType.MitchellNetravali => "銳利優先（MitchellNetravali）",
-        _                               => "一般用途（Bicubic）",
+        _ => "一般用途（Bicubic）",
     };
 
     // ── 輔助：建立錯誤項目 ───────────────────────────────────────
@@ -140,12 +140,12 @@ public sealed class ResizePlanner : IResizePlanner
     private static OperationPreviewItem MakeError(FileItem file, int index, string message) =>
         new()
         {
-            Index        = index,
-            FullPath     = file.FullPath,
+            Index = index,
+            FullPath = file.FullPath,
             OriginalName = file.Name,
-            Action       = OperationAction.Error,
-            TargetName   = string.Empty,
-            Status       = message,
-            HasError     = true,
+            Action = OperationAction.Error,
+            TargetName = string.Empty,
+            Status = message,
+            HasError = true,
         };
 }

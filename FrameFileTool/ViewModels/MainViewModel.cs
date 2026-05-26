@@ -112,11 +112,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     public string ResamplerHint => SelectedResampler switch
     {
-        ResamplerType.Lanczos3          => "大幅縮小時保持文字與線條清晰",
-        ResamplerType.CatmullRom        => "放大時邊緣比一般用途更銳利",
-        ResamplerType.NearestNeighbor   => "整數倍縮放截圖，保持像素對齊",
+        ResamplerType.Lanczos3 => "大幅縮小時保持文字與線條清晰",
+        ResamplerType.CatmullRom => "放大時邊緣比一般用途更銳利",
+        ResamplerType.NearestNeighbor => "整數倍縮放截圖，保持像素對齊",
         ResamplerType.MitchellNetravali => "線條圖需要最銳利邊緣時使用",
-        _                               => "大多數縮放情境的穩定選擇",
+        _ => "大多數縮放情境的穩定選擇",
     };
 
     public MainViewModel(
@@ -347,14 +347,14 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>從 ViewModel 目前的縮放設定建立 ResizeOptions。</summary>
     private ResizeOptions BuildResizeOptions() =>
         new(
-            Mode:            ResizeMode,
-            ScalePercent:    ScalePercent,
-            TargetWidth:     TargetWidth,
-            TargetHeight:    TargetHeight,
+            Mode: ResizeMode,
+            ScalePercent: ScalePercent,
+            TargetWidth: TargetWidth,
+            TargetHeight: TargetHeight,
             KeepAspectRatio: KeepAspectRatio,
-            OutputMode:      ResizeOutputMode,
-            SubfolderName:   ResizeSubfolderName,
-            Resampler:       SelectedResampler);
+            OutputMode: ResizeOutputMode,
+            SubfolderName: ResizeSubfolderName,
+            Resampler: SelectedResampler);
 
     /// <summary>將訊息插入 log 最上方，附上時間戳記。</summary>
     private void AddLog(string message) =>

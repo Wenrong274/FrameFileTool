@@ -75,7 +75,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         OperationResult result)
     {
         var directory = Path.GetDirectoryName(item.FullPath) ?? string.Empty;
-        var tempPath  = Path.Combine(directory, $".__FrameFileTool_resize_{Guid.NewGuid():N}.tmp");
+        var tempPath = Path.Combine(directory, $".__FrameFileTool_resize_{Guid.NewGuid():N}.tmp");
 
         try
         {
@@ -133,7 +133,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         }
 
         // 絕對模式
-        var width  = (uint)options.TargetWidth;
+        var width = (uint)options.TargetWidth;
         var height = (uint)options.TargetHeight;
 
         if (options.KeepAspectRatio)
@@ -141,9 +141,9 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
             // 單邊指定：讓 ImageMagick 依比例自動計算另一邊
             return (width, height) switch
             {
-                (> 0, 0) => new MagickGeometry(width, 0),
+                ( > 0, 0) => new MagickGeometry(width, 0),
                 (0, > 0) => new MagickGeometry(0, height),
-                _        => new MagickGeometry(width, height) { IgnoreAspectRatio = false },
+                _ => new MagickGeometry(width, height) { IgnoreAspectRatio = false },
             };
         }
 
@@ -155,11 +155,11 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
 
     private static FilterType ToFilterType(ResamplerType resampler) => resampler switch
     {
-        ResamplerType.Lanczos3          => FilterType.Lanczos,
-        ResamplerType.CatmullRom        => FilterType.Catrom,
-        ResamplerType.NearestNeighbor   => FilterType.Point,
+        ResamplerType.Lanczos3 => FilterType.Lanczos,
+        ResamplerType.CatmullRom => FilterType.Catrom,
+        ResamplerType.NearestNeighbor => FilterType.Point,
         ResamplerType.MitchellNetravali => FilterType.Mitchell,
-        _                               => FilterType.Cubic,
+        _ => FilterType.Cubic,
     };
 
     // ── 路徑輔助 ─────────────────────────────────────────────────

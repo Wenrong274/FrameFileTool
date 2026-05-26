@@ -12,7 +12,7 @@ public interface IImageResizeExecutor
     /// <summary>
     /// 執行預覽清單中標記為 <see cref="OperationAction.Resize"/> 且無錯誤的項目。
     /// </summary>
-    OperationResult Execute(
+    public OperationResult Execute(
         IEnumerable<OperationPreviewItem> previewItems,
         ResizeOptions options);
 }

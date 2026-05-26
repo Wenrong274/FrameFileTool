@@ -208,11 +208,11 @@ public sealed class ResizePlannerTests
     // ── 演算法欄位 ────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(ResamplerType.Bicubic,          "一般用途")]
-    [InlineData(ResamplerType.Lanczos3,         "高品質縮小")]
-    [InlineData(ResamplerType.CatmullRom,       "高品質放大")]
-    [InlineData(ResamplerType.NearestNeighbor,  "像素精準")]
-    [InlineData(ResamplerType.MitchellNetravali,"銳利優先")]
+    [InlineData(ResamplerType.Bicubic, "一般用途")]
+    [InlineData(ResamplerType.Lanczos3, "高品質縮小")]
+    [InlineData(ResamplerType.CatmullRom, "高品質放大")]
+    [InlineData(ResamplerType.NearestNeighbor, "像素精準")]
+    [InlineData(ResamplerType.MitchellNetravali, "銳利優先")]
     public void Plan_各演算法_Status應含對應中文說明(ResamplerType resampler, string expectedHint)
     {
         var files = new[] { MakeFile("a.png") };

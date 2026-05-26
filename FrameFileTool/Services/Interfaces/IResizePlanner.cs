@@ -11,7 +11,7 @@ public interface IResizePlanner
     /// 依據 <paramref name="options"/> 規劃每個檔案的縮放計畫。
     /// Pure function：不讀取圖片像素、不執行任何檔案 I/O。
     /// </summary>
-    IReadOnlyList<OperationPreviewItem> Plan(
+    public IReadOnlyList<OperationPreviewItem> Plan(
         IReadOnlyList<FileItem> files,
         ResizeOptions options);
 }

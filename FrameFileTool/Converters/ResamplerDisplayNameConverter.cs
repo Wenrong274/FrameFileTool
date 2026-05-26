@@ -20,11 +20,11 @@ public sealed class ResamplerDisplayNameConverter : IValueConverter
 
     private static string ToDisplayName(ResamplerType resampler) => resampler switch
     {
-        ResamplerType.Bicubic           => "一般用途（Bicubic）",
-        ResamplerType.Lanczos3          => "高品質縮小（Lanczos3）",
-        ResamplerType.CatmullRom        => "高品質放大（CatmullRom）",
-        ResamplerType.NearestNeighbor   => "像素精準（NearestNeighbor）",
+        ResamplerType.Bicubic => "一般用途（Bicubic）",
+        ResamplerType.Lanczos3 => "高品質縮小（Lanczos3）",
+        ResamplerType.CatmullRom => "高品質放大（CatmullRom）",
+        ResamplerType.NearestNeighbor => "像素精準（NearestNeighbor）",
         ResamplerType.MitchellNetravali => "銳利優先（MitchellNetravali）",
-        _                               => resampler.ToString(),
+        _ => resampler.ToString(),
     };
 }
