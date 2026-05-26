@@ -92,6 +92,9 @@ public sealed partial class MainViewModel : ObservableObject
     // ── UI 狀態 ───────────────────────────────────────────────
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(PreviewFrameDeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewRenameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewResizeCommand))]
     private int _selectedToolIndex;
 
     [ObservableProperty]
@@ -117,7 +120,26 @@ public sealed partial class MainViewModel : ObservableObject
     public bool HasPreviewErrors => CurrentPreview?.HasErrors ?? false;
 
     /// <summary>顯示於預覽摘要列的說明文字。</summary>
-    public string PreviewSummary => CurrentPreview?.Summary ?? "選擇操作並點擊預覽";
+    public string PreviewSummary => IsPreparingPreview
+        ? PreviewBusyText
+        : CurrentPreview?.Summary ?? "選擇操作並點擊預覽";
+
+    /// <summary>
+    /// 正在準備預覽資料。為 true 時停用掃描與預覽命令，避免重複操作。
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewSummary))]
+    [NotifyCanExecuteChangedFor(nameof(BrowseFolderCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ScanFilesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewFrameDeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewRenameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewResizeCommand))]
+    private bool _isPreparingPreview;
+
+    /// <summary>預覽準備中顯示於摘要列的狀態文字。</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewSummary))]
+    private string _previewBusyText = string.Empty;
 
     // ── 縮放執行進度 ─────────────────────────────────────────
 
@@ -127,6 +149,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(BrowseFolderCommand))]
     [NotifyCanExecuteChangedFor(nameof(ScanFilesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewFrameDeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewRenameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PreviewResizeCommand))]
     [NotifyCanExecuteChangedFor(nameof(ExecuteFrameDeleteCommand))]
     [NotifyCanExecuteChangedFor(nameof(ExecuteRenameCommand))]
     [NotifyCanExecuteChangedFor(nameof(ExecuteResizeCommand))]
@@ -229,7 +254,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshCommands();
     }
 
-    [RelayCommand(CanExecute = nameof(HasFiles))]
+    [RelayCommand(CanExecute = nameof(CanPreview))]
     private void PreviewFrameDelete()
     {
         var items = _frameDeletePlanner.Plan(Files.ToList(), FrameDeleteInterval);
@@ -253,7 +278,7 @@ public sealed partial class MainViewModel : ObservableObject
         ScanFiles();
     }
 
-    [RelayCommand(CanExecute = nameof(HasFiles))]
+    [RelayCommand(CanExecute = nameof(CanPreview))]
     private void PreviewRename()
     {
         var items = _renamePlanner.Plan(
@@ -278,35 +303,47 @@ public sealed partial class MainViewModel : ObservableObject
         ScanFiles();
     }
 
-    [RelayCommand(CanExecute = nameof(HasFiles))]
+    [RelayCommand(CanExecute = nameof(CanPreview))]
     private async Task PreviewResize()
     {
         var options = BuildResizeOptions();
         var files = Files.ToList();
 
-        // 在背景執行緒讀取圖片標頭尺寸，避免 UI 凍結
-        var enrichedFiles = await Task.Run(() =>
-            files.Select(f =>
-            {
-                try
+        CurrentPreview = null;
+        PreviewBusyText = "正在讀取圖片尺寸…";
+        IsPreparingPreview = true;
+
+        try
+        {
+            // 在背景執行緒讀取圖片標頭尺寸，避免 UI 凍結
+            var enrichedFiles = await Task.Run(() =>
+                files.Select(f =>
                 {
-                    var (w, h) = _dimensionReader.Read(f.FullPath);
-                    return f with { Width = w, Height = h };
-                }
-                catch
-                {
-                    return f;
-                }
-            }).ToList()
-        );
+                    try
+                    {
+                        var (w, h) = _dimensionReader.Read(f.FullPath);
+                        return f with { Width = w, Height = h };
+                    }
+                    catch
+                    {
+                        return f;
+                    }
+                }).ToList()
+            );
 
-        var items = _resizePlanner.Plan(enrichedFiles, options);
-        var vm = new ResizePreviewViewModel(items);
+            var items = _resizePlanner.Plan(enrichedFiles, options);
+            var vm = new ResizePreviewViewModel(items);
 
-        CurrentPreview = vm;
+            CurrentPreview = vm;
 
-        AddLog($"縮放預覽完成：預計縮放 {items.Count(i => i.Action == OperationAction.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
-        RefreshCommands();
+            AddLog($"縮放預覽完成：預計縮放 {items.Count(i => i.Action == OperationAction.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+        }
+        finally
+        {
+            IsPreparingPreview = false;
+            PreviewBusyText = string.Empty;
+            RefreshCommands();
+        }
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableResizePreview))]
@@ -425,6 +462,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnRenamePaddingChanged(int value) => InvalidatePreview();
 
+    partial void OnSelectedToolIndexChanged(int value) => InvalidatePreview();
+
     // ── 私有輔助方法 ──────────────────────────────────────────
 
     /// <summary>使用者變更任何會影響計畫的設定時，既有預覽不再可信。</summary>
@@ -460,7 +499,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool HasFiles() => Files.Count > 0;
 
-    private bool CanBrowseOrScan() => !IsResizing;
+    private bool CanPreview() => !IsResizing && !IsPreparingPreview && HasFiles();
+
+    private bool CanBrowseOrScan() => !IsResizing && !IsPreparingPreview;
 
     private bool HasExecutableDeletePreview() =>
         !IsResizing &&

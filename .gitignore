@@ -20,6 +20,7 @@ publish/
 *.cache
 *.tmp
 *.log
+artifacts/
 
 # ===== 測試結果 =====
 TestResults/
