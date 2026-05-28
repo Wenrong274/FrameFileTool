@@ -84,6 +84,22 @@ public sealed class RenamePlannerTests
     }
 
     [Fact]
+    public void Plan_目標檔案已存在且不在來源清單_應標記錯誤()
+    {
+        var files = new[] { MakeFile("a.png") };
+        var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            @"C:\imgs\F_1.png",
+        };
+
+        var result = _sut.Plan(files, prefix: "F_", startIndex: 1, padding: 0, existingPaths);
+
+        result[0].Action.Should().Be(OperationAction.Rename);
+        result[0].HasError.Should().BeTrue();
+        result[0].Status.Should().Be("目標檔案已存在");
+    }
+
+    [Fact]
     public void Plan_原始檔名與目標相同_應標記保留不改名()
     {
         // 檔案本身就叫 F_1.png，改名計畫也是 F_1.png → 同名不處理

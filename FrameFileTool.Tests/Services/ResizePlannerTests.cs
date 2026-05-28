@@ -187,14 +187,18 @@ public sealed class ResizePlannerTests
     [Fact]
     public void Plan_子資料夾輸出目標檔已存在_應標記錯誤()
     {
-        using var sandbox = TestDirectory.Create();
-        var resized = Path.Combine(sandbox.Path, "resized");
-        Directory.CreateDirectory(resized);
-        File.WriteAllText(Path.Combine(resized, "frame01.png"), "existing");
+        var folder = @"C:\imgs";
+        var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            Path.Combine(folder, "resized", "frame01.png"),
+        };
 
-        var files = new[] { MakeFile("frame01.png", sandbox.Path) };
+        var files = new[] { MakeFile("frame01.png", folder) };
 
-        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: "resized"));
+        var result = _sut.Plan(
+            files,
+            Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: "resized"),
+            existingPaths);
 
         result[0].HasError.Should().BeTrue();
         result[0].Action.Should().Be(OperationAction.Error);
@@ -394,33 +398,5 @@ public sealed class ResizePlannerTests
         result[0].HasError.Should().BeTrue();
         result[0].OriginalDimensions.Should().BeEmpty();
         result[0].TargetDimensions.Should().BeEmpty();
-    }
-
-    private sealed class TestDirectory : IDisposable
-    {
-        private TestDirectory(string path)
-        {
-            Path = path;
-        }
-
-        public string Path { get; }
-
-        public static TestDirectory Create()
-        {
-            var path = System.IO.Path.Combine(
-                System.IO.Path.GetTempPath(),
-                $"FrameFileToolTests_{Guid.NewGuid():N}");
-
-            Directory.CreateDirectory(path);
-            return new TestDirectory(path);
-        }
-
-        public void Dispose()
-        {
-            if (Directory.Exists(Path))
-            {
-                Directory.Delete(Path, recursive: true);
-            }
-        }
     }
 }

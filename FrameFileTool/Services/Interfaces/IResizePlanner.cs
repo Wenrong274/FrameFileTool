@@ -13,5 +13,6 @@ public interface IResizePlanner
     /// </summary>
     public IReadOnlyList<ResizePreviewItem> Plan(
         IReadOnlyList<FileItem> files,
-        ResizeOptions options);
+        ResizeOptions options,
+        IReadOnlySet<string>? existingPaths = null);
 }

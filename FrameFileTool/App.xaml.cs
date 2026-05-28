@@ -27,8 +27,10 @@ public partial class App : WpfApplication
         services.AddSingleton<IFileOperationExecutor, FileOperationExecutor>();
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
         services.AddSingleton<IResizePlanner, ResizePlanner>();
+        services.AddSingleton<IResizePreviewService, ResizePreviewService>();
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
         services.AddSingleton<IImageDimensionReader, ImageDimensionReader>();
+        services.AddSingleton<IFileExistenceService, FileExistenceService>();
 
         // ViewModels
         services.AddSingleton<MainViewModel>();

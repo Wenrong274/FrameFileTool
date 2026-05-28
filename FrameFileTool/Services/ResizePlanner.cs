@@ -13,7 +13,8 @@ public sealed class ResizePlanner : IResizePlanner
     /// <inheritdoc/>
     public IReadOnlyList<ResizePreviewItem> Plan(
         IReadOnlyList<FileItem> files,
-        ResizeOptions options)
+        ResizeOptions options,
+        IReadOnlySet<string>? existingPaths = null)
     {
         // 優先驗證共用參數，有錯就讓全部項目標記錯誤
         var globalError = ValidateOptions(options);
@@ -30,7 +31,7 @@ public sealed class ResizePlanner : IResizePlanner
                 var status = BuildStatus(options);
                 var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
                 var targetDimensions = BuildTargetDimensions(file, options);
-                var targetExists = TargetFileExists(file, options);
+                var targetExists = TargetFileExists(file, options, existingPaths);
 
                 if (targetExists)
                 {
@@ -124,7 +125,10 @@ public sealed class ResizePlanner : IResizePlanner
             ? Path.Combine(options.SubfolderName, originalName)
             : originalName;
 
-    private static bool TargetFileExists(FileItem file, ResizeOptions options)
+    private static bool TargetFileExists(
+        FileItem file,
+        ResizeOptions options,
+        IReadOnlySet<string>? existingPaths)
     {
         if (options.OutputMode != ResizeOutputMode.Subfolder)
         {
@@ -132,7 +136,7 @@ public sealed class ResizePlanner : IResizePlanner
         }
 
         var targetPath = Path.Combine(file.DirectoryPath, options.SubfolderName, file.Name);
-        return File.Exists(targetPath);
+        return existingPaths?.Contains(targetPath) ?? false;
     }
 
     // ── Status 文字建立 ──────────────────────────────────────────

@@ -11,5 +11,6 @@ public interface IRenamePlanner
         IReadOnlyList<FileItem> files,
         string prefix,
         int startIndex,
-        int padding);
+        int padding,
+        IReadOnlySet<string>? existingPaths = null);
 }
