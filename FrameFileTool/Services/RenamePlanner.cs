@@ -21,7 +21,8 @@ public sealed class RenamePlanner : IRenamePlanner
         IReadOnlyList<FileItem> files,
         string prefix,
         int startIndex,
-        int padding)
+        int padding,
+        IReadOnlySet<string>? existingPaths = null)
     {
         var plannedItems = new List<OperationPreviewItem>(files.Count);
 
@@ -32,6 +33,8 @@ public sealed class RenamePlanner : IRenamePlanner
         var sourcePaths = files
             .Select(f => f.FullPath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var knownExistingPaths = existingPaths ?? sourcePaths;
 
         // 每個資料夾獨立計數，從 startIndex 開始
         var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -69,7 +72,7 @@ public sealed class RenamePlanner : IRenamePlanner
 
             // 衝突偵測
             var hasDuplicateTarget = !targetPaths.Add(targetPath);
-            var targetExistsOutsidePlan = File.Exists(targetPath) && !sourcePaths.Contains(targetPath);
+            var targetExistsOutsidePlan = knownExistingPaths.Contains(targetPath) && !sourcePaths.Contains(targetPath);
             var sameName = string.Equals(file.FullPath, targetPath, StringComparison.OrdinalIgnoreCase);
             var hasError = hasDuplicateTarget || targetExistsOutsidePlan;
 

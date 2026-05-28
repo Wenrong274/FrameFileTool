@@ -23,17 +23,32 @@ FrameFileTool 是一個 Windows WPF 桌面應用程式，用於處理序列圖�
 
 本專案的通用技術規範由 `.agents/skills` 底下的 `SKILL.md` 補充：
 
+- `.agents/skills/dotnet-wpf-modern.md`：.NET 8+ WPF 整合規範，包含 Host builder、MVVM Toolkit、效能、theming 與現代 C#。
 - `.agents/skills/wpf/SKILL.md`：WPF、XAML、binding、commands、threading、styles 與 templates。
 - `.agents/skills/mvvm/SKILL.md`：MVVM 分層、CommunityToolkit.Mvvm、ViewModel 測試性與 commands。
 - `.agents/skills/modern-csharp/SKILL.md`：符合專案目標框架與語言版本的現代 C# 寫法。
 - `.agents/skills/project-setup/SKILL.md`：solution/project 結構、共用 MSBuild 設定、CI 與本機開發基線。
+- `.agents/skills/csharp-scripts.md`：明確需要 file-based C# app 時使用，不作為既有專案整合開發的預設方式。
 
 規則優先順序：
 
 - 專案特有的架構、檔案操作安全、Git、文件語言與 UI/UX 規則，以本檔為準。
-- WPF、MVVM、現代 C# 與 .NET 專案結構的通用技術規範，以對應 skill 為準。
+- 現代 WPF 整合議題優先參照 `dotnet-wpf-modern.md`。
+- 細部 XAML / binding / threading 問題參照 `wpf/SKILL.md`。
+- ViewModel、commands、dependency injection 與測試性問題參照 `mvvm/SKILL.md`。
+- C# 語法與語言版本問題參照 `modern-csharp/SKILL.md`。
+- solution / project 結構問題參照 `project-setup/SKILL.md`。
+- file-based C# app 僅在使用者明確要求快速 C# 原型或實驗時參照 `csharp-scripts.md`。
 - 若 skill 補足本檔未明確定義的行為，應採用 skill 的規範。
 - 若本檔與 skill 出現實質衝突，應先依 skill 修正通用技術做法，再同步更新本檔避免重複或矛盾。
+
+重複內容處理：
+
+- `dotnet-wpf-modern.md` 與 `wpf/SKILL.md`、`mvvm/SKILL.md`、`modern-csharp/SKILL.md` 內容有重疊時，
+  以 `dotnet-wpf-modern.md` 作為 WPF on modern .NET 的整合方向，
+  再用各細分 skill 補足實作細節。
+- `csharp-scripts.md` 不應取代本專案的 `.csproj`、測試專案或正式工具程式碼。
+  它只適合臨時 C# 語法/API 驗證，且檔案應放在既有 project 目錄外，避免被 SDK-style 專案誤納入編譯。
 
 ## 語言規則
 
@@ -217,8 +232,9 @@ button click -> scan files -> mutate global state -> delete files immediately
 
 ## WPF 與 MVVM 規則
 
-WPF/MVVM 的通用實作規範請以 `.agents/skills/wpf/SKILL.md` 與
-`.agents/skills/mvvm/SKILL.md` 為準。本節只保留 FrameFileTool 的專案特有邊界。
+WPF/MVVM 的通用實作規範請以 `.agents/skills/dotnet-wpf-modern.md`、
+`.agents/skills/wpf/SKILL.md` 與 `.agents/skills/mvvm/SKILL.md` 為準。
+本節只保留 FrameFileTool 的專案特有邊界。
 
 Views：
 
@@ -241,6 +257,9 @@ Binding 與 UI 執行緒：
 - 重要 binding、DataTemplate 與 command flow 必須能在 runtime 驗證。
 - 背景工作完成後更新 UI state 時，優先使用 `async/await` 回到 UI context；只有必要時才直接使用 Dispatcher。
 - 大量清單應考慮 virtualization、穩定欄寬、文字截斷與 tooltip，避免 UI 卡頓或內容溢出。
+- 若未來需要 configuration、logging、hosted services 或更完整的 app lifecycle，
+  應依 `dotnet-wpf-modern.md` 評估改用 generic Host builder。
+  目前只有 DI 註冊與主視窗啟動時，可維持現有 `ServiceCollection` 啟動方式，避免無必要的大型重構。
 
 ## C# 語言版本規則
 
@@ -251,6 +270,16 @@ Binding 與 UI 執行緒：
 - 只有在能改善正確性、可讀性或維護性時才導入新語法。
 - 不為了現代化而大規模重寫既有程式碼。
 - 若語法選擇會影響架構、style rule 或 generated-code pattern，需同步檢查 build、test 與 `dotnet format`。
+
+## C# 腳本規則
+
+file-based C# app 請以 `.agents/skills/csharp-scripts.md` 為準，且僅在使用者明確要求快速 C# 實驗、
+API 驗證或小型原型時使用。
+
+- 不要用 file-based C# app 取代本專案正式功能、測試或維護腳本。
+- 不要把臨時 `.cs` 腳本放在 `FrameFileTool/` 或 `FrameFileTool.Tests/` 目錄內，避免被 SDK-style project 自動納入編譯。
+- 若臨時 C# 原型需要保留並整合進產品，應轉為正式 project code、unit tests 或文件化維護腳本。
+- 對語言無關的一次性工作，優先使用既有 shell/PowerShell 工具，不強制改用 C# file-based app。
 
 ## UI 規則
 

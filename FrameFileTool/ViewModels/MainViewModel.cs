@@ -19,9 +19,8 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IRenamePlanner _renamePlanner;
     private readonly IFileOperationExecutor _executor;
     private readonly IFolderPickerService _folderPicker;
-    private readonly IResizePlanner _resizePlanner;
     private readonly IImageResizeExecutor _resizeExecutor;
-    private readonly IImageDimensionReader _dimensionReader;
+    private readonly IResizePreviewService _resizePreviewService;
 
     // ── 掃描選項 ──────────────────────────────────────────────
 
@@ -190,18 +189,16 @@ public sealed partial class MainViewModel : ObservableObject
         IRenamePlanner renamePlanner,
         IFileOperationExecutor executor,
         IFolderPickerService folderPicker,
-        IResizePlanner resizePlanner,
         IImageResizeExecutor resizeExecutor,
-        IImageDimensionReader dimensionReader)
+        IResizePreviewService resizePreviewService)
     {
         _scanner = scanner;
         _frameDeletePlanner = frameDeletePlanner;
         _renamePlanner = renamePlanner;
         _executor = executor;
         _folderPicker = folderPicker;
-        _resizePlanner = resizePlanner;
         _resizeExecutor = resizeExecutor;
-        _dimensionReader = dimensionReader;
+        _resizePreviewService = resizePreviewService;
     }
 
     /// <summary>掃描結果檔案清單，繫結到掃描結果區塊。</summary>
@@ -281,8 +278,12 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanPreview))]
     private void PreviewRename()
     {
+        var existingPaths = Files
+            .Select(f => f.FullPath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var items = _renamePlanner.Plan(
-            Files.ToList(), RenamePrefix, RenameStartIndex, RenamePadding);
+            Files.ToList(), RenamePrefix, RenameStartIndex, RenamePadding, existingPaths);
         var vm = new RenamePreviewViewModel(items);
 
         CurrentPreview = vm;
@@ -315,23 +316,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         try
         {
-            // 在背景執行緒讀取圖片標頭尺寸，避免 UI 凍結
-            var enrichedFiles = await Task.Run(() =>
-                files.Select(f =>
-                {
-                    try
-                    {
-                        var (w, h) = _dimensionReader.Read(f.FullPath);
-                        return f with { Width = w, Height = h };
-                    }
-                    catch
-                    {
-                        return f;
-                    }
-                }).ToList()
-            );
-
-            var items = _resizePlanner.Plan(enrichedFiles, options);
+            var items = await _resizePreviewService.BuildPreviewAsync(files, options);
             var vm = new ResizePreviewViewModel(items);
 
             CurrentPreview = vm;

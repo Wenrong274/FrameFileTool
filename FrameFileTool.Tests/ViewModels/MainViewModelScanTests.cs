@@ -37,7 +37,6 @@ public sealed class MainViewModelScanTests
         Substitute.For<IRenamePlanner>(),
         Substitute.For<IFileOperationExecutor>(),
         Substitute.For<IFolderPickerService>(),
-        Substitute.For<IResizePlanner>(),
         Substitute.For<IImageResizeExecutor>(),
-        Substitute.For<IImageDimensionReader>());
+        Substitute.For<IResizePreviewService>());
 }
