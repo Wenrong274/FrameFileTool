@@ -443,6 +443,11 @@
                 <!-- 預覽表格：ContentControl 依 CurrentPreview 型別自動選擇 DataTemplate -->
                 <Border Grid.Row="1"
                         Style="{StaticResource Card}"
+                        AllowDrop="True"
+                        DragEnter="PreviewDropTarget_DragEnter"
+                        DragOver="PreviewDropTarget_DragOver"
+                        DragLeave="PreviewDropTarget_DragLeave"
+                        Drop="PreviewDropTarget_Drop"
                         ClipToBounds="True"
                         Padding="0">
                     <Grid>
@@ -470,6 +475,26 @@
                                            Foreground="{StaticResource TextPrimary}"
                                            HorizontalAlignment="Center" />
                                 <TextBlock Text="調整工具參數後點擊預覽"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,6,0,0"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border IsHitTestVisible="False"
+                                Background="#EEF6FF"
+                                BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="2"
+                                Visibility="{Binding IsPreviewDropTargetActive, Converter={StaticResource BoolToVis}}">
+                            <StackPanel HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="放開以新增資料"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="支援拖曳檔案或資料夾"
                                            FontSize="12"
                                            Foreground="{StaticResource TextSecondary}"
                                            Margin="0,6,0,0"

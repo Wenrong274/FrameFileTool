@@ -22,7 +22,8 @@ public sealed class MainViewModelCanExecuteTests
         Substitute.For<IFileOperationExecutor>(),
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
-        Substitute.For<IResizePreviewService>());
+        Substitute.For<IResizePreviewService>(),
+        Substitute.For<IFileImportService>());
 
     // ── 預覽 ViewModel 建立輔助 ───────────────────────────────
 

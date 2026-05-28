@@ -15,7 +15,7 @@
     <Setter Property="SelectionMode"        Value="Single" />
     <Setter Property="BorderThickness"      Value="0" />
     <Setter Property="RowBackground"        Value="White" />
-    <Setter Property="ColumnHeaderStyle"    Value="{StaticResource TableColumnHeader}" />
+    <Setter Property="ColumnHeaderStyle"    Value="{DynamicResource TableColumnHeader}" />
     <Setter Property="AutomationProperties.Name" Value="預覽結果表格" />
     <Setter Property="EnableRowVirtualization" Value="True" />
     <Setter Property="EnableColumnVirtualization" Value="True" />
@@ -90,7 +90,7 @@
                                     </TextBlock>
                                 </Border>
                                 <TextBlock Text="{Binding OriginalName}"
-                                           Foreground="{StaticResource TextPrimary}"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"
@@ -99,7 +99,7 @@
                             <TextBlock Text="{Binding Status}"
                                        Margin="52,4,0,0"
                                        FontSize="11"
-                                       Foreground="{StaticResource TextMuted}"
+                                       Foreground="{DynamicResource TextMuted}"
                                        TextTrimming="CharacterEllipsis"
                                        ToolTip="{Binding Status}" />
                         </StackPanel>
@@ -116,7 +116,7 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Text"      Value="{Binding TargetName}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
                                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Keep}">
@@ -192,7 +192,7 @@
                                     </TextBlock>
                                 </Border>
                                 <TextBlock Text="{Binding OriginalName}"
-                                           Foreground="{StaticResource TextPrimary}"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"
@@ -201,7 +201,7 @@
                             <TextBlock Text="{Binding Status}"
                                        Margin="52,4,0,0"
                                        FontSize="11"
-                                       Foreground="{StaticResource TextMuted}"
+                                       Foreground="{DynamicResource TextMuted}"
                                        TextTrimming="CharacterEllipsis"
                                        ToolTip="{Binding Status}" />
                         </StackPanel>
@@ -213,7 +213,7 @@
                     <DataTemplate>
                         <TextBlock Text="{Binding TargetName}"
                                    VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimary}"
+                                   Foreground="{DynamicResource TextPrimary}"
                                    TextTrimming="CharacterEllipsis"
                                    ToolTip="{Binding TargetName}" />
                     </DataTemplate>
@@ -277,7 +277,7 @@
                                     </TextBlock>
                                 </Border>
                                 <TextBlock Text="{Binding OriginalName}"
-                                           Foreground="{StaticResource TextPrimary}"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"
@@ -286,7 +286,7 @@
                             <TextBlock Text="{Binding Status}"
                                        Margin="52,4,0,0"
                                        FontSize="11"
-                                       Foreground="{StaticResource TextMuted}"
+                                       Foreground="{DynamicResource TextMuted}"
                                        TextTrimming="CharacterEllipsis"
                                        ToolTip="{Binding Status}" />
                         </StackPanel>
@@ -298,7 +298,7 @@
                     <DataTemplate>
                         <TextBlock Text="{Binding TargetName}"
                                    VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimary}"
+                                   Foreground="{DynamicResource TextPrimary}"
                                    TextTrimming="CharacterEllipsis"
                                    ToolTip="{Binding TargetName}" />
                     </DataTemplate>
@@ -318,7 +318,7 @@
                                     <Setter Property="FontWeight" Value="SemiBold" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding TargetDimensions}" Value="">
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
                                             <Setter Property="FontWeight" Value="Normal" />
                                         </DataTrigger>
                                     </Style.Triggers>
