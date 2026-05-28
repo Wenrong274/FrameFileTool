@@ -19,6 +19,22 @@ FrameFileTool 是一個 Windows WPF 桌面應用程式，用於處理序列圖�
 - 至少有兩個真實使用情境前，不要加入過度抽象。
 - 文件與程式註解以繁體中文為主，英文僅作為必要技術詞輔助。
 
+## Skills 參照規則
+
+本專案的通用技術規範由 `.agents/skills` 底下的 `SKILL.md` 補充：
+
+- `.agents/skills/wpf/SKILL.md`：WPF、XAML、binding、commands、threading、styles 與 templates。
+- `.agents/skills/mvvm/SKILL.md`：MVVM 分層、CommunityToolkit.Mvvm、ViewModel 測試性與 commands。
+- `.agents/skills/modern-csharp/SKILL.md`：符合專案目標框架與語言版本的現代 C# 寫法。
+- `.agents/skills/project-setup/SKILL.md`：solution/project 結構、共用 MSBuild 設定、CI 與本機開發基線。
+
+規則優先順序：
+
+- 專案特有的架構、檔案操作安全、Git、文件語言與 UI/UX 規則，以本檔為準。
+- WPF、MVVM、現代 C# 與 .NET 專案結構的通用技術規範，以對應 skill 為準。
+- 若 skill 補足本檔未明確定義的行為，應採用 skill 的規範。
+- 若本檔與 skill 出現實質衝突，應先依 skill 修正通用技術做法，再同步更新本檔避免重複或矛盾。
+
 ## 語言規則
 
 文件、使用者說明與程式註解應以繁體中文為主要語言。
@@ -76,6 +92,14 @@ Models
 ```
 
 code-behind 可以初始化相依物件並設定 `DataContext`。code-behind 不應包含檔案操作規則、改名規則或抽幀規則。
+
+新增或重整 solution / project 結構時，應依 `.agents/skills/project-setup/SKILL.md`：
+
+- 從應用程式模型與部署目標選擇最小且正確的 SDK 與 target framework。
+- 專案與資料夾命名應反映責任邊界，不以暫時實作細節命名。
+- 共享 MSBuild 設定、nullable、analyzer 或 package 版本時，必須能降低重複且不隱藏平台差異。
+- 避免循環相依與雜物型 utility 專案；優先使用 project references 與組合。
+- 本機 build、test、run 流程不直覺時，需同步更新文件或本檔。
 
 ### 新增工具的標準流程
 
@@ -193,21 +217,40 @@ button click -> scan files -> mutate global state -> delete files immediately
 
 ## WPF 與 MVVM 規則
 
-Views 只應包含 layout 與 bindings。
+WPF/MVVM 的通用實作規範請以 `.agents/skills/wpf/SKILL.md` 與
+`.agents/skills/mvvm/SKILL.md` 為準。本節只保留 FrameFileTool 的專案特有邊界。
 
-ViewModels 可以：
+Views：
 
-- 保存畫面狀態。
-- 暴露 commands。
-- 驗證使用者輸入。
-- 將 service 結果轉換為 UI collections。
-- 新增 log 訊息。
+- 只應包含 layout、bindings、styles 與 templates。
+- code-behind 僅可做初始化、wiring 與 `DataContext` 設定。
+- 不得在 View 或 code-behind 實作檔案掃描、規劃、改名、刪除、縮放或自然排序規則。
 
-ViewModels 不應：
+ViewModels：
 
-- 直接列舉檔案，除非委派給 service。
-- 直接刪除或改名檔案，除非委派給 executor。
-- 包含自然排序、抽幀選取或改名衝突演算法。
+- 使用 CommunityToolkit.Mvvm 的 source generator 與 commands，避免手寫樣板式 `INotifyPropertyChanged`。
+- UI 動作應透過 command 與明確的 `CanExecute` 控制。
+- 應透過 constructor injection 取得 service abstraction，不直接建立具體 services。
+- 長時間操作應使用 `async/await` 與可取消流程，避免同步阻塞 UI thread。
+- 可以保存畫面狀態、驗證使用者輸入、轉換 service 結果為 UI collections、更新 log。
+- 不應包含自然排序、抽幀選取、改名衝突偵測或縮放規劃演算法。
+- `MainViewModel` 使用 `CurrentPreview` 搭配 `HasExecutable*Preview()` 判斷各工具可執行狀態。
+
+Binding 與 UI 執行緒：
+
+- 重要 binding、DataTemplate 與 command flow 必須能在 runtime 驗證。
+- 背景工作完成後更新 UI state 時，優先使用 `async/await` 回到 UI context；只有必要時才直接使用 Dispatcher。
+- 大量清單應考慮 virtualization、穩定欄寬、文字截斷與 tooltip，避免 UI 卡頓或內容溢出。
+
+## C# 語言版本規則
+
+現代 C# 寫法請以 `.agents/skills/modern-csharp/SKILL.md` 為準。
+
+- 使用新語法前，先確認專案實際 `TargetFramework`、`LangVersion`、SDK 與 `.editorconfig`。
+- 本專案目標為 .NET 10；可使用該穩定語言版本支援的語法，但不得因本機 SDK 較新而使用 preview-only feature。
+- 只有在能改善正確性、可讀性或維護性時才導入新語法。
+- 不為了現代化而大規模重寫既有程式碼。
+- 若語法選擇會影響架構、style rule 或 generated-code pattern，需同步檢查 build、test 與 `dotnet format`。
 
 ## UI 規則
 
