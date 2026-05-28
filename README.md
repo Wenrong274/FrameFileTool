@@ -79,5 +79,6 @@ dotnet publish .\FrameFileTool\FrameFileTool.csproj `
 本專案的開發規範、架構說明、套件清單與 commit 規則，請見：
 
 - [AGENTS.md](AGENTS.md) — 開發規範總覽（唯一依據）
+- [TODO.md](TODO.md) — 未完成功能與驗收條件
 - [UI_UX_DESIGN_RULES.md](UI_UX_DESIGN_RULES.md) — UI/UX 設計規則
 - [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md) — Commit message 格式與範例
