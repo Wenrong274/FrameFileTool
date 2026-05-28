@@ -38,5 +38,6 @@ public sealed class MainViewModelScanTests
         Substitute.For<IFileOperationExecutor>(),
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
-        Substitute.For<IResizePreviewService>());
+        Substitute.For<IResizePreviewService>(),
+        Substitute.For<IFileImportService>());
 }

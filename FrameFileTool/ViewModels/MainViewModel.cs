@@ -21,6 +21,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IFolderPickerService _folderPicker;
     private readonly IImageResizeExecutor _resizeExecutor;
     private readonly IResizePreviewService _resizePreviewService;
+    private readonly IFileImportService _fileImportService;
 
     // ── 掃描選項 ──────────────────────────────────────────────
 
@@ -140,6 +141,10 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PreviewSummary))]
     private string _previewBusyText = string.Empty;
 
+    /// <summary>預覽區是否正處於拖放檔案或資料夾的 hover 狀態。</summary>
+    [ObservableProperty]
+    private bool _isPreviewDropTargetActive;
+
     // ── 縮放執行進度 ─────────────────────────────────────────
 
     /// <summary>
@@ -190,7 +195,8 @@ public sealed partial class MainViewModel : ObservableObject
         IFileOperationExecutor executor,
         IFolderPickerService folderPicker,
         IImageResizeExecutor resizeExecutor,
-        IResizePreviewService resizePreviewService)
+        IResizePreviewService resizePreviewService,
+        IFileImportService fileImportService)
     {
         _scanner = scanner;
         _frameDeletePlanner = frameDeletePlanner;
@@ -199,6 +205,7 @@ public sealed partial class MainViewModel : ObservableObject
         _folderPicker = folderPicker;
         _resizeExecutor = resizeExecutor;
         _resizePreviewService = resizePreviewService;
+        _fileImportService = fileImportService;
     }
 
     /// <summary>掃描結果檔案清單，繫結到掃描結果區塊。</summary>
@@ -249,6 +256,54 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         RefreshCommands();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanBrowseOrScan))]
+    private async Task ImportDroppedPaths(string[]? paths)
+    {
+        if (paths is null || paths.Length == 0)
+        {
+            return;
+        }
+
+        var existingPaths = Files
+            .Select(file => file.FullPath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var result = _fileImportService.Import(
+            paths,
+            GetSelectedExtensions(),
+            IncludeSubfolders,
+            existingPaths);
+
+        if (result.Files.Count > 0)
+        {
+            CurrentPreview = null;
+            foreach (var file in result.Files)
+            {
+                Files.Add(file);
+            }
+
+            FileSummary = $"已載入 {Files.Count} 個圖片檔";
+        }
+
+        AddLog($"拖放匯入完成：新增 {result.Files.Count} 個圖片檔，略過或錯誤 {result.Errors.Count} 個。");
+        foreach (var error in result.Errors)
+        {
+            AddLog($"拖放略過：{error}");
+        }
+
+        RefreshCommands();
+
+        if (result.Files.Count > 0 && CanPreview())
+        {
+            if (SelectedToolIndex == 2)
+                await PreviewResize();
+            else if (SelectedToolIndex == 1)
+                PreviewRename();
+            else
+                PreviewFrameDelete();
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanPreview))]
@@ -538,6 +593,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         BrowseFolderCommand.NotifyCanExecuteChanged();
         ScanFilesCommand.NotifyCanExecuteChanged();
+        ImportDroppedPathsCommand.NotifyCanExecuteChanged();
         PreviewFrameDeleteCommand.NotifyCanExecuteChanged();
         ExecuteFrameDeleteCommand.NotifyCanExecuteChanged();
         PreviewRenameCommand.NotifyCanExecuteChanged();
