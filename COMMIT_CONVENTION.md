@@ -1,7 +1,5 @@
 # Commit 規範
 
-> 參考來源：<https://hackmd.io/@howhow/git_commit>
-
 文件、說明與規則以繁體中文為主，符合 [AGENTS.md](./AGENTS.md) 語言規則。
 
 ---

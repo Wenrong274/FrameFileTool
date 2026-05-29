@@ -54,10 +54,10 @@ npx markdownlint-cli2 "*.md"
 
 本專案使用 GitHub Actions 執行 CI/CD。
 
-| Workflow  | 觸發條件                            | 用途                                                   |
-| --------- | ----------------------------------- | ------------------------------------------------------ |
-| `CI`      | push、pull request、手動執行        | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
-| `Release` | 推送 `v*` tag、手動執行             | 發佈 Windows x64 self-contained 單檔 zip               |
+| Workflow  | 觸發條件                     | 用途                                                    |
+| --------- | ---------------------------- | ------------------------------------------------------- |
+| `CI`      | push、pull request、手動執行 | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
+| `Release` | 推送 `v*` tag、手動執行      | 發佈 Windows x64 self-contained 單檔 zip                |
 
 版本號規則、發布前檢查清單與完整發布流程，請見 [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md)。
 
