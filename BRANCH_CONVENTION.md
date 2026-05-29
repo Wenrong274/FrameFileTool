@@ -10,24 +10,24 @@
 <type>/<short-scope>
 ```
 
-| 區段 | 規則 |
-|------|------|
-| `type` | 小寫英文，與 commit message 的 type 對應 |
+| 區段          | 規則                                                          |
+| ------------- | ------------------------------------------------------------- |
+| `type`        | 小寫英文，與 commit message 的 type 對應                      |
 | `short-scope` | 小寫英文與連字號，簡短描述功能範圍，與 commit 的 `scope` 一致 |
 
 ---
 
 ## Type 清單
 
-| Type | 說明 | 範例 |
-|------|------|------|
-| `feat` | 新功能開發 | `feat/live-preview` |
-| `fix` | 修補 bug | `fix/rename-conflict` |
-| `hotfix` | 緊急修補，直接從 `master` 開出 | `hotfix/crash-on-empty-folder` |
-| `refactor` | 重構，不新增功能也不修補 bug | `refactor/planner-interface` |
-| `docs` | 純文件變更 | `docs/update-readme` |
-| `test` | 補充或修正測試 | `test/resize-planner-edge` |
-| `chore` | 建置、CI、工具設定 | `chore/update-nuget` |
+| Type       | 說明                           | 範例                           |
+| ---------- | ------------------------------ | ------------------------------ |
+| `feat`     | 新功能開發                     | `feat/live-preview`            |
+| `fix`      | 修補 bug                       | `fix/rename-conflict`          |
+| `hotfix`   | 緊急修補，直接從 `master` 開出 | `hotfix/crash-on-empty-folder` |
+| `refactor` | 重構，不新增功能也不修補 bug   | `refactor/planner-interface`   |
+| `docs`     | 純文件變更                     | `docs/update-readme`           |
+| `test`     | 補充或修正測試                 | `test/resize-planner-edge`     |
+| `chore`    | 建置、CI、工具設定             | `chore/update-nuget`           |
 
 ---
 
