@@ -84,3 +84,5 @@ dotnet publish .\FrameFileTool\FrameFileTool.csproj `
 - [TODO.md](TODO.md) — 未完成功能與驗收條件
 - [UI_UX_DESIGN_RULES.md](UI_UX_DESIGN_RULES.md) — UI/UX 設計規則
 - [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md) — Commit message 格式與範例
+- [BRANCH_CONVENTION.md](BRANCH_CONVENTION.md) — 分支命名格式與生命週期
+- [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md) — 版本號規則、發布流程與 release notes 格式
