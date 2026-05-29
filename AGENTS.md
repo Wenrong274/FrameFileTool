@@ -299,6 +299,8 @@ UI/UX 設計規則、使用者流程、版面、狀態、表格、log 與 WPF �
 
 Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMMIT_CONVENTION.md](./COMMIT_CONVENTION.md) 為唯一依據。
 
+分支命名格式、type 清單、生命週期與 TODO 整合規則，請以 [BRANCH_CONVENTION.md](./BRANCH_CONVENTION.md) 為唯一依據。
+
 額外注意事項：
 
 - 使用聚焦的小型 commits，每個 commit 只做一件事。
