@@ -59,14 +59,7 @@ npx markdownlint-cli2 "*.md"
 | `CI`      | push、pull request、手動執行        | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
 | `Release` | 推送 `v*` tag、手動執行             | 發佈 Windows x64 self-contained 單檔 zip               |
 
-建立 GitHub Release 的建議方式是推送 `v*` tag：
-
-```powershell
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-也可以從 GitHub Actions 手動執行 `Release` workflow，並輸入 `version`，例如 `v1.0.0`。
+版本號規則、發布前檢查清單與完整發布流程，請見 [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md)。
 
 ## 發佈單一 exe
 
@@ -82,6 +75,7 @@ dotnet publish .\FrameFileTool\FrameFileTool.csproj `
 
 - [AGENTS.md](AGENTS.md) — 開發規範總覽（唯一依據）
 - [TODO.md](TODO.md) — 未完成功能與驗收條件
+- [TODO_SPEC.md](TODO_SPEC.md) — 新增任務的規劃流程與歸檔規則
 - [UI_UX_DESIGN_RULES.md](UI_UX_DESIGN_RULES.md) — UI/UX 設計規則
 - [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md) — Commit message 格式與範例
 - [BRANCH_CONVENTION.md](BRANCH_CONVENTION.md) — 分支命名格式與生命週期

@@ -27,32 +27,7 @@
 
 ## Git 分支規則
 
-每個功能必須在獨立的 git 分支上開發，不得直接在 `master` 上實作功能。
-
-### 分支命名
-
-```text
-feat/<short-scope>
-```
-
-`<short-scope>` 使用小寫英文與連字號，與該功能 commit message 的 `scope` 一致。
-
-範例：
-
-| 功能               | 分支名稱             |
-| ------------------ | -------------------- |
-| 可勾選要變動的檔案 | `feat/checkbox`      |
-| 指定輸出資料夾     | `feat/output-folder` |
-| 倍率輸入           | `feat/scale-factor`  |
-| 即時自動預覽       | `feat/live-preview`  |
-| 清空與剔除         | `feat/clear-remove`  |
-
-### 分支生命週期
-
-1. 將功能標記為 `[~]` 時，同步建立對應分支並切換過去。
-2. 在 `TODO.md` 的功能標頭補上 `分支：feat/<short-scope>`。
-3. 功能完成並由開發者驗收後，合併回 `master`，刪除功能分支。
-4. 合併後依歸檔規則將功能移入 `DONE.md`。
+分支命名格式、type 清單、scope 規則、TODO 整合時機與生命週期，請以 [BRANCH_CONVENTION.md](./BRANCH_CONVENTION.md) 為唯一依據。
 
 ---
 
@@ -134,7 +109,7 @@ feat/<short-scope>
 ```powershell
 dotnet test -p:UseAppHost=false
 dotnet format --verify-no-changes --severity warn
-npx markdownlint-cli2 "**/*.md"
+npx markdownlint-cli2 "*.md"
 ```
 
 若有修改 UI，另需手動確認：

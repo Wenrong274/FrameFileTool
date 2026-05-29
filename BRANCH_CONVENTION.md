@@ -48,14 +48,14 @@
 
 2. 在分支上開發，遵循 COMMIT_CONVENTION.md 的 commit 規範
 
-3. 功能完成並由開發者完成驗收後，合併回 master
+3. 所有子任務與完成判定均為 `[x]` 後，合併回 master
    git switch master
    git merge --no-ff feat/<short-scope>
 
 4. 合併後刪除功能分支
    git branch -d feat/<short-scope>
 
-5. 將功能從 TODO.md 移入 DONE.md
+5. 依 [TODO_SPEC.md](./TODO_SPEC.md) 的歸檔規則將功能移入 `DONE.md`
 ```
 
 ---
