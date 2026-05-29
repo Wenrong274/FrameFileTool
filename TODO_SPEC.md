@@ -10,6 +10,7 @@
 
 - `TODO.md` 只保留進行中 `[~]` 與未開始 `[ ]` 的功能。
 - `DONE.md` 保留完整的子任務與完成判定，供日後查閱實作細節。
+- 搬入 `DONE.md` 時，必須在功能標題下方加入完成日期，格式為 `完成日期：YYYY-MM-DD`。
 - 不得只更新狀態標記而不搬移，避免 `TODO.md` 持續累積已完成項目。
 
 ### 完成判定的標記權限
@@ -36,13 +37,13 @@ feat/<short-scope>
 
 範例：
 
-| 功能 | 分支名稱 |
-|------|----------|
-| 可勾選要變動的檔案 | `feat/checkbox` |
-| 指定輸出資料夾 | `feat/output-folder` |
-| 倍率輸入 | `feat/scale-factor` |
-| 即時自動預覽 | `feat/live-preview` |
-| 清空與剔除 | `feat/clear-remove` |
+| 功能               | 分支名稱             |
+| ------------------ | -------------------- |
+| 可勾選要變動的檔案 | `feat/checkbox`      |
+| 指定輸出資料夾     | `feat/output-folder` |
+| 倍率輸入           | `feat/scale-factor`  |
+| 即時自動預覽       | `feat/live-preview`  |
+| 清空與剔除         | `feat/clear-remove`  |
 
 ### 分支生命週期
 
@@ -217,4 +218,10 @@ npx markdownlint-cli2 "**/*.md"
 - [ ] [正常路徑] 觸發條件，預期結果。
 - [ ] [邊界] 觸發條件，預期結果。
 - [ ] [錯誤狀態] 觸發條件，預期結果。
+```
+
+搬入 `DONE.md` 時，在功能標題下方加入：
+
+```markdown
+完成日期：YYYY-MM-DD
 ```
