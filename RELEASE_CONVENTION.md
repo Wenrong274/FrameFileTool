@@ -25,6 +25,7 @@
 建立 tag 前必須確認以下項目全部通過：
 
 - [ ] 本次發布範圍內的 `TODO.md` 項目已全部標記為 `[x]`
+- [ ] 本次發布包含的已完成功能已歸檔至 `DONE.md`，並記錄最終完成範圍與已知限制
 - [ ] CI 全部通過（build、unit tests、`dotnet format`、Markdown lint）
 - [ ] `README.md` 已反映本版新功能、限制或操作說明的變動
 - [ ] `.github/release-notes/vX.Y.Z.md` 已建立，內容符合本規範的格式
@@ -39,9 +40,11 @@
 ```text
 1. 確認 master 已合併本版全部功能分支
 2. 完成發布前檢查清單
-3. 在 master 建立 tag
+3. 推送 master
+   git push origin master
+4. 在 master 建立 tag
    git tag v1.2.0
-4. 推送 tag 以觸發 Release workflow
+5. 推送 tag 以觸發 Release workflow
    git push origin v1.2.0
 ```
 
@@ -55,10 +58,12 @@
    git switch master
    git merge --no-ff hotfix/<short-scope>
 4. 完成發布前檢查清單（使用 PATCH 版本號）
-5. 建立 tag 並推送
+5. 推送 master
+   git push origin master
+6. 建立 tag 並推送
    git tag v1.1.2
    git push origin v1.1.2
-6. 刪除 hotfix 分支
+7. 刪除 hotfix 分支
    git branch -d hotfix/<short-scope>
 ```
 
@@ -68,7 +73,7 @@ GitHub Actions 的 `Release` workflow 支援手動執行，適用於 tag 已推�
 
 1. 前往 GitHub Actions → Release → Run workflow。
 2. 輸入版本號，例如 `v1.2.0`。
-3. 確認 `.github/release-notes/v1.2.0.md` 已存在。
+3. 確認對應的 `.github/release-notes/vX.Y.Z.md` 已存在。
 
 ---
 
@@ -124,4 +129,5 @@ Release notes 存放於 `.github/release-notes/vX.Y.Z.md`，
 - ❌ 略過 `.github/release-notes/vX.Y.Z.md`（workflow 會使用預設說明，缺乏本版資訊）
 - ❌ 版本號語意不符（例如新增功能卻只升 PATCH）
 - ❌ 強制推送已發布的 tag（`git push --force`）
+- ❌ 未先推送 master 就推送 tag（tag 會指向遠端尚不存在的 commit）
 - ❌ 在 `TODO.md` 仍有未完成項目時發布（除非明確標記為非本版範圍）
