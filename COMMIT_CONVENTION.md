@@ -138,9 +138,32 @@ CommunityToolkit.Mvvm.ComponentModel.ObservableObject。
 
 ---
 
+## 分支命名規範
+
+每個功能開發必須在獨立分支上進行，命名格式如下：
+
+```text
+feat/<short-scope>
+```
+
+`<short-scope>` 使用小寫英文與連字號，與該功能 commit message 的 `scope` 一致。
+
+```text
+feat/checkbox
+feat/output-folder
+feat/scale-factor
+feat/live-preview
+feat/clear-remove
+```
+
+功能完成並通過開發者驗收後，合併回 `master` 並刪除功能分支。
+
+---
+
 ## 禁止事項
 
 - ❌ subject 使用過去式動詞（已新增、已修正）
 - ❌ 單一 commit 混合多個無關變更
 - ❌ 沒有說明原因的大型 commit
 - ❌ 提交 build output（`bin/`、`obj/`、`.vs/`）
+- ❌ 直接在 `master` 上開發功能，應建立對應的 `feat/<short-scope>` 分支
