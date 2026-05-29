@@ -23,9 +23,14 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         var items = previewItems.ToList();
 
         var targets = items
-            .Where(item => item.Action == OperationAction.Resize && !item.HasError)
+            .Where(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
+
+        if (targets.Count == 0)
+        {
+            return result;
+        }
 
         if (!ValidateOptions(options, targets, result))
         {
@@ -58,9 +63,14 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         var items = previewItems.ToList();
 
         var targets = items
-            .Where(item => item.Action == OperationAction.Resize && !item.HasError)
+            .Where(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
+
+        if (targets.Count == 0)
+        {
+            return result;
+        }
 
         if (!ValidateOptions(options, targets, result))
         {

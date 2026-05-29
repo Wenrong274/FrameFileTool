@@ -400,7 +400,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var snapshot = previewVm.Items;
-        var total = snapshot.Count(item => item.Action == OperationAction.Resize && !item.HasError);
+        var total = snapshot.Count(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError);
 
         IsResizing = true;
         ResizeProgressCurrent = 0;
@@ -546,19 +546,49 @@ public sealed partial class MainViewModel : ObservableObject
     private bool HasExecutableDeletePreview() =>
         !IsResizing &&
         CurrentPreview is FrameDeletePreviewViewModel vm &&
+        vm.HasExecutableItems &&
         !vm.HasErrors;
 
     private bool HasExecutableRenamePreview() =>
         !IsResizing &&
         CurrentPreview is RenamePreviewViewModel vm &&
+        vm.HasExecutableItems &&
         !vm.HasErrors;
 
     private bool HasExecutableResizePreview() =>
         !IsResizing &&
         CurrentPreview is ResizePreviewViewModel vm &&
+        vm.HasExecutableItems &&
         !vm.HasErrors;
 
     private bool CanCancelResize() => IsResizing;
+
+    partial void OnCurrentPreviewChanged(IPreviewViewModel? oldValue, IPreviewViewModel? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnCurrentPreviewPropertyChanged;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnCurrentPreviewPropertyChanged;
+        }
+    }
+
+    private void OnCurrentPreviewPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not nameof(IPreviewViewModel.Summary)
+            and not nameof(IPreviewViewModel.HasErrors)
+            and not nameof(IPreviewViewModel.HasExecutableItems))
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(PreviewSummary));
+        OnPropertyChanged(nameof(HasPreviewErrors));
+        RefreshCommands();
+    }
 
     /// <summary>從 ViewModel 目前的縮放設定建立 ResizeOptions。</summary>
     private ResizeOptions BuildResizeOptions() =>

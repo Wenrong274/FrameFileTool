@@ -25,37 +25,6 @@
 
 ## 近期功能計劃
 
-### 2. 可勾選要變動的檔案
-
-優先度：高
-分支：feat/checkbox（開始時建立）
-前置條件：無
-被依賴：功能 3（executor 需識別 `IsIncluded` 篩選條件）
-
-⚠ 影響範圍：`OperationPreviewItem` → 三個 `PreviewViewModel` →
-`MainViewModel.HasExecutable*Preview` → 三個 DataTemplate → `FileOperationExecutor` → `ImageResizeExecutor`
-
-⚠ 邊界案例：全部取消勾選、錯誤列的 checkbox 狀態、只剩一個項目時取消勾選
-
-⚠ 待確認：`OperationPreviewItem` 目前為 `init-only` immutable class，`IsIncluded` 需要可寫屬性供 WPF checkbox binding。
-決策：在 `OperationPreviewItem` 加入可寫屬性，或為每個項目建立 per-item wrapper ViewModel？
-
-- [ ] [Model] 依設計決策調整 `OperationPreviewItem`，加入可寫的 `IsIncluded` 屬性；預設值依 `HasError` 決定（有錯誤則為 false）。
-- [ ] [PreviewViewModel] 三個 PreviewViewModel 的 `Summary` 與 `HasErrors` 改依已勾選項目計算。
-- [ ] [Test] 補上三個 PreviewViewModel 摘要隨勾選狀態變化的測試。
-- [ ] [MainViewModel] 調整 `HasExecutable*Preview()`：無任何已勾選且可執行項目時回傳 false。
-- [ ] [Test] 補上 CanExecute 隨勾選狀態變化的測試。
-- [ ] [Service] `FileOperationExecutor` 與 `ImageResizeExecutor` 執行前過濾 `IsIncluded = false` 的項目。
-- [ ] [Test] 補上 executor 只執行已勾選且無錯誤項目的測試。
-- [ ] [View] 三個工具的 DataTemplate 加入 checkbox 欄位，繫結 `IsIncluded`；錯誤列 checkbox 停用。
-
-完成判定：
-
-- [ ] [正常路徑] 取消勾選單一項目後點擊執行，該項目對應的檔案操作不會被執行。
-- [ ] [邊界] 全部取消勾選時，摘要顯示「0 個項目」且執行按鈕停用。
-- [ ] [錯誤狀態] 錯誤列的 checkbox 為停用狀態，即使資料列顯示也不會被執行。
-- [ ] [一致性] 抽幀刪除、批次改名、批次縮放三個工具勾選行為一致，摘要文字隨勾選同步更新。
-
 ### 3. 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
 
 優先度：中

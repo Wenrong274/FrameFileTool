@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using FrameFileTool.Models;
 
 namespace FrameFileTool.ViewModels.Previews;
@@ -12,21 +13,50 @@ public sealed class ResizePreviewViewModel : IPreviewViewModel
     public IReadOnlyList<ResizePreviewItem> Items { get; }
 
     /// <inheritdoc/>
-    public string Summary { get; }
+    public string Summary
+    {
+        get
+        {
+            var includedItems = Items.Where(i => i.IsIncluded).ToList();
+            var resizeCount = includedItems.Count(i => i.Action == OperationAction.Resize && !i.HasError);
+            var errorCount = Items.Count(i => i.HasError);
+            var displayCount = includedItems.Count + errorCount;
+
+            return errorCount > 0
+                ? $"共 {displayCount} 個項目，預計縮放 {resizeCount} 個，{errorCount} 個錯誤（執行已停用）"
+                : $"共 {displayCount} 個項目，預計縮放 {resizeCount} 個";
+        }
+    }
 
     /// <inheritdoc/>
-    public bool HasErrors { get; }
+    public bool HasErrors => Items.Any(i => i.HasError);
+
+    /// <inheritdoc/>
+    public bool HasExecutableItems =>
+        Items.Any(i => i.IsIncluded && i.Action == OperationAction.Resize && !i.HasError);
+
+    /// <inheritdoc/>
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public ResizePreviewViewModel(IReadOnlyList<ResizePreviewItem> items)
     {
         Items = items;
 
-        var resizeCount = items.Count(i => i.Action == OperationAction.Resize && !i.HasError);
-        var errorCount = items.Count(i => i.HasError);
+        foreach (var item in Items)
+        {
+            item.PropertyChanged += OnItemPropertyChanged;
+        }
+    }
 
-        HasErrors = errorCount > 0;
-        Summary = HasErrors
-            ? $"共 {items.Count} 個項目，預計縮放 {resizeCount} 個，{errorCount} 個錯誤（執行已停用）"
-            : $"共 {items.Count} 個項目，預計縮放 {resizeCount} 個";
+    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(OperationPreviewItem.IsIncluded))
+        {
+            return;
+        }
+
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasErrors)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasExecutableItems)));
     }
 }

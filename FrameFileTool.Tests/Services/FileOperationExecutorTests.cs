@@ -15,22 +15,26 @@ public sealed class FileOperationExecutorTests
         var source = sandbox.WriteFile("a.png");
         var keep = sandbox.WriteFile("b.png");
         var error = sandbox.WriteFile("c.png");
+        var excluded = sandbox.WriteFile("d.png");
 
         var items = new[]
         {
             MakePreview(source, "a.png", OperationAction.Rename, "renamed.png"),
             MakePreview(keep, "b.png", OperationAction.Keep, string.Empty),
             MakePreview(error, "c.png", OperationAction.Rename, "ignored.png", hasError: true),
+            MakePreview(excluded, "d.png", OperationAction.Rename, "excluded.png", isIncluded: false),
         };
 
         var result = _sut.RenameFiles(items);
 
         result.SuccessCount.Should().Be(1);
-        result.SkippedCount.Should().Be(2);
+        result.SkippedCount.Should().Be(3);
         result.Errors.Should().BeEmpty();
         File.Exists(Path.Combine(sandbox.Path, "renamed.png")).Should().BeTrue();
         File.Exists(keep).Should().BeTrue();
         File.Exists(error).Should().BeTrue();
+        File.Exists(excluded).Should().BeTrue();
+        File.Exists(Path.Combine(sandbox.Path, "excluded.png")).Should().BeFalse();
     }
 
     [Fact]
@@ -103,12 +107,30 @@ public sealed class FileOperationExecutorTests
         File.Exists(source).Should().BeTrue();
     }
 
+    [Fact]
+    public void DeleteToRecycleBin_取消勾選項目_應略過不執行()
+    {
+        using var sandbox = TestDirectory.Create();
+        var source = sandbox.WriteFile("a.png");
+
+        var result = _sut.DeleteToRecycleBin(
+        [
+            MakePreview(source, "a.png", OperationAction.Delete, string.Empty, isIncluded: false),
+        ]);
+
+        result.SuccessCount.Should().Be(0);
+        result.SkippedCount.Should().Be(1);
+        result.Errors.Should().BeEmpty();
+        File.Exists(source).Should().BeTrue();
+    }
+
     private static OperationPreviewItem MakePreview(
         string fullPath,
         string originalName,
         string action,
         string targetName,
-        bool hasError = false) =>
+        bool hasError = false,
+        bool isIncluded = true) =>
         new()
         {
             FullPath = fullPath,
@@ -116,6 +138,7 @@ public sealed class FileOperationExecutorTests
             Action = action,
             TargetName = targetName,
             HasError = hasError,
+            IsIncluded = isIncluded,
         };
 
     private sealed class TestDirectory : IDisposable

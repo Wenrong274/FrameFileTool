@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace FrameFileTool.ViewModels.Previews;
 
 /// <summary>
@@ -5,11 +7,14 @@ namespace FrameFileTool.ViewModels.Previews;
 /// MainViewModel 將 <see cref="CurrentPreview"/> 指派為此介面的某個實作，
 /// 摘要列的綁定與 ContentControl 的 DataTemplate 選擇均依賴此介面。
 /// </summary>
-public interface IPreviewViewModel
+public interface IPreviewViewModel : INotifyPropertyChanged
 {
     /// <summary>顯示於預覽摘要列的說明文字。</summary>
     public string Summary { get; }
 
     /// <summary>是否含有任何錯誤項目。</summary>
     public bool HasErrors { get; }
+
+    /// <summary>是否有至少一個已勾選且可執行的項目。</summary>
+    public bool HasExecutableItems { get; }
 }

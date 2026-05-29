@@ -39,6 +39,35 @@ public sealed class MainViewModelCanExecuteTests
             new() { Action = withError ? OperationAction.Error : OperationAction.Rename, HasError = withError },
         });
 
+    private static RenamePreviewViewModel RenamePreviewWithValidItemAndError() =>
+        new(new List<OperationPreviewItem>
+        {
+            new() { Action = OperationAction.Rename },
+            new() { Action = OperationAction.Error, HasError = true },
+        });
+
+    private static RenamePreviewViewModel RenamePreviewWithExcludedSourceConflict()
+    {
+        var excludedItem = new OperationPreviewItem
+        {
+            FullPath = @"C:\imgs\b.png",
+            Action = OperationAction.Rename,
+            TargetName = "c.png",
+        };
+        excludedItem.IsIncluded = false;
+
+        return new RenamePreviewViewModel(
+        [
+            new()
+            {
+                FullPath = @"C:\imgs\a.png",
+                Action = OperationAction.Rename,
+                TargetName = "b.png",
+            },
+            excludedItem,
+        ]);
+    }
+
     private static ResizePreviewViewModel ResizePreview(bool withError = false) =>
         new(new List<ResizePreviewItem>
         {
@@ -86,6 +115,19 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
+    public void ExecuteFrameDelete_刪除項目取消勾選_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = DeletePreview();
+        var preview = (FrameDeletePreviewViewModel)sut.CurrentPreview;
+
+        preview.Items[0].IsIncluded = false;
+
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewSummary.Should().Be("共 0 個項目，預計刪除 0 個");
+    }
+
+    [Fact]
     public void ExecuteFrameDelete_縮放進行中且預覽正確_CanExecute應為false()
     {
         var sut = CreateSut();
@@ -127,12 +169,45 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
+    public void ExecuteRename_預覽同時有可改名項目與錯誤列_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreviewWithValidItemAndError();
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+        sut.HasPreviewErrors.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteRename_已勾選改名目標撞到未勾選來源檔_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreviewWithExcludedSourceConflict();
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+        sut.HasPreviewErrors.Should().BeTrue();
+    }
+
+    [Fact]
     public void ExecuteRename_預覽正確且無錯誤_CanExecute應為true()
     {
         var sut = CreateSut();
         sut.CurrentPreview = RenamePreview();
 
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteRename_改名項目取消勾選_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = RenamePreview();
+        var preview = (RenamePreviewViewModel)sut.CurrentPreview;
+
+        preview.Items[0].IsIncluded = false;
+
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewSummary.Should().Be("共 0 個項目，預計改名 0 個");
     }
 
     [Fact]
@@ -183,6 +258,19 @@ public sealed class MainViewModelCanExecuteTests
         sut.CurrentPreview = ResizePreview();
 
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteResize_縮放項目取消勾選_CanExecute應為false()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview();
+        var preview = (ResizePreviewViewModel)sut.CurrentPreview;
+
+        preview.Items[0].IsIncluded = false;
+
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
+        sut.PreviewSummary.Should().Be("共 0 個項目，預計縮放 0 個");
     }
 
     [Fact]
