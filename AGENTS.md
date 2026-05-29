@@ -360,14 +360,7 @@ GitHub Actions workflow 定義於 `.github/workflows/`。
 | `CI`      | push、pull request、手動執行 | 還原套件、build、test、檢查 `.editorconfig` 與 Markdown |
 | `Release` | 推送 `v*` tag、手動執行      | 發佈 Windows x64 self-contained 單檔 zip                |
 
-Release workflow 的建議使用方式：
-
-```powershell
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-手動執行 `Release` workflow 時，必須輸入 `version`，例如 `v1.0.0`。
+版本號規則、發布前檢查清單、發布流程與 release notes 格式，請以 [RELEASE_CONVENTION.md](./RELEASE_CONVENTION.md) 為唯一依據。
 
 ## 目前限制
 
