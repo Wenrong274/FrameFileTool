@@ -110,33 +110,6 @@ ID：`scale-factor`
 - [ ] [錯誤狀態] 輸入倍率 `0` 或負數時，預覽顯示錯誤訊息且執行按鈕停用。
 - [ ] [清理] 舊的百分比文案、log 與錯誤訊息已全部改為倍率語意，無殘留百分比用詞。
 
-### 清空全部與剔除檔案功能 [~]
-
-ID：`clear-remove`
-優先度：中
-分支：feat/clear-remove（開始時建立）
-前置條件：`live-preview` 已完成（`RemoveFileCommand` 移除後需觸發即時預覽更新）
-被依賴：無
-
-⚠ 影響範圍：`MainViewModel`（新增兩個 command）→ `MainWindow.xaml`（清空按鈕）→ 三個工具 DataTemplate（剔除欄位）
-
-⚠ 邊界案例：剔除最後一個檔案後的預覽與按鈕狀態、清空後立即再次載入、`Files` 為空時點擊清空
-
-- [x] [MainViewModel] 新增 `ClearFolderAndFilesCommand`，清空 `SelectedFolder` 與 `Files`，並重設 `CurrentPreview`。
-- [x] [Test] 補上 `ClearFolderAndFilesCommand` 執行後 `SelectedFolder`、`Files`、`CurrentPreview` 全部重設，且執行按鈕停用的測試。
-- [x] [MainViewModel] 新增 `RemoveFileCommand(FileItem)`，從 `Files` 移除指定項目，移除後觸發即時預覽更新。
-- [x] [Test] 補上 `RemoveFileCommand`：移除後預覽更新、移除最後一個檔案後執行按鈕停用的測試。
-- [x] [View] `MainWindow.xaml` 加入「清空全部」按鈕，繫結 `ClearFolderAndFilesCommand`。
-- [x] [View] 三個工具的 DataTemplate 各自新增「剔除」欄位，繫結 `RemoveFileCommand`，傳入對應的 `FileItem`。
-
-完成判定：
-
-- [v] [正常路徑] 點擊「清空全部」按鈕，來源路徑與檔案清單清空，預覽重設且執行按鈕停用。
-- [v] [正常路徑] 點擊預覽表格任意檔案的「剔除」按鈕，該檔案從清單移出，其他項目的預覽立即更新。
-- [v] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
-- [v] [正常路徑] 點擊「重新掃描」按鈕，原本被剔除的檔案應被重新加載並顯示於預覽清單中。
-- [v] [正常路徑] 執行抽幀、改名或縮放操作完成後，背景自動掃描應維持檔案的剔除狀態（不被加回清單）。
-
 ### 自動檢查 GitHub 發布更新與橫幅通知
 
 ID：`auto-update-check`

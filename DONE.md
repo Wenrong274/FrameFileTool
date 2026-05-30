@@ -182,3 +182,42 @@ ID：`live-preview`
 - [x] [即時] 調整間隔、前綴、縮放倍率等設定時，預覽即時反映最新參數。
 - [x] [邊界] 切換工具 Tab 時，目標工具的預覽自動更新至最新狀態。
 - [x] [防抖] 批次縮放連續調整設定時不會同時發起多個非同步請求；預覽計算中顯示 loading 狀態，完成後自動解除。
+
+## 清空全部與剔除檔案功能
+
+ID：`clear-remove`
+完成日期：2026-05-30
+發布版本：v1.3.1
+
+優先度：中
+分支：feat/clear-remove
+前置條件：`live-preview` 已完成（`RemoveFileCommand` 移除後需觸發即時預覽更新）
+被依賴：無
+
+影響範圍：`MainViewModel`（新增兩個 command）→ `MainWindow.xaml`（清空按鈕）→ 三個工具 DataTemplate（剔除欄位）
+
+實作結果：
+
+- 新增 `ClearFolderAndFilesCommand` 與 `RemoveFileCommand` 兩個 RelayCommand，提供資料夾整理的重啟與單個剔除能力。
+- `RemoveFileCommand` 支援多型別相容（FileItem 與 OperationPreviewItem），會將被剔除檔案的 FullPath 加入記憶清單 `_excludedFilePaths` 中。
+- 重構掃描機制為 `RefreshScanFilesCore(bool keepExclusions)`：
+  - 當點擊 UI 上的「重新掃描」按鈕時，會清除剔除清單並重新完整讀取檔案。
+  - 當執行操作完成後的背景自動重新整理時，會保留剔除清單，防止剔除的檔案在執行完成後死而復生。
+  - 切換來源資料夾或清空時會自動清空剔除記錄。
+- 於 `MainWindow.xaml` 頂部加入「清空全部」按鈕，並於三個 DataGrid 最右側追加紅色「剔除」按鈕欄。
+- 補上了 ViewModel 指令、重新掃描保留狀態與執行操作後維持過濾的 3 個單元測試，全部 160 個測試點均順利通過。
+
+- [x] [MainViewModel] 新增 `ClearFolderAndFilesCommand`，清空 `SelectedFolder` 與 `Files`，並重設 `CurrentPreview`。
+- [x] [Test] 補上 `ClearFolderAndFilesCommand` 執行後 `SelectedFolder`、`Files`、`CurrentPreview` 全部重設，且執行按鈕停用的測試。
+- [x] [MainViewModel] 新增 `RemoveFileCommand(FileItem)`，從 `Files` 移除指定項目，移除後觸發即時預覽更新。
+- [x] [Test] 補上 `RemoveFileCommand`：移除後預覽更新、移除最後一個檔案後執行按鈕停用的測試。
+- [x] [View] `MainWindow.xaml` 加入「清空全部」按鈕，繫結 `ClearFolderAndFilesCommand`。
+- [x] [View] 三個工具的 DataTemplate 各自新增「剔除」欄位，繫結 `RemoveFileCommand`，傳入對應的 `FileItem`。
+
+完成判定：
+
+- [x] [正常路徑] 點擊「清空全部」按鈕，來源路徑與檔案清單清空，預覽重設且執行按鈕停用。
+- [x] [正常路徑] 點擊預覽表格任意檔案的「剔除」按鈕，該檔案從清單移出，其他項目的預覽立即更新。
+- [x] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
+- [x] [正常路徑] 點擊「重新掃描」按鈕，原本被剔除的檔案應被重新加載並顯示於預覽清單中。
+- [x] [正常路徑] 執行抽幀、改名或縮放操作完成後，背景自動掃描應維持檔案的剔除狀態（不被加回清單）。
