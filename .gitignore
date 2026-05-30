@@ -22,6 +22,11 @@ publish/
 *.log
 artifacts/
 
+# ===== Agent 相容入口（指向 .agents/skills，不重複版控）=====
+.claude/skills/
+.codex/skills/
+.antigravitycli/skills/
+
 # ===== 測試結果 =====
 TestResults/
 *.coverage
