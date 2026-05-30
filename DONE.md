@@ -93,7 +93,7 @@ ID：`checkbox`
 
 ID：`preview-flow`
 完成日期：2026-05-30
-發布版本：未發布
+發布版本：v1.3.0
 
 優先度：高
 分支：refactor/preview-flow
@@ -150,7 +150,7 @@ ID：`preview-flow`
 
 ID：`live-preview`
 完成日期：2026-05-30
-發布版本：未發布
+發布版本：v1.3.0
 
 優先度：高
 分支：feat/live-preview
