@@ -110,7 +110,7 @@ ID：`scale-factor`
 - [ ] [錯誤狀態] 輸入倍率 `0` 或負數時，預覽顯示錯誤訊息且執行按鈕停用。
 - [ ] [清理] 舊的百分比文案、log 與錯誤訊息已全部改為倍率語意，無殘留百分比用詞。
 
-### 清空全部與剔除檔案功能
+### 清空全部與剔除檔案功能 [~]
 
 ID：`clear-remove`
 優先度：中
@@ -122,18 +122,20 @@ ID：`clear-remove`
 
 ⚠ 邊界案例：剔除最後一個檔案後的預覽與按鈕狀態、清空後立即再次載入、`Files` 為空時點擊清空
 
-- [ ] [MainViewModel] 新增 `ClearFolderAndFilesCommand`，清空 `SelectedFolder` 與 `Files`，並重設 `CurrentPreview`。
-- [ ] [Test] 補上 `ClearFolderAndFilesCommand` 執行後 `SelectedFolder`、`Files`、`CurrentPreview` 全部重設，且執行按鈕停用的測試。
-- [ ] [MainViewModel] 新增 `RemoveFileCommand(FileItem)`，從 `Files` 移除指定項目，移除後觸發即時預覽更新。
-- [ ] [Test] 補上 `RemoveFileCommand`：移除後預覽更新、移除最後一個檔案後執行按鈕停用的測試。
-- [ ] [View] `MainWindow.xaml` 加入「清空全部」按鈕，繫結 `ClearFolderAndFilesCommand`。
-- [ ] [View] 三個工具的 DataTemplate 各自新增「剔除」欄位，繫結 `RemoveFileCommand`，傳入對應的 `FileItem`。
+- [x] [MainViewModel] 新增 `ClearFolderAndFilesCommand`，清空 `SelectedFolder` 與 `Files`，並重設 `CurrentPreview`。
+- [x] [Test] 補上 `ClearFolderAndFilesCommand` 執行後 `SelectedFolder`、`Files`、`CurrentPreview` 全部重設，且執行按鈕停用的測試。
+- [x] [MainViewModel] 新增 `RemoveFileCommand(FileItem)`，從 `Files` 移除指定項目，移除後觸發即時預覽更新。
+- [x] [Test] 補上 `RemoveFileCommand`：移除後預覽更新、移除最後一個檔案後執行按鈕停用的測試。
+- [x] [View] `MainWindow.xaml` 加入「清空全部」按鈕，繫結 `ClearFolderAndFilesCommand`。
+- [x] [View] 三個工具的 DataTemplate 各自新增「剔除」欄位，繫結 `RemoveFileCommand`，傳入對應的 `FileItem`。
 
 完成判定：
 
-- [ ] [正常路徑] 點擊「清空全部」按鈕，來源路徑與檔案清單清空，預覽重設且執行按鈕停用。
-- [ ] [正常路徑] 點擊預覽表格任意檔案的「剔除」按鈕，該檔案從清單移出，其他項目的預覽立即更新。
-- [ ] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
+- [v] [正常路徑] 點擊「清空全部」按鈕，來源路徑與檔案清單清空，預覽重設且執行按鈕停用。
+- [v] [正常路徑] 點擊預覽表格任意檔案的「剔除」按鈕，該檔案從清單移出，其他項目的預覽立即更新。
+- [v] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
+- [ ] [正常路徑] 點擊「重新掃描」按鈕，原本被剔除的檔案應被重新加載並顯示於預覽清單中。
+- [ ] [正常路徑] 執行抽幀、改名或縮放操作完成後，背景自動掃描應維持檔案的剔除狀態（不被加回清單）。
 
 ### 自動檢查 GitHub 發布更新與橫幅通知
 
@@ -143,33 +145,33 @@ ID：`auto-update-check`
 被依賴：無
 
 ⚠ 影響範圍：`IUpdateService` → `GitHubUpdateService` → `MainViewModel`
-  → `MainWindow.xaml` → `UpdateServiceTests`
+→ `MainWindow.xaml` → `UpdateServiceTests`
 
 ⚠ 邊界案例：GitHub API 回傳非 200、JSON 格式不符、
-  本地版本與遠端版本相同或較新、網路逾時、多開程式時的資源競爭
+本地版本與遠端版本相同或較新、網路逾時、多開程式時的資源競爭
 
 - [ ] [Model] 新增 `UpdateInfo` record，包含 `HasUpdate` (bool), `LatestVersion` (string), `ReleaseUrl` (string)。
 - [ ] [Service] 新增 `IUpdateService` 介面，定義 `CheckForUpdateAsync(CancellationToken token)`。
 - [ ] [Service] 實作 `GitHubUpdateService`：以 `HttpClient` 背景向
-  GitHub Releases API 抓取最新發布，並與 Assembly 版本比對。
+      GitHub Releases API 抓取最新發布，並與 Assembly 版本比對。
 - [ ] [Test] 補上 `GitHubUpdateServiceTests`：模擬不同 API 回傳值
-  （版本相同、遠端較新、遠端較舊、網路逾時/失敗）的版本號比對邏輯。
+      （版本相同、遠端較新、遠端較舊、網路逾時/失敗）的版本號比對邏輯。
 - [ ] [MainViewModel] 新增 `IsUpdateAvailable`、`LatestVersionText`、
-  `LatestReleaseUrl` 等屬性，並註冊 `GoToDownloadPageCommand`
-  與 `DismissUpdateBannerCommand`。
+      `LatestReleaseUrl` 等屬性，並註冊 `GoToDownloadPageCommand`
+      與 `DismissUpdateBannerCommand`。
 - [ ] [MainViewModel] 於 ViewModel 初始化（程式啟動後）非同步背景呼叫更新檢測服務。
 - [ ] [Test] 補上 ViewModel 測試，驗證更新檢測完成後 `IsUpdateAvailable` 與指令狀態正確。
 - [ ] [View] `MainWindow.xaml` 頂端新增 Fluent 風格橫幅，繫結 `IsUpdateAvailable`
-  屬性，點選下載開啟瀏覽器，點選關閉則隱藏橫幅。
+      屬性，點選下載開啟瀏覽器，點選關閉則隱藏橫幅。
 - [ ] [DI] 於 `App.xaml.cs` 的 DI 容器註冊 `HttpClient` 與 `IUpdateService`。
 
 完成判定：
 
 - [ ] [正常路徑] 當遠端 GitHub 有較新版本發布時，程式啟動後頂端會顯示藍色更新提示橫幅，
-  點擊「下載更新」會以瀏覽器開啟 Release 頁面。
+      點擊「下載更新」會以瀏覽器開啟 Release 頁面。
 - [ ] [邊界] 當遠端版本與本機相同或更舊時，橫幅保持隱藏，不干擾使用者。
 - [ ] [錯誤狀態] 當網路連線異常或 GitHub API 呼叫逾時（設定為 5 秒）時，程式應靜默失敗，
-  不彈出任何錯誤對話框且橫幅保持隱藏。
+      不彈出任何錯誤對話框且橫幅保持隱藏。
 - [ ] [體驗] 點擊橫幅的「關閉」按鈕後，橫幅必須立刻隱藏，且在此次程式執行期間不再顯示。
 
 ## 通用驗證
