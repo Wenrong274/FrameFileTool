@@ -18,7 +18,8 @@ public sealed class MainViewModelCanExecuteTests
     private static MainViewModel CreateSut(
         IFrameDeletePlanner? frameDeletePlanner = null,
         IRenamePlanner? renamePlanner = null,
-        IResizePreviewService? resizePreviewService = null) => new(
+        IResizePreviewService? resizePreviewService = null,
+        TimeSpan debounceDelay = default) => new(
         Substitute.For<IFileScanner>(),
         frameDeletePlanner ?? Substitute.For<IFrameDeletePlanner>(),
         renamePlanner ?? Substitute.For<IRenamePlanner>(),
@@ -26,7 +27,8 @@ public sealed class MainViewModelCanExecuteTests
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
         resizePreviewService ?? Substitute.For<IResizePreviewService>(),
-        Substitute.For<IFileImportService>());
+        Substitute.For<IFileImportService>(),
+        debounceDelay);
 
     // ── 預覽 ViewModel 建立輔助 ───────────────────────────────
 
@@ -287,34 +289,8 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     // ════════════════════════════════════════════════════════
-    // Preview CanExecute
+    // 即時預覽觸發（Live Preview）
     // ════════════════════════════════════════════════════════
-
-    [Fact]
-    public void PreviewCommands_縮放進行中且有檔案_CanExecute應為false()
-    {
-        var sut = CreateSut();
-        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
-
-        sut.IsResizing = true;
-
-        sut.PreviewFrameDeleteCommand.CanExecute(null).Should().BeFalse();
-        sut.PreviewRenameCommand.CanExecute(null).Should().BeFalse();
-        sut.PreviewResizeCommand.CanExecute(null).Should().BeFalse();
-    }
-
-    [Fact]
-    public void PreviewCommands_準備預覽中且有檔案_CanExecute應為false()
-    {
-        var sut = CreateSut();
-        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
-
-        sut.IsPreparingPreview = true;
-
-        sut.PreviewFrameDeleteCommand.CanExecute(null).Should().BeFalse();
-        sut.PreviewRenameCommand.CanExecute(null).Should().BeFalse();
-        sut.PreviewResizeCommand.CanExecute(null).Should().BeFalse();
-    }
 
     [Fact]
     public void PreviewSummary_準備預覽中_應顯示忙碌文字()
@@ -328,27 +304,23 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public void PreviewFrameDelete_完成後_應更新摘要Log與CanExecute()
+    public void FrameDeleteInterval_變更且有檔案_應即時更新預覽()
     {
         var planner = Substitute.For<IFrameDeletePlanner>();
         planner.Plan(Arg.Any<IReadOnlyList<FileItem>>(), Arg.Any<int>())
-            .Returns(
-            [
-                new OperationPreviewItem { ActionKind = OperationActionKind.Delete },
-            ]);
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Delete }]);
         var sut = CreateSut(frameDeletePlanner: planner);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
 
-        sut.PreviewFrameDeleteCommand.Execute(null);
+        sut.FrameDeleteInterval = 3;
 
         sut.CurrentPreview.Should().BeOfType<FrameDeletePreviewViewModel>();
-        sut.PreviewSummary.Should().Be("共 1 個項目，預計刪除 1 個");
         sut.Logs.Should().Contain(log => log.Contains("抽幀預覽完成"));
         sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeTrue();
     }
 
     [Fact]
-    public void PreviewRename_完成後_應更新摘要Log與CanExecute()
+    public void RenamePrefix_變更且有檔案_應即時更新預覽()
     {
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
@@ -357,23 +329,20 @@ public sealed class MainViewModelCanExecuteTests
                 Arg.Any<int>(),
                 Arg.Any<int>(),
                 Arg.Any<IReadOnlySet<string>>())
-            .Returns(
-            [
-                new OperationPreviewItem { ActionKind = OperationActionKind.Rename },
-            ]);
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
         var sut = CreateSut(renamePlanner: planner);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 1;
 
-        sut.PreviewRenameCommand.Execute(null);
+        sut.RenamePrefix = "New_";
 
         sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
-        sut.PreviewSummary.Should().Be("共 1 個項目，預計改名 1 個");
         sut.Logs.Should().Contain(log => log.Contains("改名預覽完成"));
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
     }
 
     [Fact]
-    public async Task PreviewResize_完成後_應更新摘要Log與CanExecute()
+    public async Task ScalePercent_變更且有檔案_應觸發防抖縮放預覽()
     {
         var resizePreviewService = Substitute.For<IResizePreviewService>();
         resizePreviewService
@@ -381,69 +350,107 @@ public sealed class MainViewModelCanExecuteTests
                 Arg.Any<IReadOnlyList<FileItem>>(),
                 Arg.Any<ResizeOptions>(),
                 Arg.Any<CancellationToken>())
-            .Returns(
-            [
-                new ResizePreviewItem { ActionKind = OperationActionKind.Resize },
-            ]);
-        var sut = CreateSut(resizePreviewService: resizePreviewService);
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+        var sut = CreateSut(resizePreviewService: resizePreviewService, debounceDelay: TimeSpan.Zero);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 2;
 
-        await sut.PreviewResizeCommand.ExecuteAsync(null);
+        sut.ScalePercent = 75;
+        await sut.LivePreviewTask;
 
         sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
-        sut.PreviewSummary.Should().Be("共 1 個項目，預計縮放 1 個");
         sut.Logs.Should().Contain(log => log.Contains("縮放預覽完成"));
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
     }
 
     [Fact]
-    public async Task PreviewResize_準備期間縮放設定變更_舊結果不應覆蓋新設定()
+    public void SelectedToolIndex_切換到抽幀刪除且有檔案_應即時產生預覽()
+    {
+        var planner = Substitute.For<IFrameDeletePlanner>();
+        planner.Plan(Arg.Any<IReadOnlyList<FileItem>>(), Arg.Any<int>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Delete }]);
+        var sut = CreateSut(frameDeletePlanner: planner);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 1;
+
+        sut.SelectedToolIndex = 0;
+
+        sut.CurrentPreview.Should().BeOfType<FrameDeletePreviewViewModel>();
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void SelectedToolIndex_切換到批次改名且有檔案_應即時產生預覽()
+    {
+        var planner = Substitute.For<IRenamePlanner>();
+        planner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<string>(),
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<IReadOnlySet<string>>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
+        var sut = CreateSut(renamePlanner: planner);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        sut.SelectedToolIndex = 1;
+
+        sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
+        sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SelectedToolIndex_切換到批次縮放且有檔案_應觸發防抖縮放預覽()
     {
         var resizePreviewService = Substitute.For<IResizePreviewService>();
-        var pendingPreview = new TaskCompletionSource<IReadOnlyList<ResizePreviewItem>>();
-        CancellationToken capturedToken = default;
-
         resizePreviewService
             .BuildPreviewAsync(
                 Arg.Any<IReadOnlyList<FileItem>>(),
                 Arg.Any<ResizeOptions>(),
                 Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                capturedToken = call.ArgAt<CancellationToken>(2);
-                return pendingPreview.Task;
-            });
-
-        var sut = CreateSut(resizePreviewService: resizePreviewService);
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+        var sut = CreateSut(resizePreviewService: resizePreviewService, debounceDelay: TimeSpan.Zero);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
 
-        var previewTask = sut.PreviewResizeCommand.ExecuteAsync(null);
-        sut.IsPreparingPreview.Should().BeTrue();
+        sut.SelectedToolIndex = 2;
+        await sut.LivePreviewTask;
 
+        sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task 縮放設定連續變更_最終預覽反映最新設定()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+
+        var sut = CreateSut(resizePreviewService: resizePreviewService, debounceDelay: TimeSpan.Zero);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 2;
+
+        // 快速連續變更：每次都取消前一個 debounce，只有最後一個會執行
+        sut.ScalePercent = 60;
         sut.ScalePercent = 75;
-        capturedToken.IsCancellationRequested.Should().BeTrue();
 
-        pendingPreview.SetResult(
-        [
-            new ResizePreviewItem
-            {
-                ActionKind = OperationActionKind.Resize,
-                OriginalName = "a.png",
-            },
-        ]);
-        await previewTask;
+        await sut.LivePreviewTask;
 
-        sut.CurrentPreview.Should().BeNull();
+        sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
         sut.IsPreparingPreview.Should().BeFalse();
     }
 
     [Fact]
-    public async Task PreviewResize_準備期間切換到其他工具_舊結果不應覆蓋新工具()
+    public async Task 縮放預覽進行中切換工具_最終顯示新工具預覽()
     {
-        var resizePreviewService = Substitute.For<IResizePreviewService>();
-        var pendingPreview = new TaskCompletionSource<IReadOnlyList<ResizePreviewItem>>();
-        CancellationToken capturedToken = default;
+        var resizePending = new TaskCompletionSource<IReadOnlyList<ResizePreviewItem>>();
+        var resizeCallCount = 0;
 
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
         resizePreviewService
             .BuildPreviewAsync(
                 Arg.Any<IReadOnlyList<FileItem>>(),
@@ -451,31 +458,36 @@ public sealed class MainViewModelCanExecuteTests
                 Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                capturedToken = call.ArgAt<CancellationToken>(2);
-                return pendingPreview.Task;
+                resizeCallCount++;
+                return resizePending.Task;
             });
 
-        var sut = CreateSut(resizePreviewService: resizePreviewService);
+        var renamePlanner = Substitute.For<IRenamePlanner>();
+        renamePlanner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<string>(),
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<IReadOnlySet<string>>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
+
+        var sut = CreateSut(
+            renamePlanner: renamePlanner,
+            resizePreviewService: resizePreviewService,
+            debounceDelay: TimeSpan.Zero);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
         sut.SelectedToolIndex = 2;
 
-        var previewTask = sut.PreviewResizeCommand.ExecuteAsync(null);
-        sut.IsPreparingPreview.Should().BeTrue();
-
+        // 切換到改名 Tab → 取消縮放 debounce（debounce 尚未進入 BuildPreviewAsync），
+        // 同步產生改名預覽
+        var taskBeforeSwitch = sut.LivePreviewTask;
         sut.SelectedToolIndex = 1;
-        capturedToken.IsCancellationRequested.Should().BeTrue();
 
-        pendingPreview.SetResult(
-        [
-            new ResizePreviewItem
-            {
-                ActionKind = OperationActionKind.Resize,
-                OriginalName = "a.png",
-            },
-        ]);
-        await previewTask;
+        // 讓縮放 debounce 排程執行（確認即使它啟動也被取消）
+        await taskBeforeSwitch;
 
-        sut.CurrentPreview.Should().BeNull();
+        sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
         sut.IsPreparingPreview.Should().BeFalse();
     }
 

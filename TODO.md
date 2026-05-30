@@ -110,36 +110,6 @@ ID：`scale-factor`
 - [ ] [錯誤狀態] 輸入倍率 `0` 或負數時，預覽顯示錯誤訊息且執行按鈕停用。
 - [ ] [清理] 舊的百分比文案、log 與錯誤訊息已全部改為倍率語意，無殘留百分比用詞。
 
-### 移除預覽按鈕，改為即時自動預覽
-
-ID：`live-preview`
-優先度：高
-分支：feat/live-preview
-前置條件：`preview-flow` 已完成（已於 [DONE.md](./DONE.md) 歸檔）
-被依賴：`clear-remove`（`RemoveFileCommand` 移除後需觸發即時預覽更新）
-
-⚠ 影響範圍：`MainViewModel`（移除三個手動預覽 command、新增 `PropertyChanged` 監聽與 debounce 機制）→ `MainWindow.xaml`（移除三個預覽按鈕）
-
-⚠ 邊界案例：`Files` 為空時觸發預覽、縮放設定連續快速變更時的 debounce 行為、Tab 切換時目標工具尚無檔案
-
-⚠ 待確認：批次縮放 debounce 的 unit test 策略——透過 mock timer / `IScheduler` 注入，還是驗證 `CancellationToken` 被取消？確認後統一測試做法。
-
-- [ ] [MainViewModel] 移除 `PreviewFrameDeleteCommand`、`PreviewRenameCommand`、`PreviewResizeCommand` 三個手動觸發指令。
-- [ ] [View] 移除 `MainWindow.xaml` 上的三個預覽按鈕。
-- [ ] [MainViewModel] 抽幀刪除與批次改名：監聽 `Files` 與相關設定的 `PropertyChanged`，同步觸發預覽計算。
-- [ ] [MainViewModel] 批次縮放：設定變更時以 debounce（300–500 ms）觸發非同步預覽，避免連續輸入時重複讀取圖片尺寸。
-- [ ] [MainViewModel] 批次縮放預覽計算中維持 `IsPreparingPreview` 狀態與摘要列提示。
-- [ ] [MainViewModel] 切換工具 Tab 時自動觸發對應工具的即時預覽。
-- [ ] [MainViewModel] 調整 `ExecuteXxx` 的 CanExecute：不再依賴手動觸發的預覽結果，改為依 `CurrentPreview` 是否有效且無錯誤。
-- [ ] [Test] 補上即時觸發邏輯的 ViewModel 測試（屬性變更 → 預覽更新、Tab 切換觸發預覽）。
-
-完成判定：
-
-- [ ] [正常路徑] 載入圖片後，三個工具各自的預覽自動顯示，不需點擊按鈕。
-- [ ] [即時] 調整間隔、前綴、縮放倍率等設定時，預覽即時反映最新參數。
-- [ ] [邊界] 切換工具 Tab 時，目標工具的預覽自動更新至最新狀態。
-- [ ] [防抖] 批次縮放連續調整設定時不會同時發起多個非同步請求；預覽計算中顯示 loading 狀態，完成後自動解除。
-
 ### 清空全部與剔除檔案功能
 
 ID：`clear-remove`
