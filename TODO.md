@@ -135,6 +135,43 @@ ID：`clear-remove`
 - [ ] [正常路徑] 點擊預覽表格任意檔案的「剔除」按鈕，該檔案從清單移出，其他項目的預覽立即更新。
 - [ ] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
 
+### 自動檢查 GitHub 發布更新與橫幅通知
+
+ID：`auto-update-check`
+優先度：低
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：`IUpdateService` → `GitHubUpdateService` → `MainViewModel`
+  → `MainWindow.xaml` → `UpdateServiceTests`
+
+⚠ 邊界案例：GitHub API 回傳非 200、JSON 格式不符、
+  本地版本與遠端版本相同或較新、網路逾時、多開程式時的資源競爭
+
+- [ ] [Model] 新增 `UpdateInfo` record，包含 `HasUpdate` (bool), `LatestVersion` (string), `ReleaseUrl` (string)。
+- [ ] [Service] 新增 `IUpdateService` 介面，定義 `CheckForUpdateAsync(CancellationToken token)`。
+- [ ] [Service] 實作 `GitHubUpdateService`：以 `HttpClient` 背景向
+  GitHub Releases API 抓取最新發布，並與 Assembly 版本比對。
+- [ ] [Test] 補上 `GitHubUpdateServiceTests`：模擬不同 API 回傳值
+  （版本相同、遠端較新、遠端較舊、網路逾時/失敗）的版本號比對邏輯。
+- [ ] [MainViewModel] 新增 `IsUpdateAvailable`、`LatestVersionText`、
+  `LatestReleaseUrl` 等屬性，並註冊 `GoToDownloadPageCommand`
+  與 `DismissUpdateBannerCommand`。
+- [ ] [MainViewModel] 於 ViewModel 初始化（程式啟動後）非同步背景呼叫更新檢測服務。
+- [ ] [Test] 補上 ViewModel 測試，驗證更新檢測完成後 `IsUpdateAvailable` 與指令狀態正確。
+- [ ] [View] `MainWindow.xaml` 頂端新增 Fluent 風格橫幅，繫結 `IsUpdateAvailable`
+  屬性，點選下載開啟瀏覽器，點選關閉則隱藏橫幅。
+- [ ] [DI] 於 `App.xaml.cs` 的 DI 容器註冊 `HttpClient` 與 `IUpdateService`。
+
+完成判定：
+
+- [ ] [正常路徑] 當遠端 GitHub 有較新版本發布時，程式啟動後頂端會顯示藍色更新提示橫幅，
+  點擊「下載更新」會以瀏覽器開啟 Release 頁面。
+- [ ] [邊界] 當遠端版本與本機相同或更舊時，橫幅保持隱藏，不干擾使用者。
+- [ ] [錯誤狀態] 當網路連線異常或 GitHub API 呼叫逾時（設定為 5 秒）時，程式應靜默失敗，
+  不彈出任何錯誤對話框且橫幅保持隱藏。
+- [ ] [體驗] 點擊橫幅的「關閉」按鈕後，橫幅必須立刻隱藏，且在此次程式執行期間不再顯示。
+
 ## 通用驗證
 
 每完成一個功能群組，都必須執行：
