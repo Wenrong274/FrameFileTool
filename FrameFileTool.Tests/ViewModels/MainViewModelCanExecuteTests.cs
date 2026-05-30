@@ -606,4 +606,41 @@ public sealed class MainViewModelCanExecuteTests
         sut.CurrentPreview.Should().BeSameAs(preview);
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
     }
+
+    [Fact]
+    public void ClearFolderAndFiles_執行後_應清空路徑與檔案且重設預覽()
+    {
+        var sut = CreateSut();
+        sut.SelectedFolder = @"C:\imgs";
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.CurrentPreview = DeletePreview();
+
+        sut.ClearFolderAndFilesCommand.Execute(null);
+
+        sut.SelectedFolder.Should().BeEmpty();
+        sut.Files.Should().BeEmpty();
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void RemoveFile_移除指定項目_應從檔案清單移出並重新計算預覽()
+    {
+        var planner = Substitute.For<IFrameDeletePlanner>();
+        planner.Plan(Arg.Any<IReadOnlyList<FileItem>>(), Arg.Any<int>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Delete }]);
+
+        var sut = CreateSut(frameDeletePlanner: planner);
+        var itemA = new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10);
+        var itemB = new FileItem(@"C:\imgs\b.png", @"C:\imgs", "b.png", ".png", 10);
+        sut.Files.Add(itemA);
+        sut.Files.Add(itemB);
+
+        sut.RemoveFileCommand.Execute(itemA);
+
+        sut.Files.Should().ContainSingle().Which.Should().BeSameAs(itemB);
+        planner.Received(1).Plan(
+            Arg.Is<IReadOnlyList<FileItem>>(list => list.Count == 1 && list[0] == itemB),
+            Arg.Any<int>());
+    }
 }
