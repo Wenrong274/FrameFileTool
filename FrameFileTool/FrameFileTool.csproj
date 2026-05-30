@@ -12,6 +12,11 @@
     <Resource Include="Assets\AppIcon.png" />
   </ItemGroup>
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FrameFileTool.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.13.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />

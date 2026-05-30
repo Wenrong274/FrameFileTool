@@ -143,5 +143,42 @@ ID：`preview-flow`
 
 - [x] [正常路徑] 三個工具的手動預覽與執行行為與重構前一致，且所有既有單元測試通過。
 - [x] [邊界] 預覽勾選、取消勾選、錯誤列與批次改名動態衝突的摘要與按鈕狀態正確。
-- [x] [錯誤狀態] 縮放預覽讀取尺寸失敗或被取消時，舊預覽不會覆蓋新設定，log 或狀態可定位問題。
+- [x] [錯誤狀態] 縮放預覽讀取尺寸失敗或被取消時，舊預覽不會覆蓋新設定，log 或狀態可定位問題.
 - [x] [維護性] `MainViewModel` 不再直接散落大量屬性變更失效邏輯，新增工具或即時預覽不需複製整段流程。
+
+## 移除預覽按鈕，改為即時自動預覽
+
+ID：`live-preview`
+完成日期：2026-05-30
+發布版本：未發布
+
+優先度：高
+分支：feat/live-preview
+前置條件：`preview-flow` 已完成（已於 [DONE.md](./DONE.md) 歸檔）
+被依賴：`clear-remove`（`RemoveFileCommand` 移除後需觸發即時預覽更新）
+
+影響範圍：`MainViewModel`（移除三個手動預覽 command、新增 `PropertyChanged` 監聽與 debounce 機制）→ `MainWindow.xaml`（移除三個預覽按鈕）
+
+實作結果：
+
+- 成功移除三個手動預覽 Command（`PreviewFrameDeleteCommand`、`PreviewRenameCommand`、`PreviewResizeCommand`）。
+- 移除 `MainWindow.xaml` 的三個手動觸發預覽按鈕，改為輸入變更時和 Tab 切換時自動觸發。
+- 批次縮放引入了 350ms 的 Debounce 防抖，利用 CancellationToken 取消舊請求以防止覆蓋最新狀態，保障連續輸入時的流暢與正確性。
+- 非同步計算期間，預覽摘要列會立刻顯示 busy loading 文字「正在讀取圖片尺寸…」，計算結束後自動切換回完成狀態，並適當禁用/解鎖其他命令按鈕。
+- 補上屬性變更、Tab 切換、取消非同步請求等即時觸發機制的單元測試，全部 156 個測試點均順利通過。
+
+- [x] [MainViewModel] 移除 `PreviewFrameDeleteCommand`、`PreviewRenameCommand`、`PreviewResizeCommand` 三個手動觸發指令。
+- [x] [View] 移除 `MainWindow.xaml` 上的三個預覽按鈕。
+- [x] [MainViewModel] 抽幀刪除與批次改名：監聽 `Files` 與相關設定的 `PropertyChanged`，同步觸發預覽計算。
+- [x] [MainViewModel] 批次縮放：設定變更時以 debounce（300–500 ms）觸發非同步預覽，避免連續輸入時重複讀取圖片尺寸。
+- [x] [MainViewModel] 批次縮放預覽計算中維持 `IsPreparingPreview` 狀態與摘要列提示。
+- [x] [MainViewModel] 切換工具 Tab 時自動觸發對應工具的即時預覽。
+- [x] [MainViewModel] 調整 `ExecuteXxx` 的 CanExecute：不再依賴手動觸發的預覽結果，改為依 `CurrentPreview` 是否有效且無錯誤。
+- [x] [Test] 補上即時觸發邏輯的 ViewModel 測試（屬性變更 → 預覽更新、Tab 切換觸發預覽）。
+
+完成判定：
+
+- [x] [正常路徑] 載入圖片後，三個工具各自的預覽自動顯示，不需點擊按鈕。
+- [x] [即時] 調整間隔、前綴、縮放倍率等設定時，預覽即時反映最新參數。
+- [x] [邊界] 切換工具 Tab 時，目標工具的預覽自動更新至最新狀態。
+- [x] [防抖] 批次縮放連續調整設定時不會同時發起多個非同步請求；預覽計算中顯示 loading 狀態，完成後自動解除。
