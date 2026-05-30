@@ -19,10 +19,10 @@ public sealed class FileOperationExecutorTests
 
         var items = new[]
         {
-            MakePreview(source, "a.png", OperationAction.Rename, "renamed.png"),
-            MakePreview(keep, "b.png", OperationAction.Keep, string.Empty),
-            MakePreview(error, "c.png", OperationAction.Rename, "ignored.png", hasError: true),
-            MakePreview(excluded, "d.png", OperationAction.Rename, "excluded.png", isIncluded: false),
+            MakePreview(source, "a.png", OperationActionKind.Rename, "renamed.png"),
+            MakePreview(keep, "b.png", OperationActionKind.Keep, string.Empty),
+            MakePreview(error, "c.png", OperationActionKind.Rename, "ignored.png", hasError: true),
+            MakePreview(excluded, "d.png", OperationActionKind.Rename, "excluded.png", isIncluded: false),
         };
 
         var result = _sut.RenameFiles(items);
@@ -45,7 +45,7 @@ public sealed class FileOperationExecutorTests
 
         var result = _sut.RenameFiles(
         [
-            MakePreview(missingPath, "missing.png", OperationAction.Rename, "renamed.png"),
+            MakePreview(missingPath, "missing.png", OperationActionKind.Rename, "renamed.png"),
         ]);
 
         result.SuccessCount.Should().Be(0);
@@ -61,7 +61,7 @@ public sealed class FileOperationExecutorTests
 
         var result = _sut.RenameFiles(
         [
-            MakePreview(source, "a.png", OperationAction.Rename, @"..\evil.png"),
+            MakePreview(source, "a.png", OperationActionKind.Rename, @"..\evil.png"),
         ]);
 
         result.SuccessCount.Should().Be(0);
@@ -79,7 +79,7 @@ public sealed class FileOperationExecutorTests
 
         var result = _sut.RenameFiles(
         [
-            MakePreview(source, "a.png", OperationAction.Rename, "blocked.png"),
+            MakePreview(source, "a.png", OperationActionKind.Rename, "blocked.png"),
         ]);
 
         result.SuccessCount.Should().Be(0);
@@ -98,7 +98,7 @@ public sealed class FileOperationExecutorTests
 
         var result = _sut.DeleteToRecycleBin(
         [
-            MakePreview(source, "a.png", OperationAction.Delete, string.Empty, hasError: true),
+            MakePreview(source, "a.png", OperationActionKind.Delete, string.Empty, hasError: true),
         ]);
 
         result.SuccessCount.Should().Be(0);
@@ -115,7 +115,7 @@ public sealed class FileOperationExecutorTests
 
         var result = _sut.DeleteToRecycleBin(
         [
-            MakePreview(source, "a.png", OperationAction.Delete, string.Empty, isIncluded: false),
+            MakePreview(source, "a.png", OperationActionKind.Delete, string.Empty, isIncluded: false),
         ]);
 
         result.SuccessCount.Should().Be(0);
@@ -127,7 +127,7 @@ public sealed class FileOperationExecutorTests
     private static OperationPreviewItem MakePreview(
         string fullPath,
         string originalName,
-        string action,
+        OperationActionKind actionKind,
         string targetName,
         bool hasError = false,
         bool isIncluded = true) =>
@@ -135,7 +135,7 @@ public sealed class FileOperationExecutorTests
         {
             FullPath = fullPath,
             OriginalName = originalName,
-            Action = action,
+            ActionKind = actionKind,
             TargetName = targetName,
             HasError = hasError,
             IsIncluded = isIncluded,

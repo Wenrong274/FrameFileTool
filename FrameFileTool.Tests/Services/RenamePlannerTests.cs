@@ -94,7 +94,7 @@ public sealed class RenamePlannerTests
 
         var result = _sut.Plan(files, prefix: "F_", startIndex: 1, padding: 0, existingPaths);
 
-        result[0].Action.Should().Be(OperationAction.Rename);
+        result[0].ActionKind.Should().Be(OperationActionKind.Rename);
         result[0].HasError.Should().BeTrue();
         result[0].Status.Should().Be("目標檔案已存在");
     }
@@ -123,7 +123,7 @@ public sealed class RenamePlannerTests
 
         var result = _sut.Plan(files, prefix: prefix, startIndex: 1, padding: 0);
 
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
         result[0].HasError.Should().BeTrue();
         result[0].Status.Should().Contain("目標檔名");
     }

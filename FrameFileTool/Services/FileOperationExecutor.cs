@@ -20,7 +20,7 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
 
         // 只處理標記為刪除且無錯誤的項目
         var targets = items
-            .Where(item => item.IsIncluded && item.Action == OperationAction.Delete && !item.HasError)
+            .Where(item => item.IsIncluded && item.ActionKind == OperationActionKind.Delete && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
 
@@ -59,7 +59,7 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
 
         // 只處理標記為改名且無錯誤的項目
         var targets = items
-            .Where(item => item.IsIncluded && item.Action == OperationAction.Rename && !item.HasError)
+            .Where(item => item.IsIncluded && item.ActionKind == OperationActionKind.Rename && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
 

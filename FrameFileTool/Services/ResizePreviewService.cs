@@ -35,7 +35,7 @@ public sealed class ResizePreviewService(
         }
         catch
         {
-            return file;
+            return file with { DimensionReadError = "無法讀取圖片尺寸，請確認檔案內容是有效圖片" };
         }
     }
 

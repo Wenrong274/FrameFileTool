@@ -7,7 +7,7 @@ namespace FrameFileTool.Services;
 
 /// <summary>
 /// 執行實際的圖片縮放副作用，使用 Magick.NET（Apache 2.0）進行高品質重取樣。
-/// 只執行 <see cref="OperationAction.Resize"/> 且 <c>HasError = false</c> 的項目。
+/// 只執行 <see cref="OperationActionKind.Resize"/> 且 <c>HasError = false</c> 的項目。
 ///
 /// 覆寫模式安全機制：
 ///   先寫出暫存檔 → 成功後以 File.Move 覆蓋原始 → 失敗時保留原始檔案不受影響。
@@ -23,7 +23,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         var items = previewItems.ToList();
 
         var targets = items
-            .Where(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError)
+            .Where(item => item.IsIncluded && item.ActionKind == OperationActionKind.Resize && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
 
@@ -63,7 +63,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         var items = previewItems.ToList();
 
         var targets = items
-            .Where(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError)
+            .Where(item => item.IsIncluded && item.ActionKind == OperationActionKind.Resize && !item.HasError)
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
 

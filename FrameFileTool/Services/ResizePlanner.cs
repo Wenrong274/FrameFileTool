@@ -27,6 +27,11 @@ public sealed class ResizePlanner : IResizePlanner
                     return MakeError(file, index + 1, globalError);
                 }
 
+                if (!string.IsNullOrWhiteSpace(file.DimensionReadError))
+                {
+                    return MakeError(file, index + 1, file.DimensionReadError);
+                }
+
                 var targetName = BuildTargetName(file.Name, options);
                 var status = BuildStatus(options);
                 var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
@@ -40,7 +45,7 @@ public sealed class ResizePlanner : IResizePlanner
                         Index = index + 1,
                         FullPath = file.FullPath,
                         OriginalName = file.Name,
-                        Action = OperationAction.Error,
+                        ActionKind = OperationActionKind.Error,
                         TargetName = targetName,
                         Status = "目標檔案已存在",
                         HasError = true,
@@ -52,7 +57,7 @@ public sealed class ResizePlanner : IResizePlanner
                     Index = index + 1,
                     FullPath = file.FullPath,
                     OriginalName = file.Name,
-                    Action = OperationAction.Resize,
+                    ActionKind = OperationActionKind.Resize,
                     TargetName = targetName,
                     Status = status,
                     HasError = false,
@@ -236,7 +241,7 @@ public sealed class ResizePlanner : IResizePlanner
             Index = index,
             FullPath = file.FullPath,
             OriginalName = file.Name,
-            Action = OperationAction.Error,
+            ActionKind = OperationActionKind.Error,
             TargetName = string.Empty,
             Status = message,
             HasError = true,

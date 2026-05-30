@@ -12,4 +12,5 @@ public sealed record FileItem(
     string Extension,
     long SizeBytes,
     int Width = 0,
-    int Height = 0);
+    int Height = 0,
+    string? DimensionReadError = null);

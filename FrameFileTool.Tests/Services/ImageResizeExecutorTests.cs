@@ -20,7 +20,7 @@ public sealed class ImageResizeExecutorTests
             {
                 FullPath = @"C:\imgs\a.png",
                 OriginalName = "a.png",
-                Action = OperationAction.Resize,
+                ActionKind = OperationActionKind.Resize,
             },
         };
 
@@ -41,7 +41,7 @@ public sealed class ImageResizeExecutorTests
             {
                 FullPath = @"C:\imgs\a.png",
                 OriginalName = "a.png",
-                Action = OperationAction.Resize,
+                ActionKind = OperationActionKind.Resize,
                 IsIncluded = false,
             },
         };
@@ -66,7 +66,7 @@ public sealed class ImageResizeExecutorTests
             {
                 FullPath = @"C:\imgs\a.png",
                 OriginalName = "a.png",
-                Action = OperationAction.Resize,
+                ActionKind = OperationActionKind.Resize,
             },
         };
 
@@ -86,7 +86,7 @@ public sealed class ImageResizeExecutorTests
             {
                 FullPath = @"C:\imgs\a.png",
                 OriginalName = "a.png",
-                Action = OperationAction.Resize,
+                ActionKind = OperationActionKind.Resize,
                 IsIncluded = false,
             },
         };

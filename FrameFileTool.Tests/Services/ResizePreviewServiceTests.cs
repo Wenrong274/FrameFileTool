@@ -1,3 +1,4 @@
+using FluentAssertions;
 using FrameFileTool.Models;
 using FrameFileTool.Services;
 using FrameFileTool.Services.Interfaces;
@@ -97,7 +98,7 @@ public sealed class ResizePreviewServiceTests
     }
 
     [Fact]
-    public async Task BuildPreviewAsync_尺寸讀取失敗_應保留原始尺寸欄位()
+    public async Task BuildPreviewAsync_尺寸讀取失敗_應保留錯誤資訊給Planner()
     {
         var dimensionReader = Substitute.For<IImageDimensionReader>();
         var fileExistenceService = Substitute.For<IFileExistenceService>();
@@ -120,9 +121,29 @@ public sealed class ResizePreviewServiceTests
             Arg.Is<IReadOnlyList<FileItem>>(files =>
                 files.Count == 1 &&
                 files[0].Width == 0 &&
-                files[0].Height == 0),
+                files[0].Height == 0 &&
+                files[0].DimensionReadError == "無法讀取圖片尺寸，請確認檔案內容是有效圖片"),
             options,
             Arg.Any<IReadOnlySet<string>>());
+    }
+
+    [Fact]
+    public async Task BuildPreviewAsync_尺寸讀取失敗_應產生錯誤預覽項目()
+    {
+        var dimensionReader = Substitute.For<IImageDimensionReader>();
+        var fileExistenceService = Substitute.For<IFileExistenceService>();
+        var file = new FileItem(@"C:\imgs\bad.png", @"C:\imgs", "bad.png", ".png", 10);
+        var options = CreateOptions() with { OutputMode = ResizeOutputMode.Overwrite };
+
+        dimensionReader.Read(file.FullPath).Returns(_ => throw new InvalidOperationException("不是有效圖片"));
+        var sut = new ResizePreviewService(dimensionReader, fileExistenceService, new ResizePlanner());
+
+        var result = await sut.BuildPreviewAsync([file], options);
+
+        result.Should().ContainSingle();
+        result[0].HasError.Should().BeTrue();
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
+        result[0].Status.Should().Contain("無法讀取圖片尺寸");
     }
 
     private static ResizeOptions CreateOptions() =>

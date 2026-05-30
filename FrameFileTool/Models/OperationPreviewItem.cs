@@ -23,11 +23,11 @@ public class OperationPreviewItem : INotifyPropertyChanged
     /// <summary>原始檔名（不含目錄）。</summary>
     public string OriginalName { get; init; } = string.Empty;
 
-    /// <summary>
-    /// 操作動作，使用 <see cref="OperationAction"/> 常數。
-    /// 例如：刪除、保留、改名、錯誤。
-    /// </summary>
-    public string Action { get; init; } = string.Empty;
+    /// <summary>操作動作種類，供 executor 與 ViewModel 判斷行為。</summary>
+    public OperationActionKind ActionKind { get; init; }
+
+    /// <summary>操作動作的顯示文字，供 UI 繫結。</summary>
+    public string Action => OperationAction.ToDisplayText(ActionKind);
 
     /// <summary>
     /// 目標檔名（改名時）或說明文字（刪除時為「移到回收桶」）。

@@ -14,6 +14,13 @@ namespace FrameFileTool.ViewModels;
 /// </summary>
 public sealed partial class MainViewModel : ObservableObject
 {
+    private enum PreviewTool
+    {
+        FrameDelete = 0,
+        Rename = 1,
+        Resize = 2,
+    }
+
     private readonly IFileScanner _scanner;
     private readonly IFrameDeletePlanner _frameDeletePlanner;
     private readonly IRenamePlanner _renamePlanner;
@@ -175,6 +182,8 @@ public sealed partial class MainViewModel : ObservableObject
     private string _resizeProgressText = string.Empty;
 
     private CancellationTokenSource? _resizeCts;
+    private CancellationTokenSource? _resizePreviewCts;
+    private long _resizePreviewRequestId;
 
     /// <summary>
     /// 依選取的演算法顯示對應的使用建議說明，供 UI HintText 繫結。
@@ -312,10 +321,9 @@ public sealed partial class MainViewModel : ObservableObject
         var items = _frameDeletePlanner.Plan(Files.ToList(), FrameDeleteInterval);
         var vm = new FrameDeletePreviewViewModel(items);
 
-        CurrentPreview = vm;
-
-        AddLog($"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {items.Count(i => i.Action == OperationAction.Delete && !i.HasError)} 個檔案。");
-        RefreshCommands();
+        SetCurrentPreview(
+            vm,
+            $"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {items.Count(i => i.ActionKind == OperationActionKind.Delete && !i.HasError)} 個檔案。");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableDeletePreview))]
@@ -341,10 +349,9 @@ public sealed partial class MainViewModel : ObservableObject
             Files.ToList(), RenamePrefix, RenameStartIndex, RenamePadding, existingPaths);
         var vm = new RenamePreviewViewModel(items);
 
-        CurrentPreview = vm;
-
-        AddLog($"改名預覽完成：預計改名 {items.Count(i => i.Action == OperationAction.Rename && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
-        RefreshCommands();
+        SetCurrentPreview(
+            vm,
+            $"改名預覽完成：預計改名 {items.Count(i => i.ActionKind == OperationActionKind.Rename && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableRenamePreview))]
@@ -364,6 +371,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var options = BuildResizeOptions();
         var files = Files.ToList();
+        var (requestId, previewCts) = BeginResizePreviewRequest();
 
         CurrentPreview = null;
         PreviewBusyText = "正在讀取圖片尺寸…";
@@ -371,18 +379,36 @@ public sealed partial class MainViewModel : ObservableObject
 
         try
         {
-            var items = await _resizePreviewService.BuildPreviewAsync(files, options);
+            var items = await _resizePreviewService.BuildPreviewAsync(files, options, previewCts.Token);
+            if (previewCts.IsCancellationRequested || requestId != _resizePreviewRequestId)
+            {
+                return;
+            }
+
             var vm = new ResizePreviewViewModel(items);
 
-            CurrentPreview = vm;
-
-            AddLog($"縮放預覽完成：預計縮放 {items.Count(i => i.Action == OperationAction.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+            SetCurrentPreview(
+                vm,
+                $"縮放預覽完成：預計縮放 {items.Count(i => i.ActionKind == OperationActionKind.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+        }
+        catch (OperationCanceledException) when (previewCts.IsCancellationRequested)
+        {
         }
         finally
         {
-            IsPreparingPreview = false;
-            PreviewBusyText = string.Empty;
-            RefreshCommands();
+            if (ReferenceEquals(_resizePreviewCts, previewCts))
+            {
+                _resizePreviewCts = null;
+            }
+
+            previewCts.Dispose();
+
+            if (requestId == _resizePreviewRequestId)
+            {
+                IsPreparingPreview = false;
+                PreviewBusyText = string.Empty;
+                RefreshCommands();
+            }
         }
     }
 
@@ -400,7 +426,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var snapshot = previewVm.Items;
-        var total = snapshot.Count(item => item.IsIncluded && item.Action == OperationAction.Resize && !item.HasError);
+        var total = snapshot.Count(item => item.IsIncluded && item.ActionKind == OperationActionKind.Resize && !item.HasError);
 
         IsResizing = true;
         ResizeProgressCurrent = 0;
@@ -464,59 +490,140 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── 預覽失效管理 ──────────────────────────────────────────
 
-    partial void OnSelectedFolderChanged(string value) => InvalidatePreview();
+    partial void OnSelectedFolderChanged(string value) => InvalidateAnyPreview();
 
-    partial void OnIncludePngChanged(bool value) => InvalidatePreview();
+    partial void OnIncludePngChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnIncludeJpgChanged(bool value) => InvalidatePreview();
+    partial void OnIncludeJpgChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnIncludeJpegChanged(bool value) => InvalidatePreview();
+    partial void OnIncludeJpegChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnIncludeWebpChanged(bool value) => InvalidatePreview();
+    partial void OnIncludeWebpChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnIncludeBmpChanged(bool value) => InvalidatePreview();
+    partial void OnIncludeBmpChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnIncludeSubfoldersChanged(bool value) => InvalidatePreview();
+    partial void OnIncludeSubfoldersChanged(bool value) => InvalidateAnyPreview();
 
-    partial void OnFrameDeleteIntervalChanged(int value) => InvalidatePreview();
+    partial void OnFrameDeleteIntervalChanged(int value) => InvalidatePreviewFor(PreviewTool.FrameDelete);
 
-    partial void OnResizeModeChanged(ResizeMode value) => InvalidatePreview();
+    partial void OnResizeModeChanged(ResizeMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnScalePercentChanged(int value) => InvalidatePreview();
+    partial void OnScalePercentChanged(int value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnTargetWidthChanged(int value) => InvalidatePreview();
+    partial void OnTargetWidthChanged(int value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnTargetHeightChanged(int value) => InvalidatePreview();
+    partial void OnTargetHeightChanged(int value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnKeepAspectRatioChanged(bool value) => InvalidatePreview();
+    partial void OnKeepAspectRatioChanged(bool value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnResizeOutputModeChanged(ResizeOutputMode value) => InvalidatePreview();
+    partial void OnResizeOutputModeChanged(ResizeOutputMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnResizeSubfolderNameChanged(string value) => InvalidatePreview();
+    partial void OnResizeSubfolderNameChanged(string value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreview();
+    partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnRenamePrefixChanged(string value) => InvalidatePreview();
+    partial void OnRenamePrefixChanged(string value) => InvalidatePreviewFor(PreviewTool.Rename);
 
-    partial void OnRenameStartIndexChanged(int value) => InvalidatePreview();
+    partial void OnRenameStartIndexChanged(int value) => InvalidatePreviewFor(PreviewTool.Rename);
 
-    partial void OnRenamePaddingChanged(int value) => InvalidatePreview();
+    partial void OnRenamePaddingChanged(int value) => InvalidatePreviewFor(PreviewTool.Rename);
 
-    partial void OnSelectedToolIndexChanged(int value) => InvalidatePreview();
-
-    // ── 私有輔助方法 ──────────────────────────────────────────
-
-    /// <summary>使用者變更任何會影響計畫的設定時，既有預覽不再可信。</summary>
-    private void InvalidatePreview()
+    partial void OnSelectedToolIndexChanged(int value)
     {
+        if (_resizePreviewCts is not null && (PreviewTool)value != PreviewTool.Resize)
+        {
+            CancelResizePreviewRequest();
+        }
+
         if (CurrentPreview is null)
         {
             return;
         }
 
+        if (GetPreviewTool(CurrentPreview) != (PreviewTool)value)
+        {
+            if (GetPreviewTool(CurrentPreview) == PreviewTool.Resize)
+            {
+                CancelResizePreviewRequest();
+            }
+
+            ClearCurrentPreview();
+        }
+    }
+
+    // ── 私有輔助方法 ──────────────────────────────────────────
+
+    /// <summary>使用者變更共用輸入時，任何既有預覽都不再可信。</summary>
+    private void InvalidateAnyPreview()
+    {
+        CancelResizePreviewRequest();
+        ClearCurrentPreview();
+    }
+
+    /// <summary>使用者變更特定工具設定時，只清除該工具的既有預覽。</summary>
+    private void InvalidatePreviewFor(PreviewTool tool)
+    {
+        if (tool == PreviewTool.Resize)
+        {
+            CancelResizePreviewRequest();
+        }
+
+        if (CurrentPreview is null || GetPreviewTool(CurrentPreview) != tool)
+        {
+            return;
+        }
+
+        ClearCurrentPreview();
+    }
+
+    private void ClearCurrentPreview()
+    {
         CurrentPreview = null;
         RefreshCommands();
     }
+
+    private void SetCurrentPreview(IPreviewViewModel preview, string logMessage)
+    {
+        CurrentPreview = preview;
+        AddLog(logMessage);
+        RefreshCommands();
+    }
+
+    private (long RequestId, CancellationTokenSource CancellationTokenSource) BeginResizePreviewRequest()
+    {
+        CancelResizePreviewRequest(clearBusyState: false);
+
+        var cts = new CancellationTokenSource();
+        _resizePreviewCts = cts;
+        var requestId = ++_resizePreviewRequestId;
+        return (requestId, cts);
+    }
+
+    private void CancelResizePreviewRequest(bool clearBusyState = true)
+    {
+        if (_resizePreviewCts is null)
+        {
+            return;
+        }
+
+        _resizePreviewCts.Cancel();
+        _resizePreviewRequestId++;
+
+        if (clearBusyState)
+        {
+            IsPreparingPreview = false;
+            PreviewBusyText = string.Empty;
+            RefreshCommands();
+        }
+    }
+
+    private static PreviewTool GetPreviewTool(IPreviewViewModel preview) => preview switch
+    {
+        FrameDeletePreviewViewModel => PreviewTool.FrameDelete,
+        RenamePreviewViewModel => PreviewTool.Rename,
+        ResizePreviewViewModel => PreviewTool.Resize,
+        _ => throw new InvalidOperationException("未知的預覽型別。"),
+    };
 
     /// <summary>依勾選狀態收集目前啟用的副檔名清單。</summary>
     private IReadOnlyList<string> GetSelectedExtensions()

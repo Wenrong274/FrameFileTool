@@ -24,7 +24,7 @@ public sealed class FrameDeletePlanner : IFrameDeletePlanner
                     Index = index + 1,
                     FullPath = file.FullPath,
                     OriginalName = file.Name,
-                    Action = OperationAction.Error,
+                    ActionKind = OperationActionKind.Error,
                     TargetName = string.Empty,
                     Status = "間隔 N 必須大於 0",
                     HasError = true,
@@ -49,7 +49,7 @@ public sealed class FrameDeletePlanner : IFrameDeletePlanner
                     Index = index + 1,
                     FullPath = file.FullPath,
                     OriginalName = file.Name,
-                    Action = shouldDelete ? OperationAction.Delete : OperationAction.Keep,
+                    ActionKind = shouldDelete ? OperationActionKind.Delete : OperationActionKind.Keep,
                     TargetName = shouldDelete ? "移到回收桶" : string.Empty,
                     Status = shouldDelete
                         ? $"資料夾內第 {folderIndex} 張符合每 {interval} 張刪除 1 張"

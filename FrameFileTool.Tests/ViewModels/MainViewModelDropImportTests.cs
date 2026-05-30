@@ -104,7 +104,7 @@ public sealed class MainViewModelDropImportTests
 
         var preview = new RenamePreviewViewModel(
         [
-            new OperationPreviewItem { Action = OperationAction.Rename },
+            new OperationPreviewItem { ActionKind = OperationActionKind.Rename },
         ]);
         var sut = CreateSut(importService);
         sut.CurrentPreview = preview;

@@ -11,7 +11,7 @@ public interface IImageResizeExecutor
 {
     /// <summary>
     /// 同步版本（保留給測試或非 UI 情境使用）。
-    /// 執行預覽清單中標記為 <see cref="OperationAction.Resize"/> 且無錯誤的項目。
+    /// 執行預覽清單中標記為 <see cref="OperationActionKind.Resize"/> 且無錯誤的項目。
     /// </summary>
     public OperationResult Execute(
         IEnumerable<OperationPreviewItem> previewItems,

@@ -17,7 +17,7 @@ public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
         get
         {
             var includedItems = Items.Where(i => i.IsIncluded).ToList();
-            var deleteCount = includedItems.Count(i => i.Action == OperationAction.Delete && !i.HasError);
+            var deleteCount = includedItems.Count(i => i.ActionKind == OperationActionKind.Delete && !i.HasError);
             var errorCount = Items.Count(i => i.HasError);
             var displayCount = includedItems.Count + errorCount;
 
@@ -32,7 +32,7 @@ public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
 
     /// <inheritdoc/>
     public bool HasExecutableItems =>
-        Items.Any(i => i.IsIncluded && i.Action == OperationAction.Delete && !i.HasError);
+        Items.Any(i => i.IsIncluded && i.ActionKind == OperationActionKind.Delete && !i.HasError);
 
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -18,7 +18,7 @@ public sealed class ResizePreviewViewModel : IPreviewViewModel
         get
         {
             var includedItems = Items.Where(i => i.IsIncluded).ToList();
-            var resizeCount = includedItems.Count(i => i.Action == OperationAction.Resize && !i.HasError);
+            var resizeCount = includedItems.Count(i => i.ActionKind == OperationActionKind.Resize && !i.HasError);
             var errorCount = Items.Count(i => i.HasError);
             var displayCount = includedItems.Count + errorCount;
 
@@ -33,7 +33,7 @@ public sealed class ResizePreviewViewModel : IPreviewViewModel
 
     /// <inheritdoc/>
     public bool HasExecutableItems =>
-        Items.Any(i => i.IsIncluded && i.Action == OperationAction.Resize && !i.HasError);
+        Items.Any(i => i.IsIncluded && i.ActionKind == OperationActionKind.Resize && !i.HasError);
 
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;

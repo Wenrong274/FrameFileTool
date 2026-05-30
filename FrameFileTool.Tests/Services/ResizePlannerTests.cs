@@ -54,7 +54,7 @@ public sealed class ResizePlannerTests
         result.Should().AllSatisfy(item =>
         {
             item.HasError.Should().BeTrue();
-            item.Action.Should().Be(OperationAction.Error);
+            item.ActionKind.Should().Be(OperationActionKind.Error);
         });
     }
 
@@ -66,7 +66,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Percentage(10001));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Percentage(50));
 
         result[0].HasError.Should().BeFalse();
-        result[0].Action.Should().Be(OperationAction.Resize);
+        result[0].ActionKind.Should().Be(OperationActionKind.Resize);
         result[0].Status.Should().Contain("50%");
     }
 
@@ -89,7 +89,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Percentage(200));
 
         result[0].HasError.Should().BeFalse();
-        result[0].Action.Should().Be(OperationAction.Resize);
+        result[0].ActionKind.Should().Be(OperationActionKind.Resize);
         result[0].Status.Should().Contain("200%");
     }
 
@@ -103,7 +103,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Absolute(0, 0));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Absolute(0, 480, keepAspect: true));
 
         result[0].HasError.Should().BeFalse();
-        result[0].Action.Should().Be(OperationAction.Resize);
+        result[0].ActionKind.Should().Be(OperationActionKind.Resize);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Absolute(800, 0, keepAspect: true));
 
         result[0].HasError.Should().BeFalse();
-        result[0].Action.Should().Be(OperationAction.Resize);
+        result[0].ActionKind.Should().Be(OperationActionKind.Resize);
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Absolute(0, 480, keepAspect: false));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Absolute(800, 0, keepAspect: false));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public sealed class ResizePlannerTests
             existingPaths);
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
         result[0].Status.Should().Contain("目標檔案已存在");
     }
 
@@ -213,7 +213,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: ""));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
     }
 
     [Theory]
@@ -230,7 +230,7 @@ public sealed class ResizePlannerTests
         var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: subfolder));
 
         result[0].HasError.Should().BeTrue();
-        result[0].Action.Should().Be(OperationAction.Error);
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
         result[0].Status.Should().Contain("子資料夾名稱");
     }
 
@@ -292,7 +292,7 @@ public sealed class ResizePlannerTests
 
         result.Should().AllSatisfy(item =>
         {
-            item.Action.Should().Be(OperationAction.Resize);
+            item.ActionKind.Should().Be(OperationActionKind.Resize);
             item.HasError.Should().BeFalse();
         });
     }

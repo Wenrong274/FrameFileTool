@@ -70,3 +70,59 @@ ID：`checkbox`
 - [x] [邊界] 全部取消勾選時，摘要顯示「0 個項目」且執行按鈕停用。
 - [x] [錯誤狀態] 錯誤列的 checkbox 為停用狀態，即使資料列顯示也不會被執行。
 - [x] [一致性] 抽幀刪除、批次改名、批次縮放三個工具勾選行為一致，摘要文字隨勾選同步更新。
+
+## 即時預覽前的預覽流程與 MainViewModel 整理
+
+ID：`preview-flow`
+完成日期：2026-05-30
+
+優先度：高
+分支：refactor/preview-flow
+前置條件：無
+被依賴：`live-preview`、`clear-remove`
+
+計劃校正：`checkbox` 已歸檔，且決策為 `OperationPreviewItem` 直接承載 `IsIncluded`
+與 `HasSelectionConflict`。本輪保留既有勾選狀態承載方式，只收斂動作判斷、
+預覽生命週期與非同步預覽取消流程。
+
+實作結果：
+
+- 將動作判斷從中文字串改為強型別 `OperationActionKind`。
+  `OperationPreviewItem.Action` 保留為 UI 顯示文字，executor 與 ViewModel 改用 `ActionKind`。
+- 保留 `OperationPreviewItem.IsIncluded` 與 `HasSelectionConflict`，避免推翻 `checkbox` 已驗收設計。
+- `MainViewModel` 以 `PreviewTool`、`InvalidateAnyPreview()`、`InvalidatePreviewFor(...)`
+  與 `GetPreviewTool(...)` 集中管理預覽失效範圍。
+- 三個手動預覽流程共用 `SetCurrentPreview(...)`，統一設定 `CurrentPreview`、寫入 log 與刷新 commands。
+- 批次縮放預覽加入 cancellation token 與 request id，避免舊尺寸讀取結果覆蓋新設定。
+- 批次縮放讀取圖片尺寸失敗時，預覽階段即標示錯誤列，避免無效圖片到 executor 階段才失敗。
+- `PreviewTemplates.xaml` 改以 `ActionKind` 判斷樣式，不再用中文字串常數判斷行為。
+
+- [x] [Model] 將 `OperationAction` 從字串常數改為強型別 `OperationActionKind`，
+  UI 顯示文字由獨立轉換或顯示屬性提供，避免 executor 依賴中文字串判斷動作。
+- [x] [Test] 更新 planner / executor 測試，確認動作判斷使用 `OperationActionKind`，
+  且既有中文顯示文字不影響執行邏輯。
+- [x] [Model] 保留 `OperationPreviewItem` 的 `IsIncluded` / `HasSelectionConflict` 繫結狀態，
+  但確保 executor 與 ViewModel 的可執行判斷均改用 `OperationActionKind`。
+- [x] [Test] 補上預覽 row 勾選狀態測試：錯誤列不可納入、全部取消勾選時無可執行項目、
+  批次改名目標撞到未勾選來源檔時標示動態衝突。
+- [x] [MainViewModel] 集中整理預覽生命週期：建立目前工具、設定快照、檔案清單與
+  `CurrentPreview` 是否有效的判斷流程，取代分散的 `OnXChanged() -> InvalidatePreview()`。
+- [x] [Test] 補上預覽失效測試：變更來源資料夾、格式篩選、工具參數、輸出設定與
+  Tab 時，只讓受影響的預覽失效。
+- [x] [MainViewModel] 將三個 `PreviewXxx()` 的共同流程收斂：建立輸入快照、呼叫 planner /
+  preview service、設定 `CurrentPreview`、寫入 log、刷新 commands。
+- [x] [Test] 補上三個預覽流程測試，確認預覽完成後 summary、log、CanExecute 與錯誤狀態維持不變。
+- [x] [MainViewModel] 調整縮放預覽取消策略，呼叫 `ResizePreviewService` 時傳入 cancellation token，
+  避免舊的尺寸讀取結果覆蓋新的設定。
+- [x] [Test] 補上縮放預覽取消測試：設定變更或切換工具後，舊請求完成也不會覆蓋目前狀態。
+- [x] [Bugfix] 縮放預覽讀取圖片尺寸失敗時，將該檔案標示為錯誤列並停用執行，
+  避免無效圖片到 executor 階段才失敗。
+- [x] [View] 確認 `PreviewTemplates.xaml` 只繫結 `OperationActionKind` 與顯示文字，
+  不直接依賴中文字串常數判斷行為。
+
+完成判定：
+
+- [x] [正常路徑] 三個工具的手動預覽與執行行為與重構前一致，且所有既有單元測試通過。
+- [x] [邊界] 預覽勾選、取消勾選、錯誤列與批次改名動態衝突的摘要與按鈕狀態正確。
+- [x] [錯誤狀態] 縮放預覽讀取尺寸失敗或被取消時，舊預覽不會覆蓋新設定，log 或狀態可定位問題。
+- [x] [維護性] `MainViewModel` 不再直接散落大量屬性變更失效邏輯，新增工具或即時預覽不需複製整段流程。

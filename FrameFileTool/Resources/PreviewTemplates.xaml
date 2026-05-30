@@ -87,11 +87,11 @@
                                             <Setter Property="Background" Value="#F1F5F9" />
                                             <Setter Property="BorderBrush" Value="#CBD5E1" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Delete}">
                                                     <Setter Property="Background" Value="#FEE2E2" />
                                                     <Setter Property="BorderBrush" Value="#FCA5A5" />
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                     <Setter Property="Background" Value="#FEF3C7" />
                                                     <Setter Property="BorderBrush" Value="#FBBF24" />
                                                 </DataTrigger>
@@ -106,10 +106,10 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#64748B" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Delete}">
                                                         <Setter Property="Foreground" Value="#B91C1C" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                         <Setter Property="Foreground" Value="#B45309" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -147,11 +147,11 @@
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
                                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Keep}">
+                                        <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Keep}">
                                             <Setter Property="Text"      Value="不變更" />
                                             <Setter Property="Foreground" Value="#94A3B8" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Delete}">
+                                        <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Delete}">
                                             <Setter Property="Foreground" Value="#DC2626" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </DataTrigger>
@@ -210,11 +210,11 @@
                                             <Setter Property="Background" Value="#F1F5F9" />
                                             <Setter Property="BorderBrush" Value="#CBD5E1" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Rename}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Rename}">
                                                     <Setter Property="Background" Value="#DBEAFE" />
                                                     <Setter Property="BorderBrush" Value="#93C5FD" />
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                     <Setter Property="Background" Value="#FEF3C7" />
                                                     <Setter Property="BorderBrush" Value="#FBBF24" />
                                                 </DataTrigger>
@@ -229,10 +229,10 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#64748B" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Rename}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Rename}">
                                                         <Setter Property="Foreground" Value="#1D4ED8" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                         <Setter Property="Foreground" Value="#B45309" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -316,11 +316,11 @@
                                             <Setter Property="Background" Value="#F1F5F9" />
                                             <Setter Property="BorderBrush" Value="#CBD5E1" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Resize}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Resize}">
                                                     <Setter Property="Background" Value="#DBEAFE" />
                                                     <Setter Property="BorderBrush" Value="#93C5FD" />
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                     <Setter Property="Background" Value="#FEF3C7" />
                                                     <Setter Property="BorderBrush" Value="#FBBF24" />
                                                 </DataTrigger>
@@ -335,10 +335,10 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#64748B" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Resize}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Resize}">
                                                         <Setter Property="Foreground" Value="#1D4ED8" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Action}" Value="{x:Static models:OperationAction.Error}">
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                         <Setter Property="Foreground" Value="#B45309" />
                                                     </DataTrigger>
                                                 </Style.Triggers>

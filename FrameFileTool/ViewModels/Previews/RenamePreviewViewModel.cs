@@ -20,7 +20,7 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
             var includedItems = Items.Where(i => i.IsIncluded).ToList();
             var inclusionConflictItems = GetInclusionConflictItems();
             var renameCount = includedItems.Count(
-                i => i.Action == OperationAction.Rename && !i.HasError && !inclusionConflictItems.Contains(i));
+                i => i.ActionKind == OperationActionKind.Rename && !i.HasError && !inclusionConflictItems.Contains(i));
             var staticErrorCount = Items.Count(i => i.HasError);
             var errorCount = staticErrorCount + inclusionConflictItems.Count;
             var displayCount = includedItems.Count + staticErrorCount;
@@ -38,7 +38,7 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
     public bool HasExecutableItems =>
         Items.Any(i =>
             i.IsIncluded &&
-            i.Action == OperationAction.Rename &&
+            i.ActionKind == OperationActionKind.Rename &&
             !i.HasError &&
             !GetInclusionConflictItems().Contains(i));
 
@@ -82,12 +82,12 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
     private HashSet<OperationPreviewItem> GetInclusionConflictItems()
     {
         var sourcePathsHeldInPlace = Items
-            .Where(i => !i.IsIncluded || i.Action != OperationAction.Rename || i.HasError)
+            .Where(i => !i.IsIncluded || i.ActionKind != OperationActionKind.Rename || i.HasError)
             .Select(i => i.FullPath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return Items
-            .Where(i => i.IsIncluded && i.Action == OperationAction.Rename && !i.HasError)
+            .Where(i => i.IsIncluded && i.ActionKind == OperationActionKind.Rename && !i.HasError)
             .Where(i => sourcePathsHeldInPlace.Contains(BuildTargetPath(i)))
             .ToHashSet();
     }
