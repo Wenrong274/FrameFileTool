@@ -1,6 +1,11 @@
 ---
 name: modern-csharp
-description: "Write modern, version-aware C# for .NET repositories while staying compatible with the repo's target framework and language-version policy. USE FOR: modern idiomatic C# code; language-version compatibility decisions; upgrading or reviewing C# feature usage across versions. DO NOT USE FOR: non-C# .NET languages such as F# or VB; analyzer-only or formatter-only setup with no language feature choice. INVOKES: inspect the repository context, edit targeted files, and run relevant build, test, lint, or validation commands when changes are made."
+description: >-
+  Write modern, version-aware C# for .NET repositories while staying compatible with the repo's target framework and
+  language-version policy. USE FOR: modern idiomatic C# code; language-version compatibility decisions; upgrading or
+  reviewing C# feature usage across versions. DO NOT USE FOR: non-C# .NET languages such as F# or VB; analyzer-only or
+  formatter-only setup with no language feature choice. INVOKES: inspect the repository context, edit targeted files,
+  and run relevant build, test, lint, or validation commands when changes are made.
 compatibility: "Requires a C# or .NET repository; respects explicit `LangVersion` and target framework settings."
 ---
 
@@ -61,9 +66,11 @@ If the requested C# feature depends on SDK or language support the repo does not
    - `dotnet --list-sdks`
    - `rg -n "TargetFramework|LangVersion|TargetFrameworks" -g '*.csproj' -g 'Directory.Build.*' .`
 2. Confirm whether the repo wants to stay on the current stable language level or intentionally upgrade.
-3. If the feature requires a newer supported SDK or target framework, upgrade the repo toolchain deliberately instead of relying on the local machine by accident.
+3. If the feature requires a newer supported SDK or target framework, upgrade the repo toolchain deliberately instead of
+   relying on the local machine by accident.
 4. If the repo needs explicit `LangVersion`, record it in project or shared MSBuild config.
-5. Run `dotnet build SOLUTION_OR_PROJECT` after the feature or toolchain change and return `status: configured` or `status: improved`.
+5. Run `dotnet build SOLUTION_OR_PROJECT` after the feature or toolchain change and return `status: configured` or
+   `status: improved`.
 6. If the repo intentionally stays below the required language level, return `status: not_applicable`.
 
 ## Deliver

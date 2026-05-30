@@ -1,6 +1,10 @@
 ---
 name: csharp-scripts
-description: "Run file-based C# apps with the .NET CLI when the user explicitly wants C#/.NET code without creating a project. Use for C# language/API experiments, one-file C# apps, small multi-file C# apps composed with `#:include`/`#:exclude`, or C# file-based apps linked with `#:ref`. Do not use for language-agnostic throwaway scripts, generic computations, Python/PowerShell-style automation, full projects, or existing app integration."
+description: >-
+  Run file-based C# apps with the .NET CLI when the user explicitly wants C#/.NET code without creating a project. Use
+  for C# language/API experiments, one-file C# apps, small multi-file C# apps composed with `#:include`/`#:exclude`, or
+  C# file-based apps linked with `#:ref`. Do not use for language-agnostic throwaway scripts, generic computations,
+  Python/PowerShell-style automation, full projects, or existing app integration.
 license: MIT
 ---
 
@@ -17,7 +21,8 @@ license: MIT
 - The user asks for a language-agnostic quick script, throwaway computation, or shell/Python/PowerShell-style automation
 - The user needs a full project, solution integration, or project references in an existing app
 - The user is working inside an existing .NET solution and wants to add code there
-- The app is large enough that project structure, build customization, tests, or publish configuration should live in a `.csproj`
+- The app is large enough that project structure, build customization, tests, or publish configuration should live in a
+  `.csproj`
 
 ## Inputs
 
@@ -29,11 +34,15 @@ license: MIT
 
 ### Step 1: Check the .NET SDK version
 
-Run `dotnet --version` to verify the SDK is installed and note the full version, including the feature band. File-based apps require .NET 10 or later. `#:include`, `#:exclude`, and transitive directive processing require SDK 10.0.300 or later; SDK 10.0.100/10.0.200 builds can run single-file apps but do not support those multi-file directives. If the version is below 10, follow the [fallback for older SDKs](#fallback-for-net-9-and-earlier) instead.
+Run `dotnet --version` to verify the SDK is installed and note the full version, including the feature band. File-based
+apps require .NET 10 or later. `#:include`, `#:exclude`, and transitive directive processing require SDK 10.0.300 or
+later; SDK 10.0.100/10.0.200 builds can run single-file apps but do not support those multi-file directives. If the
+version is below 10, follow the [fallback for older SDKs](#fallback-for-net-9-and-earlier) instead.
 
 ### Step 2: Write the app file
 
-Create an entry-point `.cs` file using top-level statements. Place it outside any existing project directory to avoid conflicts with `.csproj` files.
+Create an entry-point `.cs` file using top-level statements. Place it outside any existing project directory to avoid
+conflicts with `.csproj` files.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -64,11 +73,13 @@ dotnet hello.cs -- arg1 arg2 "multi word arg"
 
 ### Step 4: Add directives (if needed)
 
-Place directives at the top of the file (immediately after an optional shebang line), before any `using` directives or other C# code. All directives start with `#:`.
+Place directives at the top of the file (immediately after an optional shebang line), before any `using` directives or
+other C# code. All directives start with `#:`.
 
 #### `#:package` — NuGet package references
 
-Specify a version unless the app intentionally uses central package management. Use `@*` when the latest available package is acceptable (or `@*-*` for pre-release):
+Specify a version unless the app intentionally uses central package management. Use `@*` when the latest available
+package is acceptable (or `@*-*` for pre-release):
 
 ```csharp
 #:package Humanizer@2.14.1
@@ -114,7 +125,9 @@ Reference another project by relative path:
 
 #### `#:ref` — File-based app references
 
-Reference another `.cs` file as a separate file-based app project when it should compile into a separate assembly instead of being included in the same compilation. Use `#:include` for ordinary helper files that should share the same assembly as the entry point; use `#:ref` when you want project-reference-like boundaries.
+Reference another `.cs` file as a separate file-based app project when it should compile into a separate assembly
+instead of being included in the same compilation. Use `#:include` for ordinary helper files that should share the same
+assembly as the entry point; use `#:ref` when you want project-reference-like boundaries.
 
 ```csharp
 #:property ExperimentalFileBasedProgramEnableRefDirective=true
@@ -126,11 +139,14 @@ Console.WriteLine(Formatter.Title("hello world"));
 Guidelines:
 
 - The referenced file is compiled as its own virtual project and added as a project reference.
-- If the referenced file is a library without top-level statements, put `#:property OutputType=Library` in that referenced file.
-- Members that must be consumed by the referencing app should be public; internal members are not visible across the assembly boundary.
+- If the referenced file is a library without top-level statements, put `#:property OutputType=Library` in that
+  referenced file.
+- Members that must be consumed by the referencing app should be public; internal members are not visible across the
+  assembly boundary.
 - `#:ref` is transitive: a referenced file can contain its own `#:ref` and other `#:` directives.
 - Relative paths are resolved relative to the file containing the directive.
-- Some SDK builds require `#:property ExperimentalFileBasedProgramEnableRefDirective=true`; remove that property if the SDK accepts `#:ref` without it.
+- Some SDK builds require `#:property ExperimentalFileBasedProgramEnableRefDirective=true`; remove that property if the
+  SDK accepts `#:ref` without it.
 
 #### `#:sdk` — SDK selection
 
@@ -142,7 +158,10 @@ Override the default SDK (`Microsoft.NET.Sdk`):
 
 #### `#:include` and `#:exclude` — Multi-file apps
 
-In .NET SDK 10.0.300 and later, file-based apps can include additional files in the same virtual project. Check the full `dotnet --version` output before using these directives; a 10.0.100 or 10.0.200 SDK is still .NET 10 but does not support them. Use `#:include` for helper source files and supported assets, and `#:exclude` to remove files from an include pattern or default item set.
+In .NET SDK 10.0.300 and later, file-based apps can include additional files in the same virtual project. Check the full
+`dotnet --version` output before using these directives; a 10.0.100 or 10.0.200 SDK is still .NET 10 but does not
+support them. Use `#:include` for helper source files and supported assets, and `#:exclude` to remove files from an
+include pattern or default item set.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -159,9 +178,12 @@ Guidelines:
 - Put declarations such as classes, records, and enums in included `.cs` files.
 - Prefer explicit globs such as `Helpers.cs` or `Models/*.cs` over broad recursive globs.
 - Paths are resolved relative to the file containing the directive.
-- Include directives from non-entry-point C# files are processed too, so a helper file can declare its own `#:package`, `#:property`, `#:sdk`, `#:project`, `#:ref`, `#:include`, or `#:exclude` directives.
-- Avoid duplicate directives across included files unless the directive kind explicitly supports duplicates; duplicate `#:package`, `#:property`, `#:sdk`, `#:include`, and `#:exclude` entries can fail.
-- When an app uses `#:include`, add a shebang (`#!/usr/bin/env dotnet`) to the entry-point file on Unix-like systems to make the entry point clear to tools. Use `LF` line endings and no BOM for shebang files.
+- Include directives from non-entry-point C# files are processed too, so a helper file can declare its own `#:package`,
+  `#:property`, `#:sdk`, `#:project`, `#:ref`, `#:include`, or `#:exclude` directives.
+- Avoid duplicate directives across included files unless the directive kind explicitly supports duplicates; duplicate
+  `#:package`, `#:property`, `#:sdk`, `#:include`, and `#:exclude` entries can fail.
+- When an app uses `#:include`, add a shebang (`#!/usr/bin/env dotnet`) to the entry-point file on Unix-like systems to
+  make the entry point clear to tools. Use `LF` line endings and no BOM for shebang files.
 
 Example layout:
 
@@ -231,7 +253,8 @@ Use `LF` line endings (not `CRLF`) when adding a shebang. This directive is igno
 
 ## Source-generated JSON
 
-File-based apps enable native AOT by default. Reflection-based APIs like `JsonSerializer.Serialize<T>(value)` fail at runtime under AOT. Use source-generated serialization instead:
+File-based apps enable native AOT by default. Reflection-based APIs like `JsonSerializer.Serialize<T>(value)` fail at
+runtime under AOT. Use source-generated serialization instead:
 
 ```csharp
 using System.Text.Json;
@@ -267,12 +290,14 @@ mkdir -p /tmp/csharp-file-based-app && cd /tmp/csharp-file-based-app
 dotnet new console -o . --force
 ```
 
-Replace the generated `Program.cs` with the app content and run with `dotnet run`. Add NuGet packages with `dotnet add package <name>`. Remove the directory when done.
+Replace the generated `Program.cs` with the app content and run with `dotnet run`. Add NuGet packages with `dotnet add
+package <name>`. Remove the directory when done.
 
 ## Validation
 
 - [ ] `dotnet --version` reports 10.0 or later (or fallback path is used)
-- [ ] If the app uses `#:include`, `#:exclude`, or transitive directives from included files, `dotnet --version` reports SDK 10.0.300 or later
+- [ ] If the app uses `#:include`, `#:exclude`, or transitive directives from included files, `dotnet --version` reports
+  SDK 10.0.300 or later
 - [ ] The app compiles without errors (can be checked explicitly with `dotnet build <file>.cs`)
 - [ ] `dotnet <file>.cs` produces the expected output
 - [ ] Multi-file apps include every required helper file and exclude unintended matches
@@ -295,4 +320,4 @@ Replace the generated `Program.cs` with the app content and run with `dotnet run
 
 ## More info
 
-See https://learn.microsoft.com/en-us/dotnet/core/sdk/file-based-apps for a full reference on file-based apps.
+See <https://learn.microsoft.com/en-us/dotnet/core/sdk/file-based-apps> for a full reference on file-based apps.

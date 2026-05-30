@@ -1,6 +1,7 @@
 # Modern C# Features For .NET Repositories
 
-Use this reference when modernizing C# code without breaking the repo's target framework, SDK, or language-version expectations.
+Use this reference when modernizing C# code without breaking the repo's target framework, SDK, or language-version
+expectations.
 
 ## First Rule: Detect The Real Language Ceiling
 
@@ -192,7 +193,8 @@ Practical use:
 
 ## Sources
 
-- [Configure C# language version](https://learn.microsoft.com/dotnet/csharp/language-reference/configure-language-version)
+- [Configure C# language
+  version](https://learn.microsoft.com/dotnet/csharp/language-reference/configure-language-version)
 - [The history of C#](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-version-history)
 - [What's new in C# 13](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13)
 - [What's new in C# 14](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-14)

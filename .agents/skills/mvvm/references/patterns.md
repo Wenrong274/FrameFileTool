@@ -3,12 +3,14 @@
 ## Property Patterns
 
 ### Simple Observable Property
+
 ```csharp
 [ObservableProperty]
 private string _name = string.Empty;
 ```
 
 ### Property with Change Notification
+
 ```csharp
 [ObservableProperty]
 private int _quantity;
@@ -21,6 +23,7 @@ partial void OnQuantityChanged(int oldValue, int newValue)
 ```
 
 ### Property Affecting Commands
+
 ```csharp
 [ObservableProperty]
 [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
@@ -29,6 +32,7 @@ private bool _isValid;
 ```
 
 ### Property with Validation
+
 ```csharp
 [ObservableProperty]
 [NotifyDataErrorInfo]
@@ -40,6 +44,7 @@ private string _name = string.Empty;
 ## Command Patterns
 
 ### Simple Async Command
+
 ```csharp
 [RelayCommand]
 private async Task LoadDataAsync()
@@ -50,6 +55,7 @@ private async Task LoadDataAsync()
 ```
 
 ### Command with CanExecute
+
 ```csharp
 [RelayCommand(CanExecute = nameof(CanSave))]
 private async Task SaveAsync()
@@ -61,6 +67,7 @@ private bool CanSave() => IsValid && !IsBusy;
 ```
 
 ### Command with Parameter
+
 ```csharp
 [RelayCommand]
 private void SelectItem(Item item)
@@ -77,6 +84,7 @@ private async Task DeleteItemAsync(int itemId)
 ```
 
 ### Command with Cancellation
+
 ```csharp
 [RelayCommand(IncludeCancelCommand = true)]
 private async Task SearchAsync(string query, CancellationToken token)
@@ -90,6 +98,7 @@ private async Task SearchAsync(string query, CancellationToken token)
 ## Collection Patterns
 
 ### Master-Detail
+
 ```csharp
 public partial class MasterDetailViewModel : ObservableObject
 {
@@ -115,6 +124,7 @@ public partial class MasterDetailViewModel : ObservableObject
 ```
 
 ### Filtered Collection
+
 ```csharp
 public partial class FilteredListViewModel : ObservableObject
 {
@@ -145,6 +155,7 @@ public partial class FilteredListViewModel : ObservableObject
 ## Navigation Patterns
 
 ### ViewModel-First Navigation
+
 ```csharp
 public interface INavigationService
 {
@@ -164,6 +175,7 @@ public partial class MainViewModel(INavigationService navigation) : ObservableOb
 ```
 
 ### View-First Navigation
+
 ```csharp
 // Shell navigation (MAUI)
 [RelayCommand]
@@ -183,6 +195,7 @@ private void NavigateToSettings()
 ## State Management Patterns
 
 ### Loading State
+
 ```csharp
 public partial class DataViewModel : ObservableObject
 {
@@ -221,6 +234,7 @@ public enum ViewState { Idle, Loading, Success, Error }
 ```
 
 ### Undo/Redo Pattern
+
 ```csharp
 public partial class EditViewModel : ObservableObject
 {
@@ -257,6 +271,7 @@ public partial class EditViewModel : ObservableObject
 ## Dialog Patterns
 
 ### Confirmation Dialog
+
 ```csharp
 public interface IDialogService
 {
@@ -283,6 +298,7 @@ private async Task DeleteItemAsync(Item item)
 ## Dependency Injection Patterns
 
 ### Constructor Injection (Preferred)
+
 ```csharp
 public partial class ProductViewModel(
     IProductService productService,
@@ -294,6 +310,7 @@ public partial class ProductViewModel(
 ```
 
 ### Factory Pattern for ViewModels
+
 ```csharp
 public interface IViewModelFactory
 {

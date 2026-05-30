@@ -1,6 +1,11 @@
 ---
 name: mvvm
-description: "Implement the Model-View-ViewModel pattern in .NET applications with proper separation of concerns, data binding, commands, and testable ViewModels using MVVM Toolkit. USE FOR: implementing UI separation with Model-View-ViewModel; using MVVM Toolkit (CommunityToolkit.Mvvm) for ViewModels; designing testable UI architecture. DO NOT USE FOR: unrelated stacks; generic tasks that do not need this specific guidance. INVOKES: inspect the repository context, edit targeted files, and run relevant build, test, lint, or validation commands when changes are made."
+description: >-
+  Implement the Model-View-ViewModel pattern in .NET applications with proper separation of concerns, data binding,
+  commands, and testable ViewModels using MVVM Toolkit. USE FOR: implementing UI separation with Model-View-ViewModel;
+  using MVVM Toolkit (CommunityToolkit.Mvvm) for ViewModels; designing testable UI architecture. DO NOT USE FOR:
+  unrelated stacks; generic tasks that do not need this specific guidance. INVOKES: inspect the repository context, edit
+  targeted files, and run relevant build, test, lint, or validation commands when changes are made.
 compatibility: "Applies to WPF, MAUI, WinUI, Uno Platform, Avalonia, and Blazor projects."
 ---
 
@@ -25,6 +30,7 @@ compatibility: "Applies to WPF, MAUI, WinUI, Uno Platform, Avalonia, and Blazor 
 ## References
 
 See detailed examples in the `references/` folder:
+
 - [`patterns.md`](references/patterns.md) — ViewModel, command, navigation, and state patterns
 - [`anti-patterns.md`](references/anti-patterns.md) — Common mistakes and how to fix them
 
@@ -53,6 +59,7 @@ See detailed examples in the `references/` folder:
 ## ViewModel Patterns
 
 ### Basic ViewModel with Source Generators
+
 ```csharp
 public partial class ProductViewModel(IProductService productService) : ObservableObject
 {
@@ -77,6 +84,7 @@ public partial class ProductViewModel(IProductService productService) : Observab
 ```
 
 ### Property Changed Notifications
+
 ```csharp
 public partial class OrderViewModel : ObservableObject
 {
@@ -102,6 +110,7 @@ public partial class OrderViewModel : ObservableObject
 ```
 
 ### Collection ViewModel
+
 ```csharp
 public partial class ProductListViewModel(IProductService productService) : ObservableObject
 {
@@ -145,6 +154,7 @@ public partial class ProductListViewModel(IProductService productService) : Obse
 ## Commands
 
 ### Async Commands with Cancellation
+
 ```csharp
 public partial class SearchViewModel : ObservableObject
 {
@@ -161,6 +171,7 @@ public partial class SearchViewModel : ObservableObject
 ```
 
 ### Command with Parameter
+
 ```csharp
 public partial class NavigationViewModel : ObservableObject
 {
@@ -181,6 +192,7 @@ public partial class NavigationViewModel : ObservableObject
 ## Messenger Pattern
 
 ### Sending Messages
+
 ```csharp
 // Define message
 public record ProductSelectedMessage(Product Product);
@@ -190,6 +202,7 @@ WeakReferenceMessenger.Default.Send(new ProductSelectedMessage(selectedProduct))
 ```
 
 ### Receiving Messages
+
 ```csharp
 public partial class ProductDetailViewModel : ObservableRecipient
 {
@@ -214,6 +227,7 @@ public partial class ProductDetailViewModel : ObservableRecipient
 ## Validation
 
 ### Using ObservableValidator
+
 ```csharp
 public partial class RegistrationViewModel : ObservableValidator
 {
@@ -245,6 +259,7 @@ public partial class RegistrationViewModel : ObservableValidator
 ## Dependency Injection
 
 ### Registration
+
 ```csharp
 // Services
 services.AddSingleton<IProductService, ProductService>();
@@ -260,6 +275,7 @@ services.AddTransient<ProductDetailPage>();
 ```
 
 ### ViewModel Locator Pattern
+
 ```csharp
 public class ViewModelLocator
 {
@@ -275,6 +291,7 @@ public class ViewModelLocator
 ## View Binding
 
 ### XAML Binding
+
 ```xml
 <Page x:Class="MyApp.Views.ProductListPage"
       xmlns:vm="using:MyApp.ViewModels"

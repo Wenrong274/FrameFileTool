@@ -5,21 +5,32 @@ description: "Building WPF on .NET 8+. Host builder, MVVM Toolkit, Fluent theme,
 
 # dotnet-wpf-modern
 
-WPF on .NET 8+: Host builder and dependency injection, MVVM with CommunityToolkit.Mvvm source generators, hardware-accelerated rendering improvements, modern C# patterns (records, primary constructors, pattern matching), Fluent theme (.NET 9+), system theme detection, and what changed from .NET Framework WPF.
+WPF on .NET 8+: Host builder and dependency injection, MVVM with CommunityToolkit.Mvvm source generators,
+hardware-accelerated rendering improvements, modern C# patterns (records, primary constructors, pattern matching),
+Fluent theme (.NET 9+), system theme detection, and what changed from .NET Framework WPF.
 
-**Version assumptions:** .NET 8.0+ baseline (current LTS). TFM `net8.0-windows`. .NET 9 features (Fluent theme) explicitly marked.
+**Version assumptions:** .NET 8.0+ baseline (current LTS). TFM `net8.0-windows`. .NET 9 features (Fluent theme)
+explicitly marked.
 
-**Scope boundary:** This skill owns WPF on modern .NET patterns: Host builder, MVVM Toolkit, performance, modern C#, theming. Migration from .NET Framework to .NET 8+ is owned by [skill:dotnet-wpf-migration]. Desktop testing is owned by [skill:dotnet-ui-testing-core].
+**Scope boundary:** This skill owns WPF on modern .NET patterns: Host builder, MVVM Toolkit, performance, modern C#,
+theming. Migration from .NET Framework to .NET 8+ is owned by [skill:dotnet-wpf-migration]. Desktop testing is owned by
+[skill:dotnet-ui-testing-core].
 
-**Out of scope:** WPF .NET Framework patterns (legacy) -- this skill covers .NET 8+ only. Migration guidance -- see [skill:dotnet-wpf-migration]. Desktop testing -- see [skill:dotnet-ui-testing-core]. General Native AOT patterns -- see [skill:dotnet-native-aot]. UI framework selection -- see [skill:dotnet-ui-chooser].
+**Out of scope:** WPF .NET Framework patterns (legacy) -- this skill covers .NET 8+ only. Migration guidance -- see
+[skill:dotnet-wpf-migration]. Desktop testing -- see [skill:dotnet-ui-testing-core]. General Native AOT patterns -- see
+[skill:dotnet-native-aot]. UI framework selection -- see [skill:dotnet-ui-chooser].
 
-Cross-references: [skill:dotnet-ui-testing-core] for desktop testing, [skill:dotnet-winui] for WinUI 3 patterns, [skill:dotnet-wpf-migration] for migration guidance, [skill:dotnet-native-aot] for general AOT, [skill:dotnet-ui-chooser] for framework selection, [skill:dotnet-accessibility] for accessibility patterns (AutomationProperties, AutomationPeer, UI Automation).
+Cross-references: [skill:dotnet-ui-testing-core] for desktop testing, [skill:dotnet-winui] for WinUI 3 patterns,
+[skill:dotnet-wpf-migration] for migration guidance, [skill:dotnet-native-aot] for general AOT,
+[skill:dotnet-ui-chooser] for framework selection, [skill:dotnet-accessibility] for accessibility patterns
+(AutomationProperties, AutomationPeer, UI Automation).
 
 ---
 
 ## .NET 8+ Differences
 
-WPF on .NET 8+ is a significant modernization from .NET Framework WPF. The project format, DI pattern, language features, and runtime behavior have all changed.
+WPF on .NET 8+ is a significant modernization from .NET Framework WPF. The project format, DI pattern, language
+features, and runtime behavior have all changed.
 
 ### New Project Template
 
@@ -42,6 +53,7 @@ WPF on .NET 8+ is a significant modernization from .NET Framework WPF. The proje
 ```
 
 **Key differences from .NET Framework WPF:**
+
 - SDK-style `.csproj` (no `packages.config`, no `AssemblyInfo.cs`)
 - Nullable reference types enabled by default
 - Implicit usings enabled
@@ -52,7 +64,8 @@ WPF on .NET 8+ is a significant modernization from .NET Framework WPF. The proje
 
 ### Host Builder Pattern
 
-Modern WPF apps use the generic host for dependency injection, configuration, and logging -- replacing the legacy `ServiceLocator` or manual DI approaches.
+Modern WPF apps use the generic host for dependency injection, configuration, and logging -- replacing the legacy
+`ServiceLocator` or manual DI approaches.
 
 ```csharp
 // App.xaml.cs
@@ -122,7 +135,8 @@ public partial class App : Application
 
 ## MVVM Toolkit
 
-CommunityToolkit.Mvvm (Microsoft MVVM Toolkit) is the recommended MVVM framework for modern WPF. It uses source generators to eliminate boilerplate.
+CommunityToolkit.Mvvm (Microsoft MVVM Toolkit) is the recommended MVVM framework for modern WPF. It uses source
+generators to eliminate boilerplate.
 
 ```csharp
 // ViewModels/ProductListViewModel.cs
@@ -206,6 +220,7 @@ public partial class ProductListViewModel : ObservableObject
 ```
 
 **Key source generator attributes:**
+
 - `[ObservableProperty]` -- generates property with `INotifyPropertyChanged` from a backing field
 - `[RelayCommand]` -- generates `ICommand` from a method (supports async, cancellation, `CanExecute`)
 - `[NotifyPropertyChangedFor]` -- raises `PropertyChanged` for dependent properties
@@ -238,7 +253,9 @@ WPF on .NET 8+ delivers significant performance improvements over .NET Framework
 </PropertyGroup>
 ```
 
-**Trimming caveat:** WPF relies heavily on XAML reflection for data binding and resource resolution. Use `TrimMode=partial` (not `full`) and test thoroughly. Compiled bindings and `x:Type` references are safer than string-based bindings for trimming.
+**Trimming caveat:** WPF relies heavily on XAML reflection for data binding and resource resolution. Use
+`TrimMode=partial` (not `full`) and test thoroughly. Compiled bindings and `x:Type` references are safer than
+string-based bindings for trimming.
 
 ### Memory and GC
 
@@ -248,18 +265,22 @@ WPF on .NET 8+ delivers significant performance improvements over .NET Framework
 
 ### Expected Improvements
 
-WPF on .NET 8 delivers measurable improvements over .NET Framework 4.8 across key metrics. Exact numbers depend on workload, hardware, and application complexity -- always benchmark your own scenarios:
+WPF on .NET 8 delivers measurable improvements over .NET Framework 4.8 across key metrics. Exact numbers depend on
+workload, hardware, and application complexity -- always benchmark your own scenarios:
 
-- **Cold startup** -- significantly faster due to ReadyToRun, tiered compilation, and reduced framework initialization overhead
+- **Cold startup** -- significantly faster due to ReadyToRun, tiered compilation, and reduced framework initialization
+  overhead
 - **UI virtualization** -- improved rendering pipeline and GC reduce time for large ItemsControls (ListBox, DataGrid)
-- **GC pauses** -- shorter and less frequent Gen2 collections from .NET 8 GC improvements (Dynamic PGO, frozen object heap, pinned object heap)
+- **GC pauses** -- shorter and less frequent Gen2 collections from .NET 8 GC improvements (Dynamic PGO, frozen object
+  heap, pinned object heap)
 - **Memory footprint** -- lower baseline working set compared to .NET Framework CLR
 
 ---
 
-## Modern C#
+## Modern C\#
 
-.NET 8+ WPF projects can use the latest C# language features. These patterns reduce boilerplate and improve code clarity.
+.NET 8+ WPF projects can use the latest C# language features. These patterns reduce boilerplate and improve code
+clarity.
 
 ### Records for Data Models
 
@@ -332,7 +353,8 @@ List<string> categories = ["Electronics", "Clothing", "Books"];
 
 ### Fluent Theme (.NET 9+)
 
-.NET 9 introduces the Fluent theme for WPF, providing modern Windows 11-style visuals. It applies rounded corners, updated control templates, and Mica/Acrylic backdrop support.
+.NET 9 introduces the Fluent theme for WPF, providing modern Windows 11-style visuals. It applies rounded corners,
+updated control templates, and Mica/Acrylic backdrop support.
 
 ```xml
 <!-- App.xaml: enable Fluent theme (.NET 9+) via ThemeMode property -->
@@ -355,12 +377,14 @@ mainWindow.ThemeMode = ThemeMode.Dark;
 ```
 
 **ThemeMode values:**
+
 - `None` -- classic WPF look (no Fluent styling)
 - `Light` -- Fluent theme with light colors
 - `Dark` -- Fluent theme with dark colors
 - `System` -- follow Windows system light/dark theme setting
 
 **Fluent theme includes:**
+
 - Rounded corners on buttons, text boxes, and list items
 - Updated color palette aligned with Windows 11 design language
 - Mica and Acrylic backdrop support (Windows 11)
@@ -427,13 +451,22 @@ public void ApplyTheme(AppTheme theme)
 
 ## Agent Gotchas
 
-1. **Do not use .NET Framework WPF patterns in .NET 8+ projects.** Avoid `App.config` for DI (use Host builder), `packages.config` (use `PackageReference`), `ServiceLocator` pattern (use constructor injection), and `AssemblyInfo.cs` (use `<PropertyGroup>` properties).
-2. **Do not use deprecated WPF APIs.** `BitmapEffect` (replaced by `Effect`/`ShaderEffect`), `DrawingContext.PushEffect` (removed), and `VisualBrush` tile modes with hardware acceleration disabled are obsolete.
-3. **Do not mix `{Binding}` and manual `INotifyPropertyChanged` when using MVVM Toolkit.** Use `[ObservableProperty]` source generators consistently. Mixing approaches causes subtle binding update bugs.
-4. **Do not use `Dispatcher.Invoke` from async code.** In async methods, `await` automatically marshals back to the UI thread (the default `ConfigureAwait(true)` behavior). `Dispatcher.Invoke`/`BeginInvoke` is still appropriate from non-async contexts (timers, COM callbacks, native interop).
-5. **Do not set `TrimMode=full` for WPF apps.** WPF uses XAML reflection extensively. Use `TrimMode=partial` and test all views after trimming to catch missing types.
-6. **Do not forget the Host builder lifecycle.** Call `_host.StartAsync()` in `OnStartup` and `_host.StopAsync()` in `OnExit`. Forgetting lifecycle management causes DI-registered `IHostedService` instances to never start or stop.
-7. **Do not hardcode colors when using Fluent theme.** Reference theme resources (`{DynamicResource SystemAccentColor}`) to maintain compatibility with light/dark mode and system accent color changes.
+1. **Do not use .NET Framework WPF patterns in .NET 8+ projects.** Avoid `App.config` for DI (use Host builder),
+   `packages.config` (use `PackageReference`), `ServiceLocator` pattern (use constructor injection), and
+   `AssemblyInfo.cs` (use `<PropertyGroup>` properties).
+2. **Do not use deprecated WPF APIs.** `BitmapEffect` (replaced by `Effect`/`ShaderEffect`), `DrawingContext.PushEffect`
+   (removed), and `VisualBrush` tile modes with hardware acceleration disabled are obsolete.
+3. **Do not mix `{Binding}` and manual `INotifyPropertyChanged` when using MVVM Toolkit.** Use `[ObservableProperty]`
+   source generators consistently. Mixing approaches causes subtle binding update bugs.
+4. **Do not use `Dispatcher.Invoke` from async code.** In async methods, `await` automatically marshals back to the UI
+   thread (the default `ConfigureAwait(true)` behavior). `Dispatcher.Invoke`/`BeginInvoke` is still appropriate from
+   non-async contexts (timers, COM callbacks, native interop).
+5. **Do not set `TrimMode=full` for WPF apps.** WPF uses XAML reflection extensively. Use `TrimMode=partial` and test
+   all views after trimming to catch missing types.
+6. **Do not forget the Host builder lifecycle.** Call `_host.StartAsync()` in `OnStartup` and `_host.StopAsync()` in
+   `OnExit`. Forgetting lifecycle management causes DI-registered `IHostedService` instances to never start or stop.
+7. **Do not hardcode colors when using Fluent theme.** Reference theme resources (`{DynamicResource SystemAccentColor}`)
+   to maintain compatibility with light/dark mode and system accent color changes.
 
 ---
 

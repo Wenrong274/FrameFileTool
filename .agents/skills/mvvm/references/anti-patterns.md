@@ -2,7 +2,8 @@
 
 ## 1. Logic in Code-Behind
 
-### Bad
+### Bad: Logic in Code-Behind
+
 ```csharp
 // MainPage.xaml.cs
 public partial class MainPage : Page
@@ -20,7 +21,8 @@ public partial class MainPage : Page
 }
 ```
 
-### Good
+### Good: Logic in Code-Behind
+
 ```csharp
 // MainPage.xaml.cs
 public partial class MainPage : Page
@@ -45,7 +47,8 @@ public partial class MainViewModel(IProductService productService) : ObservableO
 
 ## 2. ViewModel Referencing View Types
 
-### Bad
+### Bad: ViewModel Referencing View Types
+
 ```csharp
 public class MainViewModel : ObservableObject
 {
@@ -58,7 +61,8 @@ public class MainViewModel : ObservableObject
 }
 ```
 
-### Good
+### Good: ViewModel Referencing View Types
+
 ```csharp
 public partial class MainViewModel : ObservableObject
 {
@@ -69,7 +73,8 @@ public partial class MainViewModel : ObservableObject
 
 ## 3. Manual INotifyPropertyChanged
 
-### Bad
+### Bad: Manual INotifyPropertyChanged
+
 ```csharp
 public class ProductViewModel : INotifyPropertyChanged
 {
@@ -91,7 +96,8 @@ public class ProductViewModel : INotifyPropertyChanged
 }
 ```
 
-### Good
+### Good: Manual INotifyPropertyChanged
+
 ```csharp
 public partial class ProductViewModel : ObservableObject
 {
@@ -102,7 +108,8 @@ public partial class ProductViewModel : ObservableObject
 
 ## 4. God ViewModel
 
-### Bad
+### Bad: God ViewModel
+
 ```csharp
 public partial class MainViewModel : ObservableObject
 {
@@ -115,7 +122,8 @@ public partial class MainViewModel : ObservableObject
 }
 ```
 
-### Good
+### Good: God ViewModel
+
 ```csharp
 // Split into focused ViewModels
 public partial class ProductListViewModel : ObservableObject { /* Products only */ }
@@ -126,10 +134,12 @@ public partial class SettingsViewModel : ObservableObject { /* Settings only */ 
 
 ## 5. Direct Service Calls in View
 
-### Bad
+### Bad: Direct Service Calls in View
+
 ```xml
 <Button Click="OnClick" />
 ```
+
 ```csharp
 private async void OnClick(object sender, EventArgs e)
 {
@@ -139,10 +149,12 @@ private async void OnClick(object sender, EventArgs e)
 }
 ```
 
-### Good
+### Good: Direct Service Calls in View
+
 ```xml
 <Button Command="{Binding LoadDataCommand}" />
 ```
+
 ```csharp
 public partial class DataViewModel(IDataService service) : ObservableObject
 {
@@ -157,7 +169,8 @@ public partial class DataViewModel(IDataService service) : ObservableObject
 
 ## 6. Exposing Model Directly
 
-### Bad
+### Bad: Exposing Model Directly
+
 ```csharp
 public partial class OrderViewModel : ObservableObject
 {
@@ -168,7 +181,8 @@ public partial class OrderViewModel : ObservableObject
 }
 ```
 
-### Good
+### Good: Exposing Model Directly
+
 ```csharp
 public partial class OrderViewModel : ObservableObject
 {
@@ -182,7 +196,8 @@ public partial class OrderViewModel : ObservableObject
 
 ## 7. Synchronous Operations on UI Thread
 
-### Bad
+### Bad: Synchronous Operations on UI Thread
+
 ```csharp
 [RelayCommand]
 private void LoadData()
@@ -192,7 +207,8 @@ private void LoadData()
 }
 ```
 
-### Good
+### Good: Synchronous Operations on UI Thread
+
 ```csharp
 [RelayCommand]
 private async Task LoadDataAsync()
@@ -204,7 +220,8 @@ private async Task LoadDataAsync()
 
 ## 8. Missing Validation
 
-### Bad
+### Bad: Missing Validation
+
 ```csharp
 [RelayCommand]
 private async Task SaveAsync()
@@ -213,7 +230,8 @@ private async Task SaveAsync()
 }
 ```
 
-### Good
+### Good: Missing Validation
+
 ```csharp
 public partial class ProductViewModel : ObservableValidator
 {
@@ -238,7 +256,8 @@ public partial class ProductViewModel : ObservableValidator
 
 ## 9. Tight Coupling Between ViewModels
 
-### Bad
+### Bad: Tight Coupling Between ViewModels
+
 ```csharp
 public class OrderViewModel : ObservableObject
 {
@@ -252,7 +271,8 @@ public class OrderViewModel : ObservableObject
 }
 ```
 
-### Good
+### Good: Tight Coupling Between ViewModels
+
 ```csharp
 public partial class OrderViewModel : ObservableRecipient
 {
@@ -273,7 +293,8 @@ public partial class OrderViewModel : ObservableRecipient
 
 ## 10. Not Using IDisposable
 
-### Bad
+### Bad: Not Using IDisposable
+
 ```csharp
 public class LiveDataViewModel : ObservableObject
 {
@@ -287,7 +308,8 @@ public class LiveDataViewModel : ObservableObject
 }
 ```
 
-### Good
+### Good: Not Using IDisposable
+
 ```csharp
 public partial class LiveDataViewModel : ObservableObject, IDisposable
 {

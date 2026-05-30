@@ -1,6 +1,11 @@
 ---
 name: wpf
-description: "Build and modernize WPF applications on .NET with correct XAML, data binding, commands, threading, styling, and Windows desktop migration decisions. USE FOR: working on WPF UI, MVVM, binding, commands, or desktop modernization; migrating WPF from .NET Framework to .NET; integrating newer Windows capabilities into a WPF app. DO NOT USE FOR: unrelated stacks; generic tasks that do not need this specific guidance. INVOKES: inspect the repository context, edit targeted files, and run relevant build, test, lint, or validation commands when changes are made."
+description: >-
+  Build and modernize WPF applications on .NET with correct XAML, data binding, commands, threading, styling, and
+  Windows desktop migration decisions. USE FOR: working on WPF UI, MVVM, binding, commands, or desktop modernization;
+  migrating WPF from .NET Framework to .NET; integrating newer Windows capabilities into a WPF app. DO NOT USE FOR:
+  unrelated stacks; generic tasks that do not need this specific guidance. INVOKES: inspect the repository context, edit
+  targeted files, and run relevant build, test, lint, or validation commands when changes are made.
 compatibility: "Requires a WPF project on .NET or .NET Framework."
 ---
 
@@ -23,7 +28,8 @@ compatibility: "Requires a WPF project on .NET or .NET Framework."
 
 ### References
 
-- [patterns.md](references/patterns.md) - MVVM patterns, binding patterns, command patterns, and reusable architectural approaches
+- [patterns.md](references/patterns.md) - MVVM patterns, binding patterns, command patterns, and reusable architectural
+  approaches
 - [anti-patterns.md](references/anti-patterns.md) - Common WPF mistakes and how to avoid them
 
 ## Workflow
@@ -37,7 +43,7 @@ compatibility: "Requires a WPF project on .NET or .NET Framework."
 
 ## Project Structure
 
-```
+```text
 MyWpfApp/
 ├── MyWpfApp/
 │   ├── App.xaml                # Application entry
@@ -55,6 +61,7 @@ MyWpfApp/
 ## MVVM Pattern
 
 ### ViewModel with MVVM Toolkit
+
 ```csharp
 public partial class CustomersViewModel : ObservableObject
 {
@@ -105,6 +112,7 @@ public partial class CustomersViewModel : ObservableObject
 ```
 
 ### View Binding
+
 ```xml
 <Window x:Class="MyWpfApp.Views.CustomersView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -242,6 +250,7 @@ public class MultiplyConverter : IMultiValueConverter
 ## Styles and Templates
 
 ### Resource Dictionary
+
 ```xml
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -330,6 +339,7 @@ private async Task LoadDataAsync()
    - Enable `x:CompileBindings="True"` for performance
 
 2. **Implement INotifyDataErrorInfo for validation:**
+
    ```csharp
    [ObservableProperty]
    [NotifyDataErrorInfo]
@@ -339,11 +349,13 @@ private async Task LoadDataAsync()
    ```
 
 3. **Use weak event patterns for long-lived subscriptions:**
+
    ```csharp
    WeakEventManager<Source, EventArgs>.AddHandler(source, "EventName", Handler);
    ```
 
 4. **Virtualize large collections:**
+
    ```xml
    <ListBox VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.VirtualizationMode="Recycling"
@@ -351,12 +363,14 @@ private async Task LoadDataAsync()
    ```
 
 5. **Freeze Freezables when possible:**
+
    ```csharp
    var brush = new SolidColorBrush(Colors.Blue);
    brush.Freeze(); // Thread-safe, better performance
    ```
 
 6. **Use design-time data:**
+
    ```xml
    <Window d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=True}">
    ```

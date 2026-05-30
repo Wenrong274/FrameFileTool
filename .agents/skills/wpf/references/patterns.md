@@ -10,7 +10,7 @@ The Model-View-ViewModel pattern separates concerns:
 - **View**: XAML UI, no business logic
 - **ViewModel**: Presentation logic, exposes data and commands to the View
 
-```
+```text
 View (XAML) ←→ ViewModel (C#) ←→ Model (C#)
      ↑              ↑
   DataBinding    Services/Repositories

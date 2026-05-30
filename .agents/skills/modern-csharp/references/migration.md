@@ -1,6 +1,7 @@
 # C# Version Migration Guide
 
-This reference provides guidance for migrating codebases from older C# versions to modern C# (12, 13, 14). All examples demonstrate the modern approach using primary constructors and current patterns.
+This reference provides guidance for migrating codebases from older C# versions to modern C# (12, 13, 14). All examples
+demonstrate the modern approach using primary constructors and current patterns.
 
 ## Migration Strategy
 
@@ -30,6 +31,7 @@ Migrate in phases rather than all at once:
 ### Constructor to Primary Constructor
 
 **Before (Traditional Constructor)**:
+
 ```csharp
 public class OrderService
 {
@@ -51,6 +53,7 @@ public class OrderService
 ```
 
 **After (Primary Constructor)**:
+
 ```csharp
 public class OrderService(IOrderRepository repository, ILogger<OrderService> logger)
 {
@@ -65,6 +68,7 @@ public class OrderService(IOrderRepository repository, ILogger<OrderService> log
 ### When Primary Constructors Are Not Suitable
 
 Keep traditional constructors when:
+
 - You need multiple constructor overloads with complex logic
 - Constructor parameters require significant validation
 - You need explicit field visibility modifiers
@@ -94,6 +98,7 @@ public class ValidatedEntity
 ### Array Initialization to Collection Expressions
 
 **Before**:
+
 ```csharp
 private readonly string[] _allowedExtensions = new[] { ".jpg", ".png", ".gif" };
 private readonly List<int> _numbers = new List<int> { 1, 2, 3 };
@@ -101,6 +106,7 @@ private readonly HashSet<string> _tags = new HashSet<string>();
 ```
 
 **After**:
+
 ```csharp
 private readonly string[] _allowedExtensions = [".jpg", ".png", ".gif"];
 private readonly List<int> _numbers = [1, 2, 3];
@@ -110,6 +116,7 @@ private readonly HashSet<string> _tags = [];
 ### Spread Operator for Collection Concatenation
 
 **Before**:
+
 ```csharp
 public string[] GetAllArgs(string[] baseArgs, string outputPath)
 {
@@ -121,6 +128,7 @@ public string[] GetAllArgs(string[] baseArgs, string outputPath)
 ```
 
 **After**:
+
 ```csharp
 public string[] GetAllArgs(string[] baseArgs, string outputPath) =>
     [..baseArgs, "--output", outputPath];
@@ -131,6 +139,7 @@ public string[] GetAllArgs(string[] baseArgs, string outputPath) =>
 ### String Concatenation to Raw String Literals
 
 **Before**:
+
 ```csharp
 public class QueryGenerator
 {
@@ -145,6 +154,7 @@ public class QueryGenerator
 ```
 
 **After**:
+
 ```csharp
 public class QueryGenerator(string defaultSchema)
 {
@@ -161,6 +171,7 @@ public class QueryGenerator(string defaultSchema)
 ### Generic Constraints to Generic Math
 
 **Before**:
+
 ```csharp
 public static class MathUtils
 {
@@ -181,6 +192,7 @@ public static class MathUtils
 ```
 
 **After**:
+
 ```csharp
 public static class MathUtils
 {
@@ -197,6 +209,7 @@ public static class MathUtils
 ### Required Members
 
 **Before**:
+
 ```csharp
 public class UserRequest
 {
@@ -206,6 +219,7 @@ public class UserRequest
 ```
 
 **After**:
+
 ```csharp
 public class UserRequest
 {
@@ -217,6 +231,7 @@ public class UserRequest
 ### List Patterns
 
 **Before**:
+
 ```csharp
 public string ParseCommand(string[] args)
 {
@@ -231,6 +246,7 @@ public string ParseCommand(string[] args)
 ```
 
 **After**:
+
 ```csharp
 public string ParseCommand(string[] args) => args switch
 {
@@ -246,6 +262,7 @@ public string ParseCommand(string[] args) => args switch
 ### Record Structs
 
 **Before**:
+
 ```csharp
 public struct Point : IEquatable<Point>
 {
@@ -261,6 +278,7 @@ public struct Point : IEquatable<Point>
 ```
 
 **After**:
+
 ```csharp
 public readonly record struct Point(double X, double Y);
 ```
@@ -268,6 +286,7 @@ public readonly record struct Point(double X, double Y);
 ### Global Usings
 
 **Before (every file)**:
+
 ```csharp
 using System;
 using System.Collections.Generic;
@@ -277,6 +296,7 @@ using Microsoft.Extensions.Logging;
 ```
 
 **After (GlobalUsings.cs or Directory.Build.props)**:
+
 ```csharp
 // GlobalUsings.cs
 global using System;
@@ -289,6 +309,7 @@ global using Microsoft.Extensions.Logging;
 ### File-Scoped Namespaces
 
 **Before**:
+
 ```csharp
 namespace MyApp.Services
 {
@@ -300,6 +321,7 @@ namespace MyApp.Services
 ```
 
 **After**:
+
 ```csharp
 namespace MyApp.Services;
 
@@ -312,6 +334,7 @@ public class OrderService(IOrderRepository repository)
 ### Null Parameter Checks
 
 **Before**:
+
 ```csharp
 public void Process(string value)
 {
@@ -324,6 +347,7 @@ public void Process(string value)
 ```
 
 **After**:
+
 ```csharp
 public void Process(string value)
 {
@@ -338,6 +362,7 @@ public void Process(string value)
 ### Classes to Records
 
 **Before**:
+
 ```csharp
 public class OrderDto
 {
@@ -358,6 +383,7 @@ public class OrderDto
 ```
 
 **After**:
+
 ```csharp
 public record OrderDto(Guid Id, string CustomerName, decimal Total);
 ```
@@ -365,6 +391,7 @@ public record OrderDto(Guid Id, string CustomerName, decimal Total);
 ### Init-Only Properties
 
 **Before**:
+
 ```csharp
 public class Config
 {
@@ -378,6 +405,7 @@ public class Config
 ```
 
 **After**:
+
 ```csharp
 public class Config
 {
@@ -388,12 +416,14 @@ public class Config
 ### Target-Typed New
 
 **Before**:
+
 ```csharp
 private readonly Dictionary<string, List<Order>> _ordersByCustomer =
     new Dictionary<string, List<Order>>();
 ```
 
 **After**:
+
 ```csharp
 private readonly Dictionary<string, List<Order>> _ordersByCustomer = [];
 ```
@@ -401,6 +431,7 @@ private readonly Dictionary<string, List<Order>> _ordersByCustomer = [];
 ### Pattern Matching Improvements
 
 **Before**:
+
 ```csharp
 public decimal CalculateDiscount(object customer)
 {
@@ -415,6 +446,7 @@ public decimal CalculateDiscount(object customer)
 ```
 
 **After**:
+
 ```csharp
 public decimal CalculateDiscount(object customer) => customer switch
 {
@@ -430,6 +462,7 @@ public decimal CalculateDiscount(object customer) => customer switch
 ### Nullable Reference Types
 
 Enable in project file:
+
 ```xml
 <PropertyGroup>
     <Nullable>enable</Nullable>
@@ -437,6 +470,7 @@ Enable in project file:
 ```
 
 **Before**:
+
 ```csharp
 public class UserService
 {
@@ -449,6 +483,7 @@ public class UserService
 ```
 
 **After**:
+
 ```csharp
 public class UserService(IUserRepository repository)
 {
@@ -463,6 +498,7 @@ public class UserService(IUserRepository repository)
 ### Switch Expressions
 
 **Before**:
+
 ```csharp
 public string GetStatusText(OrderStatus status)
 {
@@ -483,6 +519,7 @@ public string GetStatusText(OrderStatus status)
 ```
 
 **After**:
+
 ```csharp
 public string GetStatusText(OrderStatus status) => status switch
 {
@@ -497,6 +534,7 @@ public string GetStatusText(OrderStatus status) => status switch
 ### Using Declarations
 
 **Before**:
+
 ```csharp
 public async Task<string> ReadFileAsync(string path)
 {
@@ -509,6 +547,7 @@ public async Task<string> ReadFileAsync(string path)
 ```
 
 **After**:
+
 ```csharp
 public async Task<string> ReadFileAsync(string path)
 {
@@ -521,6 +560,7 @@ public async Task<string> ReadFileAsync(string path)
 ### Async Streams
 
 **Before**:
+
 ```csharp
 public async Task<List<Order>> GetAllOrdersAsync()
 {
@@ -535,6 +575,7 @@ public async Task<List<Order>> GetAllOrdersAsync()
 ```
 
 **After**:
+
 ```csharp
 public class OrderReader(IOrderRepository repository)
 {
@@ -555,6 +596,7 @@ public class OrderReader(IOrderRepository repository)
 ### Indices and Ranges
 
 **Before**:
+
 ```csharp
 var lastItem = array[array.Length - 1];
 var lastThree = array.Skip(array.Length - 3).ToArray();
@@ -562,6 +604,7 @@ var middle = array.Skip(1).Take(array.Length - 2).ToArray();
 ```
 
 **After**:
+
 ```csharp
 var lastItem = array[^1];
 var lastThree = array[^3..];
@@ -573,6 +616,7 @@ var middle = array[1..^1];
 ### params Collections
 
 **Before**:
+
 ```csharp
 public void Log(params string[] messages)
 {
@@ -582,6 +626,7 @@ public void Log(params string[] messages)
 ```
 
 **After (more flexible)**:
+
 ```csharp
 public void Log(params IEnumerable<string> messages)
 {
@@ -602,6 +647,7 @@ public int Sum(params ReadOnlySpan<int> values)
 ### Lock Object
 
 **Before**:
+
 ```csharp
 public class Counter
 {
@@ -619,6 +665,7 @@ public class Counter
 ```
 
 **After**:
+
 ```csharp
 public class Counter
 {
@@ -640,6 +687,7 @@ public class Counter
 ### Field Keyword
 
 **Before**:
+
 ```csharp
 public class Person
 {
@@ -654,6 +702,7 @@ public class Person
 ```
 
 **After**:
+
 ```csharp
 public class Person
 {
@@ -670,6 +719,7 @@ public class Person
 ### Do Not Over-Modernize
 
 Avoid changing working code just to use new syntax. Prioritize:
+
 1. Bug fixes and correctness improvements
 2. Readability improvements
 3. Performance improvements

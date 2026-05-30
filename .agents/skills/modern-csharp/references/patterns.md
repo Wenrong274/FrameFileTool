@@ -1,6 +1,7 @@
 # Modern C# Patterns
 
-This reference covers idiomatic patterns for C# 12, C# 13, and C# 14. All examples use primary constructors and modern syntax.
+This reference covers idiomatic patterns for C# 12, C# 13, and C# 14. All examples use primary constructors and modern
+syntax.
 
 ## Primary Constructors (C# 12+)
 
