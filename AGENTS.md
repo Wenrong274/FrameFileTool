@@ -33,6 +33,7 @@ FrameFileTool 是一個 Windows WPF 桌面應用程式，用於處理序列圖�
 
 `.claude/skills`、`.codex/skills` 與 `.antigravitycli/skills` 僅作為不同 agent 的相容入口，
 皆應指向 `.agents/skills`；新增或更新 skill 時只維護 `.agents/skills`。
+需要重建相容入口時，使用 `.\tools\setup-agent-skills.ps1`。
 
 - `.agents/skills/dotnet-wpf-modern.md`：.NET 8+ WPF 整合規範，包含 Host builder、MVVM Toolkit、效能、theming 與現代 C#。
 - `.agents/skills/wpf/SKILL.md`：WPF、XAML、binding、commands、threading、styles 與 templates。

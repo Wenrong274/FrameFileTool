@@ -25,6 +25,17 @@
 - .NET 10 SDK
 - Visual Studio 2022 或 JetBrains Rider（或 `dotnet` CLI）
 
+## 開發環境初始設定
+
+若需要讓 Claude、Codex 與 Antigravity CLI 共用同一份專案 skills，請執行：
+
+```powershell
+.\tools\setup-agent-skills.ps1
+```
+
+此腳本會將 `.claude\skills`、`.codex\skills` 與 `.antigravitycli\skills`
+建立為指向 `.agents\skills` 的 Windows directory junction。
+
 ## 執行
 
 ```powershell
