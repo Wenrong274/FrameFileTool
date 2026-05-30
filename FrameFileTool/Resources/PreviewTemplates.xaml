@@ -162,6 +162,21 @@
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="56" Header="剔除">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Button Content="剔除"
+                                Padding="4,2"
+                                FontSize="11"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#EF4444"
+                                Command="{Binding DataContext.RemoveFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                AutomationProperties.Name="剔除此檔案" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
         </DataGrid.Columns>
     </DataGrid>
 </DataTemplate>
@@ -265,6 +280,21 @@
                                    Foreground="{DynamicResource TextPrimary}"
                                    TextTrimming="CharacterEllipsis"
                                    ToolTip="{Binding TargetName}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="56" Header="剔除">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Button Content="剔除"
+                                Padding="4,2"
+                                FontSize="11"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#EF4444"
+                                Command="{Binding DataContext.RemoveFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                AutomationProperties.Name="剔除此檔案" />
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -396,6 +426,21 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="56" Header="剔除">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Button Content="剔除"
+                                Padding="4,2"
+                                FontSize="11"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#EF4444"
+                                Command="{Binding DataContext.RemoveFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                AutomationProperties.Name="剔除此檔案" />
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>

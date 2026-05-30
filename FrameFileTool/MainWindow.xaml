@@ -75,6 +75,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0"
@@ -98,6 +99,12 @@
                         Content="重新掃描"
                         Command="{Binding ScanFilesCommand}" />
 
+                <Button Grid.Row="0"
+                        Grid.Column="4"
+                        Content="清空全部"
+                        Margin="6,0,0,0"
+                        Command="{Binding ClearFolderAndFilesCommand}" />
+
                 <TextBlock Grid.Row="1"
                            Text="掃描格式"
                            FontWeight="SemiBold"
@@ -105,7 +112,7 @@
 
                 <WrapPanel Grid.Row="1"
                            Grid.Column="1"
-                           Grid.ColumnSpan="3"
+                           Grid.ColumnSpan="4"
                            Margin="0,8,0,0"
                            VerticalAlignment="Center">
                     <CheckBox Content=".png"

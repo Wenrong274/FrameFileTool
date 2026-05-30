@@ -177,6 +177,7 @@ public sealed partial class MainViewModel : ObservableObject
     private CancellationTokenSource? _resizeCts;
     private CancellationTokenSource? _resizePreviewCts;
     private long _resizePreviewRequestId;
+    private readonly HashSet<string> _excludedFilePaths = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>正在執行的即時預覽 Task，供測試層 await 結果。</summary>
     internal Task LivePreviewTask { get; private set; } = Task.CompletedTask;
@@ -246,6 +247,16 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanBrowseOrScan))]
     private void ScanFiles()
     {
+        RefreshScanFilesCore(keepExclusions: false);
+    }
+
+    private void RefreshScanFilesCore(bool keepExclusions)
+    {
+        if (!keepExclusions)
+        {
+            _excludedFilePaths.Clear();
+        }
+
         Files.Clear();
         CurrentPreview = null;
 
@@ -254,7 +265,10 @@ public sealed partial class MainViewModel : ObservableObject
 
         foreach (var file in scanResult.Files)
         {
-            Files.Add(file);
+            if (!_excludedFilePaths.Contains(file.FullPath))
+            {
+                Files.Add(file);
+            }
         }
 
         FileSummary = $"已掃描 {Files.Count} 個圖片檔";
@@ -291,6 +305,7 @@ public sealed partial class MainViewModel : ObservableObject
             CurrentPreview = null;
             foreach (var file in result.Files)
             {
+                _excludedFilePaths.Remove(file.FullPath); // 重新啟用手動拖入的檔案
                 Files.Add(file);
             }
 
@@ -332,7 +347,7 @@ public sealed partial class MainViewModel : ObservableObject
         var result = _executor.DeleteToRecycleBin(vm.Items);
         AddLog($"抽幀執行完成：已移到回收桶 {result.SuccessCount} 個檔案。");
         AddErrors(result);
-        ScanFiles();
+        RefreshScanFilesCore(keepExclusions: true);
     }
 
     private void TriggerRenamePreview()
@@ -361,7 +376,7 @@ public sealed partial class MainViewModel : ObservableObject
         var result = _executor.RenameFiles(vm.Items);
         AddLog($"改名執行完成：成功 {result.SuccessCount} 個檔案。");
         AddErrors(result);
-        ScanFiles();
+        RefreshScanFilesCore(keepExclusions: true);
     }
 
     private void TriggerResizePreviewDebounced()
@@ -490,7 +505,7 @@ public sealed partial class MainViewModel : ObservableObject
             _resizeCts = null;
         }
 
-        ScanFiles();
+        RefreshScanFilesCore(keepExclusions: true);
     }
 
     [RelayCommand(CanExecute = nameof(CanCancelResize))]
@@ -503,6 +518,49 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ClearLog() => Logs.Clear();
 
+    [RelayCommand]
+    private void ClearFolderAndFiles()
+    {
+        SelectedFolder = string.Empty;
+        _excludedFilePaths.Clear();
+        Files.Clear();
+        ClearCurrentPreview();
+    }
+
+    [RelayCommand]
+    private void RemoveFile(object parameter)
+    {
+        if (parameter is null)
+        {
+            return;
+        }
+
+        FileItem? fileItem = null;
+        if (parameter is FileItem fi)
+        {
+            fileItem = fi;
+        }
+        else if (parameter is OperationPreviewItem op)
+        {
+            fileItem = Files.FirstOrDefault(f => f.FullPath == op.FullPath);
+        }
+
+        if (fileItem is not null)
+        {
+            _excludedFilePaths.Add(fileItem.FullPath); // 記錄被剔除的 FullPath
+            Files.Remove(fileItem);
+        }
+
+        if (Files.Count == 0)
+        {
+            ClearCurrentPreview();
+        }
+        else
+        {
+            TriggerLivePreviewForCurrentTool();
+        }
+    }
+
     [ObservableProperty]
     private bool _isLogExpanded = false;
 
@@ -513,7 +571,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── 預覽失效管理 ──────────────────────────────────────────
 
-    partial void OnSelectedFolderChanged(string value) => InvalidateAnyPreview();
+    partial void OnSelectedFolderChanged(string value)
+    {
+        _excludedFilePaths.Clear();
+        InvalidateAnyPreview();
+    }
 
     partial void OnIncludePngChanged(bool value) => InvalidateAnyPreview();
 
