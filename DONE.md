@@ -7,8 +7,9 @@
 
 ---
 
-## 1. 拖曳檔案或資料夾新增資料
+## 拖曳檔案或資料夾新增資料
 
+ID：`drag-import`
 完成日期：2026-05-29
 
 - [x] 新增拖放匯入服務，將 dropped paths 轉成 `FileItem` 清單與錯誤訊息。
@@ -28,14 +29,15 @@
 - [x] 拖入不支援副檔名、重複檔案或無法讀取路徑時，log 有明確訊息。
 - [x] 拖放後既有 `CurrentPreview` 失效，執行按鈕不可沿用舊預覽。
 
-## 2. 可勾選要變動的檔案
+## 可勾選要變動的檔案
 
+ID：`checkbox`
 完成日期：2026-05-30
 
 優先度：高
 分支：feat/checkbox
 前置條件：無
-被依賴：功能 3（executor 需識別 `IsIncluded` 篩選條件）
+被依賴：`output-folder`（executor 需識別 `IsIncluded` 篩選條件）
 
 影響範圍：`OperationPreviewItem` → 三個 `PreviewViewModel` →
 `MainViewModel.HasExecutable*Preview` → 三個 DataTemplate → `FileOperationExecutor` → `ImageResizeExecutor`

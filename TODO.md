@@ -28,11 +28,12 @@
 
 ## 近期功能計劃
 
-### 3. 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
+### 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
 
+ID：`output-folder`
 優先度：中
 分支：feat/output-folder（開始時建立）
-前置條件：功能 2 已完成（executor 需能識別 `IsIncluded` 後再套用輸出資料夾邏輯）
+前置條件：`checkbox` 已完成（executor 需能識別 `IsIncluded` 後再套用輸出資料夾邏輯）
 被依賴：無
 
 ⚠ 影響範圍：`FrameDeletePlanner` / `RenamePlanner` / `ResizePlanner` / `ResizeOptions` /
@@ -78,12 +79,13 @@
 - [ ] [錯誤狀態] 目標檔已存在或同名衝突時，預覽標示錯誤且執行按鈕停用。
 - [ ] [一致性] 批次縮放：覆寫原檔、另存子資料夾、指定資料夾三種輸出模式都維持可用。
 
-### 4. 批次縮放改用倍率輸入
+### 批次縮放改用倍率輸入
 
+ID：`scale-factor`
 優先度：中
 分支：feat/scale-factor（開始時建立）
 前置條件：無（獨立改動，不依賴其他功能）
-被依賴：功能 3 若同期進行需注意 `ResizeOptions` 欄位版本一致性
+被依賴：`output-folder` 若同期進行需注意 `ResizeOptions` 欄位版本一致性
 
 ⚠ 影響範圍：`ResizeOptions.ScalePercent` (int) → `ScaleFactor` (double) →
 `ResizePlanner` → `ResizePreviewService` → `ImageResizeExecutor` →
@@ -108,12 +110,59 @@
 - [ ] [錯誤狀態] 輸入倍率 `0` 或負數時，預覽顯示錯誤訊息且執行按鈕停用。
 - [ ] [清理] 舊的百分比文案、log 與錯誤訊息已全部改為倍率語意，無殘留百分比用詞。
 
-### 5. 移除預覽按鈕，改為即時自動預覽
+### 即時預覽前的預覽流程與 MainViewModel 整理
 
+ID：`preview-flow`
+優先度：高
+分支：refactor/preview-flow（開始時建立）
+前置條件：無
+被依賴：`live-preview`、`clear-remove`
+
+可執行度：可直接進計劃。現有 planner、executor、PreviewViewModel 與測試基礎足夠，
+但必須維持外部行為不變，避免在功能重構時混入 UI 流程變更。
+
+⚠ 影響範圍：`OperationAction` / `OperationPreviewItem` / 三個 `PreviewViewModel` /
+`MainViewModel` 的 preview lifecycle、CanExecute 與失效邏輯 → 三個 planner / executor 測試與
+ViewModel 測試
+
+⚠ 邊界案例：全部取消勾選後執行按鈕停用、批次改名勾選狀態造成的動態衝突、
+縮放預覽讀取尺寸期間切換 Tab 或修改設定、舊預覽不得覆蓋新設定
+
+- [ ] [Model] 將 `OperationAction` 從字串常數改為強型別 `OperationActionKind`，
+  UI 顯示文字由獨立轉換或顯示屬性提供，避免 executor 依賴中文字串判斷動作。
+- [ ] [Test] 更新 planner / executor 測試，確認動作判斷使用 `OperationActionKind`，
+  且既有中文顯示文字不影響執行邏輯。
+- [ ] [Model] 將 immutable 規劃結果與 UI 勾選狀態拆開：planner 輸出不持有
+  `IsIncluded` / `HasSelectionConflict`，預覽 ViewModel 或專用 row ViewModel 才持有互動狀態。
+- [ ] [Test] 補上預覽 row 勾選狀態測試：錯誤列不可納入、全部取消勾選時無可執行項目、
+  批次改名目標撞到未勾選來源檔時標示動態衝突。
+- [ ] [MainViewModel] 集中整理預覽生命週期：建立目前工具、設定快照、檔案清單與
+  `CurrentPreview` 是否有效的判斷流程，取代分散的 `OnXChanged() -> InvalidatePreview()`。
+- [ ] [Test] 補上預覽失效測試：變更來源資料夾、格式篩選、工具參數、輸出設定與
+  Tab 時，只讓受影響的預覽失效。
+- [ ] [MainViewModel] 將三個 `PreviewXxx()` 的共同流程收斂：建立輸入快照、呼叫 planner /
+  preview service、設定 `CurrentPreview`、寫入 log、刷新 commands。
+- [ ] [Test] 補上三個預覽流程測試，確認預覽完成後 summary、log、CanExecute 與錯誤狀態維持不變。
+- [ ] [Service] 調整 `ResizePreviewService` 的取消與錯誤回報策略，避免自動預覽時舊的尺寸讀取結果
+  覆蓋新的設定。
+- [ ] [Test] 補上縮放預覽取消測試：後發的預覽請求完成後，不會被先前較慢的請求覆蓋。
+- [ ] [View] 確認 `PreviewTemplates.xaml` 只繫結預覽 row ViewModel 提供的 UI 欄位，
+  不直接依賴 planner 內部資料結構。
+
+完成判定：
+
+- [ ] [正常路徑] 三個工具的手動預覽與執行行為與重構前一致，且所有既有單元測試通過。
+- [ ] [邊界] 預覽勾選、取消勾選、錯誤列與批次改名動態衝突的摘要與按鈕狀態正確。
+- [ ] [錯誤狀態] 縮放預覽讀取尺寸失敗或被取消時，舊預覽不會覆蓋新設定，log 或狀態可定位問題。
+- [ ] [維護性] `MainViewModel` 不再直接散落大量屬性變更失效邏輯，新增工具或即時預覽不需複製整段流程。
+
+### 移除預覽按鈕，改為即時自動預覽
+
+ID：`live-preview`
 優先度：高
 分支：feat/live-preview
-前置條件：無
-被依賴：功能 6（`RemoveFileCommand` 移除後需觸發即時預覽更新）
+前置條件：`preview-flow` 已完成（預覽生命週期與縮放預覽取消流程需先整理）
+被依賴：`clear-remove`（`RemoveFileCommand` 移除後需觸發即時預覽更新）
 
 ⚠ 影響範圍：`MainViewModel`（移除三個手動預覽 command、新增 `PropertyChanged` 監聽與 debounce 機制）→ `MainWindow.xaml`（移除三個預覽按鈕）
 
@@ -137,11 +186,12 @@
 - [ ] [邊界] 切換工具 Tab 時，目標工具的預覽自動更新至最新狀態。
 - [ ] [防抖] 批次縮放連續調整設定時不會同時發起多個非同步請求；預覽計算中顯示 loading 狀態，完成後自動解除。
 
-### 6. 清空全部與剔除檔案功能
+### 清空全部與剔除檔案功能
 
+ID：`clear-remove`
 優先度：中
 分支：feat/clear-remove（開始時建立）
-前置條件：功能 5 已完成（`RemoveFileCommand` 移除後需觸發即時預覽更新）
+前置條件：`live-preview` 已完成（`RemoveFileCommand` 移除後需觸發即時預覽更新）
 被依賴：無
 
 ⚠ 影響範圍：`MainViewModel`（新增兩個 command）→ `MainWindow.xaml`（清空按鈕）→ 三個工具 DataTemplate（剔除欄位）
