@@ -137,6 +137,8 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
             .ToList();
         result.SkippedCount = items.Count - targets.Count;
 
+        var createdDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var item in targets)
         {
             try
@@ -147,13 +149,18 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
                     continue;
                 }
 
-                if (!PathSafetyValidator.IsSafeTargetDirectoryPath(Path.GetDirectoryName(item.TargetPath) ?? string.Empty))
+                var targetDir = Path.GetDirectoryName(item.TargetPath) ?? string.Empty;
+                if (!PathSafetyValidator.IsSafeTargetDirectoryPath(targetDir))
                 {
                     result.Errors.Add($"{item.OriginalName}: 目標路徑不安全");
                     continue;
                 }
 
-                Directory.CreateDirectory(Path.GetDirectoryName(item.TargetPath)!);
+                if (createdDirectories.Add(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                }
+
                 File.Copy(item.FullPath, item.TargetPath);
                 result.SuccessCount++;
             }

@@ -8,24 +8,6 @@ namespace FrameFileTool.Services;
 /// </summary>
 internal static class PathSafetyValidator
 {
-    public static bool IsSafeSingleDirectoryName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return false;
-        }
-
-        if (name is "." or "..")
-        {
-            return false;
-        }
-
-        return !Path.IsPathRooted(name) &&
-            Path.GetFileName(name) == name &&
-            !ContainsPathSeparator(name) &&
-            name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
-    }
-
     public static bool IsSafeFileName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
