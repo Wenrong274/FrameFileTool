@@ -153,7 +153,7 @@ code-behind 可以初始化相依物件並設定 `DataContext`。code-behind 不
 - 依副檔名過濾檔案。
 - 抽幀刪除規劃。
 - 批次改名規劃。
-- 批次縮放規劃（百分比驗證、絕對尺寸驗證、目標尺寸計算、等比縮放、fit-within-box）。
+- 批次縮放規劃（倍率驗證、絕對尺寸驗證、目標尺寸計算、等比縮放、fit-within-box）。
 - 衝突偵測。
 - 勾選包含子資料夾時，每個資料夾各自計數的行為。
 - ViewModel 的 CanExecute 邏輯（HasExecutable\*Preview 依 CurrentPreview 型別判斷）。

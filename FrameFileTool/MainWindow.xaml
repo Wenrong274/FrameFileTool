@@ -222,12 +222,12 @@
                                            Style="{StaticResource FieldLabel}" />
                                 <StackPanel Orientation="Horizontal"
                                             Margin="0,2,0,8">
-                                    <RadioButton Content="百分比"
-                                                 GroupName="ResizeMode"
-                                                 Margin="0,0,14,0"
-                                                 IsChecked="{Binding ResizeMode,
-                                                     Converter={StaticResource EnumToBoolConverter},
-                                                     ConverterParameter=Percentage}" />
+                                    <RadioButton Content="倍率"
+                                                     GroupName="ResizeMode"
+                                                     Margin="0,0,14,0"
+                                                     IsChecked="{Binding ResizeMode,
+                                                         Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=ScaleFactor}" />
                                     <RadioButton Content="絕對尺寸"
                                                  GroupName="ResizeMode"
                                                  IsChecked="{Binding ResizeMode,
@@ -235,13 +235,39 @@
                                                      ConverterParameter=Absolute}" />
                                 </StackPanel>
 
-                                <!-- 百分比模式區塊 -->
+                                <!-- 倍率模式區塊 -->
                                 <StackPanel Visibility="{Binding ResizeMode,
                                                 Converter={StaticResource EnumToVisibilityConverter},
-                                                ConverterParameter=Percentage}">
-                                    <TextBlock Text="縮放比例（%）"
+                                                ConverterParameter=ScaleFactor}">
+                                    <TextBlock Text="縮放倍率"
                                                Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding ScalePercent, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,2,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="62" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Slider Grid.Column="0"
+                                                AutomationProperties.Name="縮放倍率"
+                                                Minimum="{Binding ScaleFactorSliderMinimum}"
+                                                Maximum="{Binding ScaleFactorSliderMaximum}"
+                                                SmallChange="{Binding ScaleFactorSliderSmallChange}"
+                                                LargeChange="0.5"
+                                                TickFrequency="{Binding ScaleFactorSliderSmallChange}"
+                                                IsSnapToTickEnabled="True"
+                                                Value="{Binding ScaleFactor,
+                                                    Mode=TwoWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,8,0" />
+
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding ScaleFactor,
+                                                     UpdateSourceTrigger=PropertyChanged,
+                                                     Converter={StaticResource ScaleFactorTextConverter}}"
+                                                 TextAlignment="Right"
+                                                 Margin="0" />
+                                    </Grid>
                                 </StackPanel>
 
                                 <!-- 絕對尺寸模式區塊 -->

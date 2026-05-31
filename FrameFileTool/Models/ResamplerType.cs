@@ -6,7 +6,7 @@ namespace FrameFileTool.Models;
 /// </summary>
 public enum ResamplerType
 {
-    /// <summary>一般用途（預設）。縮放比例不大時效果穩定。</summary>
+    /// <summary>一般用途（預設）。縮放倍率不大時效果穩定。</summary>
     Bicubic,
 
     /// <summary>高品質縮小。大幅縮小時保持文字與線條清晰。</summary>

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FrameFileTool.Models;
 using FrameFileTool.Services;
+using ImageMagick;
 
 namespace FrameFileTool.Tests.Services;
 
@@ -98,10 +99,51 @@ public sealed class ImageResizeExecutorTests
         result.Errors.Should().BeEmpty();
     }
 
-    private static ResizeOptions Options(string subfolderName = "resized") =>
+    [Fact]
+    public void Execute_倍率0點5_應輸出一半尺寸且至少保留1像素()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FrameFileToolTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var sourcePath = Path.Combine(root, "a.png");
+            using (var image = new MagickImage(MagickColors.White, 2, 2))
+            {
+                image.Write(sourcePath);
+            }
+
+            var item = new OperationPreviewItem
+            {
+                FullPath = sourcePath,
+                OriginalName = "a.png",
+                ActionKind = OperationActionKind.Resize,
+            };
+
+            var result = _sut.Execute([item], Options(factor: 0.5));
+            var targetPath = Path.Combine(root, "resized", "a.png");
+
+            result.SuccessCount.Should().Be(1);
+            result.Errors.Should().BeEmpty();
+            File.Exists(targetPath).Should().BeTrue();
+
+            using var resized = new MagickImage(targetPath);
+            resized.Width.Should().Be(1);
+            resized.Height.Should().Be(1);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static ResizeOptions Options(double factor = 0.5, string subfolderName = "resized") =>
         new(
-            ResizeMode.Percentage,
-            ScalePercent: 50,
+            ResizeMode.ScaleFactor,
+            ScaleFactor: factor,
             TargetWidth: 0,
             TargetHeight: 0,
             KeepAspectRatio: true,

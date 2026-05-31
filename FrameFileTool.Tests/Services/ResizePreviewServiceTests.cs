@@ -146,10 +146,29 @@ public sealed class ResizePreviewServiceTests
         result[0].Status.Should().Contain("無法讀取圖片尺寸");
     }
 
+    [Fact]
+    public async Task BuildPreviewAsync_倍率模式_預覽文字應使用倍率語意()
+    {
+        var dimensionReader = Substitute.For<IImageDimensionReader>();
+        var fileExistenceService = Substitute.For<IFileExistenceService>();
+        var file = new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10);
+        var options = CreateOptions() with { OutputMode = ResizeOutputMode.Overwrite };
+
+        dimensionReader.Read(file.FullPath).Returns((100, 50));
+        var sut = new ResizePreviewService(dimensionReader, fileExistenceService, new ResizePlanner());
+
+        var result = await sut.BuildPreviewAsync([file], options);
+
+        result.Should().ContainSingle();
+        result[0].Status.Should().Contain("0.5 倍");
+        result[0].Status.Should().NotContain("%");
+        result[0].Status.Should().NotContain("百分比");
+    }
+
     private static ResizeOptions CreateOptions() =>
         new(
-            Mode: ResizeMode.Percentage,
-            ScalePercent: 50,
+            Mode: ResizeMode.ScaleFactor,
+            ScaleFactor: 0.5,
             TargetWidth: 0,
             TargetHeight: 0,
             KeepAspectRatio: true,

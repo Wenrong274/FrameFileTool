@@ -342,7 +342,7 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public async Task ScalePercent_變更且有檔案_應觸發防抖縮放預覽()
+    public async Task ScaleFactor_變更且有檔案_應觸發防抖縮放預覽()
     {
         var resizePreviewService = Substitute.For<IResizePreviewService>();
         resizePreviewService
@@ -355,12 +355,27 @@ public sealed class MainViewModelCanExecuteTests
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
         sut.SelectedToolIndex = 2;
 
-        sut.ScalePercent = 75;
+        sut.ScaleFactor = 0.75;
         await sut.LivePreviewTask;
 
         sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
         sut.Logs.Should().Contain(log => log.Contains("縮放預覽完成"));
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
+        await resizePreviewService.Received(1).BuildPreviewAsync(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Is<ResizeOptions>(options => options.ScaleFactor == 0.75),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void ScaleFactorSlider_設定應涵蓋常用倍率且預設值落在範圍內()
+    {
+        var sut = CreateSut();
+
+        sut.ScaleFactorSliderMinimum.Should().Be(0.1);
+        sut.ScaleFactorSliderMaximum.Should().Be(4.0);
+        sut.ScaleFactorSliderSmallChange.Should().Be(0.1);
+        sut.ScaleFactor.Should().BeInRange(sut.ScaleFactorSliderMinimum, sut.ScaleFactorSliderMaximum);
     }
 
     [Fact]
@@ -435,8 +450,8 @@ public sealed class MainViewModelCanExecuteTests
         sut.SelectedToolIndex = 2;
 
         // 快速連續變更：每次都取消前一個 debounce，只有最後一個會執行
-        sut.ScalePercent = 60;
-        sut.ScalePercent = 75;
+        sut.ScaleFactor = 0.6;
+        sut.ScaleFactor = 0.75;
 
         await sut.LivePreviewTask;
 
@@ -546,25 +561,25 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public void ScalePercent_變更後_應清除既有預覽並停用執行()
+    public void ScaleFactor_變更後_應清除既有預覽並停用執行()
     {
         var sut = CreateSut();
         sut.CurrentPreview = ResizePreview();
 
-        sut.ScalePercent = 75;
+        sut.ScaleFactor = 0.75;
 
         sut.CurrentPreview.Should().BeNull();
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
-    public void ScalePercent_變更時_不應清除改名預覽()
+    public void ScaleFactor_變更時_不應清除改名預覽()
     {
         var sut = CreateSut();
         var preview = RenamePreview();
         sut.CurrentPreview = preview;
 
-        sut.ScalePercent = 75;
+        sut.ScaleFactor = 0.75;
 
         sut.CurrentPreview.Should().BeSameAs(preview);
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
