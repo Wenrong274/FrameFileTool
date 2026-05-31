@@ -227,6 +227,14 @@
                                                      ConverterParameter=CopyKeptToTargetFolder}" />
                                 </StackPanel>
 
+                                <TextBlock Text="* 預覽不含目標資料夾衝突偵測，將於執行時選擇資料夾並重新確認"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,0,0,4"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding FrameDeleteOutputMode,
+                                               Converter={StaticResource EnumToVisibilityConverter},
+                                               ConverterParameter=CopyKeptToTargetFolder}" />
+
                                 <Button Content="{Binding FrameDeleteExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"
                                         Command="{Binding ExecuteFrameDeleteCommand}"
@@ -270,6 +278,14 @@
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=CopyToTargetFolder}" />
                                 </StackPanel>
+
+                                <TextBlock Text="* 預覽不含目標資料夾衝突偵測，將於執行時選擇資料夾並重新確認"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,0,0,4"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding RenameOutputMode,
+                                               Converter={StaticResource EnumToVisibilityConverter},
+                                               ConverterParameter=CopyToTargetFolder}" />
 
                                 <Button Content="{Binding RenameExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"

@@ -392,9 +392,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var actionKind = FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
             ? OperationActionKind.Copy
             : OperationActionKind.Delete;
+        var copyNote = FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+            ? "（目標資料夾待確認，衝突偵測將於執行時進行）"
+            : string.Empty;
         SetCurrentPreview(
             vm,
-            $"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計{actionText} {items.Count(i => i.ActionKind == actionKind && !i.HasError)} 個檔案。");
+            $"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計{actionText} {items.Count(i => i.ActionKind == actionKind && !i.HasError)} 個檔案。{copyNote}");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableDeletePreview))]
@@ -470,9 +473,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var actionKind = RenameOutputMode == RenameOutputMode.CopyToTargetFolder
             ? OperationActionKind.Copy
             : OperationActionKind.Rename;
+        var actionCount = items.Count(i => i.ActionKind == actionKind && !i.HasError);
+        var errorCount = items.Count(i => i.HasError);
+        var renameCopyNote = RenameOutputMode == RenameOutputMode.CopyToTargetFolder
+            ? "（目標資料夾待確認，衝突偵測將於執行時進行）"
+            : string.Empty;
         SetCurrentPreview(
             vm,
-            $"改名預覽完成：預計{actionText} {items.Count(i => i.ActionKind == actionKind && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+            $"改名預覽完成：預計{actionText} {actionCount} 個檔案，錯誤 {errorCount} 個。{renameCopyNote}");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableRenamePreview))]
