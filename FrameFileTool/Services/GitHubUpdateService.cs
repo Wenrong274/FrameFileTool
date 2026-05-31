@@ -44,7 +44,7 @@ public sealed class GitHubUpdateService : IUpdateService
 
             return new UpdateInfo(true, latestVersionText, releaseUrl);
         }
-        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
             return UpdateInfo.None;
         }

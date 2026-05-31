@@ -13,7 +13,7 @@ namespace FrameFileTool.ViewModels;
 /// 所有商業邏輯均委派給對應的 service；ViewModel 只負責
 /// 狀態同步、log 記錄與 command 的 CanExecute 管理。
 /// </summary>
-public sealed partial class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private enum PreviewTool
     {
@@ -33,6 +33,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IFileImportService _fileImportService;
     private readonly IUpdateService _updateService;
     private readonly IExternalLinkService _externalLinkService;
+    private readonly CancellationTokenSource _updateCheckCts = new();
     private bool _isUpdateBannerDismissed;
 
     // ── 掃描選項 ──────────────────────────────────────────────
@@ -988,13 +989,13 @@ public sealed partial class MainViewModel : ObservableObject
         IsUpdateAvailable && !string.IsNullOrWhiteSpace(LatestReleaseUrl);
 
     private void StartUpdateCheck() =>
-        UpdateCheckTask = RunUpdateCheckAsync(_updateService);
+        UpdateCheckTask = RunUpdateCheckAsync(_updateService, _updateCheckCts.Token);
 
-    private async Task RunUpdateCheckAsync(IUpdateService updateService)
+    private async Task RunUpdateCheckAsync(IUpdateService updateService, CancellationToken token)
     {
         try
         {
-            var updateInfo = await updateService.CheckForUpdateAsync(CancellationToken.None);
+            var updateInfo = await updateService.CheckForUpdateAsync(token);
             if (_isUpdateBannerDismissed || !updateInfo.HasUpdate)
             {
                 return;
@@ -1004,10 +1005,21 @@ public sealed partial class MainViewModel : ObservableObject
             LatestReleaseUrl = updateInfo.ReleaseUrl;
             IsUpdateAvailable = true;
         }
-        catch
+        catch (OperationCanceledException)
         {
             IsUpdateAvailable = false;
         }
+        catch (Exception ex)
+        {
+            AddLog($"更新檢查失敗：{ex.GetType().Name}");
+            IsUpdateAvailable = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _updateCheckCts.Cancel();
+        _updateCheckCts.Dispose();
     }
 
     partial void OnCurrentPreviewChanged(IPreviewViewModel? oldValue, IPreviewViewModel? newValue)

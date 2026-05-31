@@ -56,4 +56,10 @@ public partial class App : WpfApplication
         base.OnStartup(e);
         _serviceProvider.GetRequiredService<MainWindow>().Show();
     }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        (_serviceProvider as IDisposable)?.Dispose();
+        base.OnExit(e);
+    }
 }
