@@ -65,6 +65,22 @@ ID：`auto-update-check`
       不彈出任何錯誤對話框且橫幅保持隱藏。
 - [ ] [體驗] 點擊橫幅的「關閉」按鈕後，橫幅必須立刻隱藏，且在此次程式執行期間不再顯示。
 
+## 技術債追蹤
+
+### GetExistingRenameTargetPaths 邏輯重複
+
+`MainViewModel.GetExistingRenameTargetPaths()` 在 ViewModel 內複製了
+`RenamePlanner` 的逐資料夾計數與目標檔名公式（`startIndex + folderIndex`、
+`PadLeft(padding, '0')`、`prefix + numberText + extension`），
+導致兩份邏輯必須同步更新。
+
+建議修正方向：在 `IRenamePlanner` 新增
+`ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)` 方法，
+讓 ViewModel 呼叫 planner 計算路徑，而非自行重現命名邏輯。
+
+影響範圍：`IRenamePlanner` 介面變更 → `RenamePlanner`、`MainViewModel`、
+相關測試均需同步調整，屬中型重構。
+
 ## 通用驗證
 
 每完成一個功能群組，都必須執行：
