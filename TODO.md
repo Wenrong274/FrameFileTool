@@ -28,7 +28,63 @@
 
 ## 近期功能計劃
 
-（目前無進行中項目）
+### 批次縮放支援像素噪點降低
+
+ID：`resize-denoise`
+優先度：低
+分支：feat/resize-denoise（開始時建立）
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：`ResizeOptions` → `ImageResizeExecutor` → `ResizePlanner`（驗證）
+→ `MainViewModel` → 批次縮放 UI 面板
+
+⚠ 邊界案例：縮放比例為 1 時不應劣化原圖；強度值為 0 等同未啟用；
+大型圖片（4K+）套用降噪的效能影響需評估
+
+⚠ 待確認（研究後才可開始實作）：
+
+- 使用哪個 Magick.NET API？
+  候選：`ReduceNoise(order)`（中值濾波）、`AdaptiveBlur(radius, sigma)`（邊緣保留模糊）、
+  `UnsharpMask(radius, sigma, amount, threshold)`（銳化降噪）、或組合方式。
+- 套用時機：縮放前、縮放後、或縮放前後各套用一次？
+- 強度設計：固定預設值（使用者一鍵啟用）還是提供強度調整滑桿？
+- 哪些格式效果最明顯（PNG / JPG / WebP 的噪點特性不同）？
+
+#### 第一階段：技術研究
+
+- [ ] [研究] 使用 Magick.NET 對不同縮放比例的圖片分別試用
+      `ReduceNoise`、`AdaptiveBlur`、`UnsharpMask`，
+      記錄主觀視覺效果與每張圖的耗時差異。
+- [ ] [研究] 確認最適合縮小場景（倍率 < 1）與放大場景（倍率 > 1）的算法組合。
+- [ ] [決策] 根據研究結果決定：算法、套用時機、強度是否可調、UI 控制方式。
+      **研究結論未記錄於本文件前，不得開始第二階段。**
+
+#### 第二階段：實作（研究完成後展開）
+
+- [ ] [Model] 在 `ResizeOptions` 新增 `DenoiseMode`（啟用 / 停用）
+      與 `DenoiseStrength`（若採可調強度設計）。
+- [ ] [Service] 調整 `ImageResizeExecutor`：
+      依 `DenoiseMode` 在縮放前後套用對應的 Magick.NET 降噪操作。
+- [ ] [Test] 補上 `ImageResizeExecutorTests`：
+      啟用降噪時執行降噪操作、停用時不執行、強度為 0 等同停用。
+- [ ] [Service] 調整 `ResizePlanner`：
+      若 `DenoiseMode` 啟用但強度值無效，在預覽標示錯誤。
+- [ ] [Test] 補上 `ResizePlannerTests`：
+      無效強度值的錯誤標示行為。
+- [ ] [ViewModel] 在 `MainViewModel` 新增降噪相關屬性與 `PropertyChanged` 觸發。
+- [ ] [View] 批次縮放 UI 面板加入降噪選項（開關與強度控制）。
+
+完成判定：
+
+- [ ] [正常路徑] 啟用降噪、縮放比例 0.5 執行後，輸出圖片的噪點明顯少於未啟用時
+      （手動視覺比對）。
+- [ ] [邊界] 縮放比例為 1 且啟用降噪時，輸出圖片與原圖的視覺差異在可接受範圍內，
+      不造成明顯模糊或劣化。
+- [ ] [邊界] 停用降噪時，縮放行為與原本完全相同，log 不出現降噪相關訊息。
+- [ ] [錯誤狀態] 若強度設計為可調且使用者輸入無效值，預覽顯示錯誤且執行按鈕停用。
+- [ ] [效能] 對 20 張 1920×1080 圖片啟用降噪縮放的總耗時，
+      相對於未啟用時的增幅在可接受範圍內（研究階段定義具體閾值）。
 
 ## 技術債追蹤
 
