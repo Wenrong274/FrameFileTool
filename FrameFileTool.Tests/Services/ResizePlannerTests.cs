@@ -14,12 +14,12 @@ public sealed class ResizePlannerTests
     private static FileItem MakeFileWithDimensions(string name, int width, int height, string folder = @"C:\imgs") =>
         new(Path.Combine(folder, name), folder, name, Path.GetExtension(name), 0, width, height);
 
-    private static ResizeOptions Percentage(
-        int percent,
+    private static ResizeOptions Scale(
+        double factor,
         ResizeOutputMode output = ResizeOutputMode.Subfolder,
         string subfolder = "resized",
         ResamplerType resampler = ResamplerType.Bicubic) =>
-        new(ResizeMode.Percentage, percent, 0, 0, true, output, subfolder, resampler);
+        new(ResizeMode.ScaleFactor, factor, 0, 0, true, output, subfolder, resampler);
 
     private static ResizeOptions Absolute(
         int width,
@@ -27,70 +27,62 @@ public sealed class ResizePlannerTests
         bool keepAspect = true,
         ResizeOutputMode output = ResizeOutputMode.Subfolder,
         string subfolder = "resized") =>
-        new(ResizeMode.Absolute, 0, width, height, keepAspect, output, subfolder, ResamplerType.Bicubic);
+        new(ResizeMode.Absolute, 1, width, height, keepAspect, output, subfolder, ResamplerType.Bicubic);
 
     // ── 邊界案例 ─────────────────────────────────────────────────
 
     [Fact]
     public void Plan_空清單_應回傳空結果()
     {
-        var result = _sut.Plan([], Percentage(50));
+        var result = _sut.Plan([], Scale(0.5));
 
         result.Should().BeEmpty();
     }
 
-    // ── 百分比模式：參數驗證 ──────────────────────────────────────
+    // ── 倍率模式：參數驗證 ──────────────────────────────────────
 
     [Theory]
     [InlineData(0)]
+    [InlineData(-0.1)]
     [InlineData(-1)]
-    [InlineData(-100)]
-    public void Plan_百分比為零或負數_所有項目應標記錯誤(int percent)
+    public void Plan_倍率為零或負數_所有項目應標記錯誤(double factor)
     {
         var files = new[] { MakeFile("a.png"), MakeFile("b.png") };
 
-        var result = _sut.Plan(files, Percentage(percent));
+        var result = _sut.Plan(files, Scale(factor));
 
         result.Should().AllSatisfy(item =>
         {
             item.HasError.Should().BeTrue();
             item.ActionKind.Should().Be(OperationActionKind.Error);
+            item.Status.Should().Contain("倍率");
         });
     }
 
     [Fact]
-    public void Plan_百分比超過上限10000_所有項目應標記錯誤()
+    public void Plan_倍率0點5_應產生縮放計畫且Status含倍率資訊()
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Percentage(10001));
-
-        result[0].HasError.Should().BeTrue();
-        result[0].ActionKind.Should().Be(OperationActionKind.Error);
-    }
-
-    [Fact]
-    public void Plan_百分比50_應產生縮放計畫且Status含百分比資訊()
-    {
-        var files = new[] { MakeFile("a.png") };
-
-        var result = _sut.Plan(files, Percentage(50));
+        var result = _sut.Plan(files, Scale(0.5));
 
         result[0].HasError.Should().BeFalse();
         result[0].ActionKind.Should().Be(OperationActionKind.Resize);
-        result[0].Status.Should().Contain("50%");
+        result[0].Status.Should().Contain("0.5 倍");
+        result[0].Status.Should().NotContain("%");
     }
 
     [Fact]
-    public void Plan_百分比200放大_應產生縮放計畫且Status含百分比資訊()
+    public void Plan_倍率2放大_應產生縮放計畫且Status含倍率資訊()
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Percentage(200));
+        var result = _sut.Plan(files, Scale(2));
 
         result[0].HasError.Should().BeFalse();
         result[0].ActionKind.Should().Be(OperationActionKind.Resize);
-        result[0].Status.Should().Contain("200%");
+        result[0].Status.Should().Contain("2 倍");
+        result[0].Status.Should().NotContain("%");
     }
 
     // ── 絕對尺寸模式：參數驗證 ────────────────────────────────────
@@ -169,7 +161,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("frame01.png") };
 
-        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Overwrite));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Overwrite));
 
         result[0].TargetName.Should().Be("frame01.png");
     }
@@ -179,7 +171,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("frame01.png") };
 
-        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: "resized"));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: "resized"));
 
         result[0].TargetName.Should().Be(@"resized\frame01.png");
     }
@@ -197,7 +189,7 @@ public sealed class ResizePlannerTests
 
         var result = _sut.Plan(
             files,
-            Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: "resized"),
+            Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: "resized"),
             existingPaths);
 
         result[0].HasError.Should().BeTrue();
@@ -210,7 +202,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: ""));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: ""));
 
         result[0].HasError.Should().BeTrue();
         result[0].ActionKind.Should().Be(OperationActionKind.Error);
@@ -227,7 +219,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Percentage(50, output: ResizeOutputMode.Subfolder, subfolder: subfolder));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: subfolder));
 
         result[0].HasError.Should().BeTrue();
         result[0].ActionKind.Should().Be(OperationActionKind.Error);
@@ -241,7 +233,7 @@ public sealed class ResizePlannerTests
 
         // 覆寫模式下 SubfolderName 為空也合法
         var result = _sut.Plan(files,
-            new ResizeOptions(ResizeMode.Percentage, 50, 0, 0, true,
+            new ResizeOptions(ResizeMode.ScaleFactor, 0.5, 0, 0, true,
                 ResizeOutputMode.Overwrite, "", ResamplerType.Bicubic));
 
         result[0].HasError.Should().BeFalse();
@@ -259,7 +251,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Percentage(50, resampler: resampler));
+        var result = _sut.Plan(files, Scale(0.5, resampler: resampler));
 
         result[0].Status.Should().Contain(expectedHint);
     }
@@ -273,7 +265,7 @@ public sealed class ResizePlannerTests
             .Select(i => MakeFile($"frame{i}.png"))
             .ToList();
 
-        var result = _sut.Plan(files, Percentage(50));
+        var result = _sut.Plan(files, Scale(0.5));
 
         result.Select(i => i.Index).Should().BeEquivalentTo([1, 2, 3, 4]);
     }
@@ -288,7 +280,7 @@ public sealed class ResizePlannerTests
             MakeFile("c.webp"),
         };
 
-        var result = _sut.Plan(files, Percentage(75));
+        var result = _sut.Plan(files, Scale(0.75));
 
         result.Should().AllSatisfy(item =>
         {
@@ -302,7 +294,7 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("a.png", @"C:\imgs") };
 
-        var result = _sut.Plan(files, Percentage(50));
+        var result = _sut.Plan(files, Scale(0.5));
 
         result[0].FullPath.Should().Be(@"C:\imgs\a.png");
         result[0].OriginalName.Should().Be("a.png");
@@ -315,32 +307,54 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFile("a.png") }; // Width=0, Height=0
 
-        var result = _sut.Plan(files, Percentage(50));
+        var result = _sut.Plan(files, Scale(0.5));
 
         result[0].OriginalDimensions.Should().BeEmpty();
         result[0].TargetDimensions.Should().BeEmpty();
     }
 
     [Fact]
-    public void Plan_百分比50且來源1920x1080_TargetDimensions應為960x540()
+    public void Plan_倍率0點5且來源1920x1080_TargetDimensions應為960x540()
     {
         var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
 
-        var result = _sut.Plan(files, Percentage(50));
+        var result = _sut.Plan(files, Scale(0.5));
 
         result[0].OriginalDimensions.Should().Be("1920×1080");
         result[0].TargetDimensions.Should().Be("960×540");
     }
 
     [Fact]
-    public void Plan_百分比200且來源800x600_TargetDimensions應為1600x1200()
+    public void Plan_倍率1且來源800x600_TargetDimensions應與原圖相同()
     {
         var files = new[] { MakeFileWithDimensions("a.png", 800, 600) };
 
-        var result = _sut.Plan(files, Percentage(200));
+        var result = _sut.Plan(files, Scale(1));
+
+        result[0].OriginalDimensions.Should().Be("800×600");
+        result[0].TargetDimensions.Should().Be("800×600");
+    }
+
+    [Fact]
+    public void Plan_倍率2且來源800x600_TargetDimensions應為1600x1200()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 800, 600) };
+
+        var result = _sut.Plan(files, Scale(2));
 
         result[0].OriginalDimensions.Should().Be("800×600");
         result[0].TargetDimensions.Should().Be("1600×1200");
+    }
+
+    [Fact]
+    public void Plan_倍率0點5且來源1x1_TargetDimensions至少保留1x1()
+    {
+        var files = new[] { MakeFileWithDimensions("a.png", 1, 1) };
+
+        var result = _sut.Plan(files, Scale(0.5));
+
+        result[0].OriginalDimensions.Should().Be("1×1");
+        result[0].TargetDimensions.Should().Be("1×1");
     }
 
     [Fact]
@@ -392,8 +406,8 @@ public sealed class ResizePlannerTests
     {
         var files = new[] { MakeFileWithDimensions("a.png", 1920, 1080) };
 
-        // 百分比為 0 → 全部標記為錯誤
-        var result = _sut.Plan(files, Percentage(0));
+        // 倍率為 0 → 全部標記為錯誤
+        var result = _sut.Plan(files, Scale(0));
 
         result[0].HasError.Should().BeTrue();
         result[0].OriginalDimensions.Should().BeEmpty();

@@ -24,6 +24,7 @@
 <converters:EnumToBoolConverter       x:Key="EnumToBoolConverter" />
 <converters:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
 <converters:ResamplerDisplayNameConverter x:Key="ResamplerDisplayNameConverter" />
+<converters:ScaleFactorTextConverter x:Key="ScaleFactorTextConverter" />
 
 <!-- ── Button：ghost（預設，用於選擇資料夾等次要動作）─── -->
 <Style TargetType="Button">

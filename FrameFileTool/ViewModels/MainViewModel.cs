@@ -61,10 +61,16 @@ public sealed partial class MainViewModel : ObservableObject
     // ── 縮放設定 ──────────────────────────────────────────────
 
     [ObservableProperty]
-    private ResizeMode _resizeMode = ResizeMode.Percentage;
+    private ResizeMode _resizeMode = ResizeMode.ScaleFactor;
 
     [ObservableProperty]
-    private int _scalePercent = 50;
+    private double _scaleFactor = 0.5;
+
+    public double ScaleFactorSliderMinimum => 0.1;
+
+    public double ScaleFactorSliderMaximum => 4.0;
+
+    public double ScaleFactorSliderSmallChange => 0.1;
 
     [ObservableProperty]
     private int _targetWidth;
@@ -593,7 +599,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnResizeModeChanged(ResizeMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnScalePercentChanged(int value) => InvalidatePreviewFor(PreviewTool.Resize);
+    partial void OnScaleFactorChanged(double value) => InvalidatePreviewFor(PreviewTool.Resize);
 
     partial void OnTargetWidthChanged(int value) => InvalidatePreviewFor(PreviewTool.Resize);
 
@@ -798,7 +804,7 @@ public sealed partial class MainViewModel : ObservableObject
     private ResizeOptions BuildResizeOptions() =>
         new(
             Mode: ResizeMode,
-            ScalePercent: ScalePercent,
+            ScaleFactor: ScaleFactor,
             TargetWidth: TargetWidth,
             TargetHeight: TargetHeight,
             KeepAspectRatio: KeepAspectRatio,

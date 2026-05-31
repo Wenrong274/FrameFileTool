@@ -116,7 +116,15 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         if (options.OutputMode != ResizeOutputMode.Subfolder ||
             PathSafetyValidator.IsSafeSingleDirectoryName(options.SubfolderName))
         {
-            return true;
+            if (options.Mode != ResizeMode.ScaleFactor ||
+                (!double.IsNaN(options.ScaleFactor) && !double.IsInfinity(options.ScaleFactor) && options.ScaleFactor > 0))
+            {
+                return true;
+            }
+
+            result.SkippedCount += targets.Count;
+            result.Errors.Add("縮放倍率必須大於 0");
+            return false;
         }
 
         result.SkippedCount += targets.Count;
@@ -208,10 +216,11 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
     /// <summary>依 ResizeOptions 計算目標 MagickGeometry。</summary>
     private static MagickGeometry BuildGeometry(MagickImage image, ResizeOptions options)
     {
-        if (options.Mode == ResizeMode.Percentage)
+        if (options.Mode == ResizeMode.ScaleFactor)
         {
-            var pct = (uint)options.ScalePercent;
-            return new MagickGeometry($"{pct}%");
+            var scaledWidth = ToScaledDimension(image.Width, options.ScaleFactor);
+            var scaledHeight = ToScaledDimension(image.Height, options.ScaleFactor);
+            return new MagickGeometry(scaledWidth, scaledHeight) { IgnoreAspectRatio = true };
         }
 
         // 絕對模式
@@ -232,6 +241,9 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         // 不維持比例：強制指定兩邊
         return new MagickGeometry(width, height) { IgnoreAspectRatio = true };
     }
+
+    private static uint ToScaledDimension(uint source, double factor) =>
+        Math.Max(1u, (uint)Math.Round(source * factor));
 
     // ── ResamplerType → FilterType 對應 ──────────────────────────
 

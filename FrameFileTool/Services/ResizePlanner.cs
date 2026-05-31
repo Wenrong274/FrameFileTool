@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using FrameFileTool.Models;
 using FrameFileTool.Services.Interfaces;
@@ -91,19 +92,16 @@ public sealed class ResizePlanner : IResizePlanner
 
         return options.Mode switch
         {
-            ResizeMode.Percentage => ValidatePercentage(options.ScalePercent),
+            ResizeMode.ScaleFactor => ValidateScaleFactor(options.ScaleFactor),
             ResizeMode.Absolute => ValidateAbsolute(options),
             _ => null,
         };
     }
 
-    private static string? ValidatePercentage(int percent)
+    private static string? ValidateScaleFactor(double factor)
     {
-        if (percent <= 0)
-            return "縮放比例必須大於 0%";
-
-        if (percent > 10000)
-            return "縮放比例不可超過 10000%";
+        if (double.IsNaN(factor) || double.IsInfinity(factor) || factor <= 0)
+            return "縮放倍率必須大於 0";
 
         return null;
     }
@@ -148,8 +146,8 @@ public sealed class ResizePlanner : IResizePlanner
 
     private static string BuildStatus(ResizeOptions options)
     {
-        var sizeDesc = options.Mode == ResizeMode.Percentage
-            ? $"{options.ScalePercent}%"
+        var sizeDesc = options.Mode == ResizeMode.ScaleFactor
+            ? $"{FormatScaleFactor(options.ScaleFactor)} 倍"
             : BuildAbsoluteSizeDesc(options);
 
         var resamplerDesc = ResamplerDescription(options.Resampler);
@@ -187,10 +185,10 @@ public sealed class ResizePlanner : IResizePlanner
 
         int tw, th;
 
-        if (options.Mode == ResizeMode.Percentage)
+        if (options.Mode == ResizeMode.ScaleFactor)
         {
-            tw = Math.Max(1, (int)Math.Round(w * options.ScalePercent / 100.0));
-            th = Math.Max(1, (int)Math.Round(h * options.ScalePercent / 100.0));
+            tw = Math.Max(1, (int)Math.Round(w * options.ScaleFactor));
+            th = Math.Max(1, (int)Math.Round(h * options.ScaleFactor));
         }
         else
         {
@@ -232,6 +230,9 @@ public sealed class ResizePlanner : IResizePlanner
         ResamplerType.MitchellNetravali => "銳利優先（MitchellNetravali）",
         _ => "一般用途（Bicubic）",
     };
+
+    private static string FormatScaleFactor(double factor) =>
+        factor.ToString("0.####", CultureInfo.InvariantCulture);
 
     // ── 輔助：建立錯誤項目 ───────────────────────────────────────
 

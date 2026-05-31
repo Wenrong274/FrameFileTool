@@ -6,7 +6,7 @@ namespace FrameFileTool.Models;
 /// </summary>
 public sealed record ResizeOptions(
     ResizeMode Mode,
-    int ScalePercent,
+    double ScaleFactor,
     int TargetWidth,
     int TargetHeight,
     bool KeepAspectRatio,
