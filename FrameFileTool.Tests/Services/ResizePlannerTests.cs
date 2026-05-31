@@ -85,6 +85,18 @@ public sealed class ResizePlannerTests
         result[0].Status.Should().NotContain("%");
     }
 
+    [Fact]
+    public void Plan_啟用降噪_Status應含降噪資訊()
+    {
+        var files = new[] { MakeFile("a.png") };
+        var options = Scale(0.5) with { DenoiseEnabled = true };
+
+        var result = _sut.Plan(files, options);
+
+        result[0].HasError.Should().BeFalse();
+        result[0].Status.Should().Contain("降噪");
+    }
+
     // ── 絕對尺寸模式：參數驗證 ────────────────────────────────────
 
     [Fact]

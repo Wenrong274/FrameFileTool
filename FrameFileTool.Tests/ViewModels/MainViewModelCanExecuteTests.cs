@@ -621,6 +621,30 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
+    public async Task DenoiseEnabled_變更且有檔案_應觸發防抖縮放預覽()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+        var sut = CreateSut(resizePreviewService: resizePreviewService, debounceDelay: TimeSpan.Zero);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 2;
+
+        sut.DenoiseEnabled = true;
+        await sut.LivePreviewTask;
+
+        sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
+        await resizePreviewService.Received(1).BuildPreviewAsync(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Is<ResizeOptions>(options => options.DenoiseEnabled),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ResizeOutputMode_指定資料夾模式變更且有檔案_應預覽但不選資料夾()
     {
         var resizePreviewService = Substitute.For<IResizePreviewService>();
