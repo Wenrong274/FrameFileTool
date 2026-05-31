@@ -461,6 +461,14 @@
                                                     Height="28"
                                                     Padding="10,0"
                                                     FontSize="11" />
+                                            <Button Content="放大比較"
+                                                    DockPanel.Dock="Right"
+                                                    Margin="0,0,4,0"
+                                                    Height="28"
+                                                    Padding="10,0"
+                                                    FontSize="11"
+                                                    IsEnabled="{Binding HasDenoisePreview}"
+                                                    Click="OpenDenoiseCompare_Click" />
                                             <TextBlock Text="各模式效果比較"
                                                        FontSize="11"
                                                        FontWeight="SemiBold"

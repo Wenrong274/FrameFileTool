@@ -62,6 +62,20 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OpenDenoiseCompare_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm)
+            return;
+
+        new DenoiseCompareWindow(
+            vm.DenoisePreviewDetail,
+            vm.DenoisePreviewStandard,
+            vm.DenoisePreviewStrong)
+        {
+            Owner = this,
+        }.ShowDialog();
+    }
+
     private static string[] GetDroppedPaths(System.Windows.DragEventArgs e) =>
         e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop) &&
         e.Data.GetData(System.Windows.DataFormats.FileDrop) is string[] paths

@@ -1,0 +1,125 @@
+<Window x:Class="FrameFileTool.DenoiseCompareWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="降噪效果比較"
+        Width="940"
+        Height="460"
+        MinWidth="600"
+        MinHeight="300"
+        Background="#EEF2F7"
+        FontFamily="Segoe UI"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/MainWindowStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 三欄比較 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 保留細節 -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="保留細節"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,8" />
+                    <Image Grid.Row="1"
+                           x:Name="DetailImage"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                </Grid>
+            </Border>
+
+            <!-- 標準 -->
+            <Border Grid.Column="2"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="標準"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,8" />
+                    <Image Grid.Row="1"
+                           x:Name="StandardImage"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                </Grid>
+            </Border>
+
+            <!-- 強力 -->
+            <Border Grid.Column="4"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="強力"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,8" />
+                    <Image Grid.Row="1"
+                           x:Name="StrongImage"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 底部：說明文字 + 關閉 -->
+        <DockPanel Grid.Row="1" Margin="0,10,0,0">
+            <Button Content="關閉"
+                    DockPanel.Dock="Right"
+                    Width="80"
+                    Click="Close_Click" />
+            <TextBlock Text="取第一張圖的中央區塊（256×256），僅套用降噪，不含縮放與 resampler 效果"
+                       FontSize="11"
+                       Foreground="{StaticResource TextSecondary}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+    </Grid>
+</Window>
