@@ -26,6 +26,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -60,8 +61,46 @@
             </DockPanel>
         </Border>
 
-        <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
+        <!-- ── 更新通知：啟動後背景檢查 GitHub Release ─────── -->
         <Border Grid.Row="1"
+                Background="#EFF6FF"
+                BorderBrush="{StaticResource AccentBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,10"
+                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
+            <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Right"
+                        Content="關閉"
+                        Command="{Binding DismissUpdateBannerCommand}"
+                        Height="28"
+                        Padding="10,0"
+                        Margin="8,0,0,0"
+                        FontSize="11"
+                        Foreground="{StaticResource TextSecondary}"
+                        Background="White"
+                        BorderBrush="{StaticResource GhostBorderBrush}" />
+
+                <Button DockPanel.Dock="Right"
+                        Content="下載更新"
+                        Command="{Binding GoToDownloadPageCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        Height="28"
+                        Padding="12,0"
+                        FontSize="11" />
+
+                <TextBlock Foreground="#1E3A8A"
+                           FontSize="12"
+                           TextTrimming="CharacterEllipsis">
+                    <Run Text="已有新版可下載：" />
+                    <Run Text="{Binding LatestVersionText}" />
+                </TextBlock>
+            </DockPanel>
+        </Border>
+
+        <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
+        <Border Grid.Row="2"
                 Style="{StaticResource Card}"
                 Padding="14,12"
                 Margin="0,0,0,12">
@@ -139,7 +178,7 @@
         </Border>
 
         <!-- ── 主內容：左側工具 + 右側預覽 ─────────────────── -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="245" />
                 <ColumnDefinition Width="12" />
@@ -545,7 +584,7 @@
         </Grid>
 
         <!-- ── Log（Card 風格，可摺疊）──────────────────────── -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="1"

@@ -41,20 +41,20 @@ ID：`auto-update-check`
 ⚠ 邊界案例：GitHub API 回傳非 200、JSON 格式不符、
 本地版本與遠端版本相同或較新、網路逾時、多開程式時的資源競爭
 
-- [ ] [Model] 新增 `UpdateInfo` record，包含 `HasUpdate` (bool), `LatestVersion` (string), `ReleaseUrl` (string)。
-- [ ] [Service] 新增 `IUpdateService` 介面，定義 `CheckForUpdateAsync(CancellationToken token)`。
-- [ ] [Service] 實作 `GitHubUpdateService`：以 `HttpClient` 背景向
+- [x] [Model] 新增 `UpdateInfo` record，包含 `HasUpdate` (bool), `LatestVersion` (string), `ReleaseUrl` (string)。
+- [x] [Service] 新增 `IUpdateService` 介面，定義 `CheckForUpdateAsync(CancellationToken token)`。
+- [x] [Service] 實作 `GitHubUpdateService`：以 `HttpClient` 背景向
       GitHub Releases API 抓取最新發布，並與 Assembly 版本比對。
-- [ ] [Test] 補上 `GitHubUpdateServiceTests`：模擬不同 API 回傳值
+- [x] [Test] 補上 `GitHubUpdateServiceTests`：模擬不同 API 回傳值
       （版本相同、遠端較新、遠端較舊、網路逾時/失敗）的版本號比對邏輯。
-- [ ] [MainViewModel] 新增 `IsUpdateAvailable`、`LatestVersionText`、
+- [x] [MainViewModel] 新增 `IsUpdateAvailable`、`LatestVersionText`、
       `LatestReleaseUrl` 等屬性，並註冊 `GoToDownloadPageCommand`
       與 `DismissUpdateBannerCommand`。
-- [ ] [MainViewModel] 於 ViewModel 初始化（程式啟動後）非同步背景呼叫更新檢測服務。
-- [ ] [Test] 補上 ViewModel 測試，驗證更新檢測完成後 `IsUpdateAvailable` 與指令狀態正確。
-- [ ] [View] `MainWindow.xaml` 頂端新增 Fluent 風格橫幅，繫結 `IsUpdateAvailable`
+- [x] [MainViewModel] 於 ViewModel 初始化（程式啟動後）非同步背景呼叫更新檢測服務。
+- [x] [Test] 補上 ViewModel 測試，驗證更新檢測完成後 `IsUpdateAvailable` 與指令狀態正確。
+- [x] [View] `MainWindow.xaml` 頂端新增 Fluent 風格橫幅，繫結 `IsUpdateAvailable`
       屬性，點選下載開啟瀏覽器，點選關閉則隱藏橫幅。
-- [ ] [DI] 於 `App.xaml.cs` 的 DI 容器註冊 `HttpClient` 與 `IUpdateService`。
+- [x] [DI] 於 `App.xaml.cs` 的 DI 容器註冊 `HttpClient` 與 `IUpdateService`。
 
 完成判定：
 

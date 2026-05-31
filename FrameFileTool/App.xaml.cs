@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Windows;
 using FrameFileTool.Services;
 using FrameFileTool.Services.Interfaces;
@@ -32,6 +33,16 @@ public partial class App : WpfApplication
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
         services.AddSingleton<IImageDimensionReader, ImageDimensionReader>();
         services.AddSingleton<IFileExistenceService, FileExistenceService>();
+        services.AddSingleton(new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(5),
+        });
+        services.AddSingleton<IUpdateService>(provider =>
+        {
+            var version = typeof(App).Assembly.GetName().Version ?? new Version(1, 0, 0);
+            return new GitHubUpdateService(provider.GetRequiredService<HttpClient>(), version);
+        });
+        services.AddSingleton<IExternalLinkService, ExternalLinkService>();
 
         // ViewModels
         services.AddSingleton<MainViewModel>();
