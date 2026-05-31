@@ -27,7 +27,7 @@
 
 ID：`output-folder`
 完成日期：2026-05-31
-發布版本：未發布
+發布版本：v1.4.0
 
 優先度：中
 分支：feat/output-folder
@@ -89,7 +89,7 @@ ID：`output-folder`
 
 ID：`scale-factor`
 完成日期：2026-05-31
-發布版本：未發布
+發布版本：v1.4.0
 
 優先度：中
 分支：feat/scale-factor
@@ -298,7 +298,7 @@ ID：`live-preview`
 
 ID：`auto-update-check`
 完成日期：2026-05-31
-發布版本：未發布
+發布版本：v1.4.0
 
 優先度：低
 分支：feat/auto-update-check
@@ -362,6 +362,47 @@ ID：`auto-update-check`
 - [x] [錯誤狀態] 當網路連線異常或 GitHub API 呼叫逾時（設定為 5 秒）時，程式靜默失敗，
   不彈出任何錯誤對話框且橫幅保持隱藏。
 - [x] [體驗] 點擊橫幅的「關閉」按鈕後，橫幅立刻隱藏，且在此次程式執行期間不再顯示。
+
+## GetExistingRenameTargetPaths 邏輯重複重構
+
+ID：`rename-planner-project-paths`
+完成日期：2026-05-31
+發布版本：v1.4.1
+
+優先度：中
+分支：refactor/rename-planner-project-paths
+前置條件：無
+被依賴：無
+
+影響範圍：`IRenamePlanner` → `RenamePlanner` →
+`MainViewModel.GetExistingRenameTargetPaths()` → `RenamePlannerTests`
+
+邊界案例：`targetFolderPath` 為空時回傳空集合且不呼叫 planner；
+多個子資料夾各自獨立計數行為必須與 `RenamePlanner.Plan()` 完全一致。
+
+實作結果：
+
+- `IRenamePlanner` 新增 `ProjectTargetPaths()`，集中產生複製改名目標路徑。
+- `RenamePlanner.Plan()` 與 `MainViewModel.GetExistingRenameTargetPaths()` 共用同一套
+  逐資料夾計數與補零命名邏輯，避免兩處規則漂移。
+- `GetExistingRenameTargetPaths()` 在目標資料夾為空時直接回傳空集合，不呼叫 planner。
+- 補上 `ProjectTargetPaths` 與 `GetExistingRenameTargetPaths` 的對比測試，鎖定路徑一致性。
+
+- [x] [Service] 在 `IRenamePlanner` 新增 `ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)`
+      介面方法，回傳 `IEnumerable<string>`。
+- [x] [Service] 在 `RenamePlanner` 實作 `ProjectTargetPaths`，
+      將 `Plan()` 的逐資料夾計數與目標路徑公式提取至此方法，兩處共用同一邏輯。
+- [x] [Test] 補上 `RenamePlannerTests.ProjectTargetPaths_*`：
+      單檔無補零、多檔有補零、多個子資料夾各自獨立計數、空清單回傳空序列。
+- [x] [ViewModel] `MainViewModel.GetExistingRenameTargetPaths()` 改為
+      呼叫 `_renamePlanner.ProjectTargetPaths(...)`，移除重複的計數與命名邏輯。
+
+完成判定：
+
+- [x] [正確性] `GetExistingRenameTargetPaths` 與 `RenamePlanner.Plan()` 對相同輸入產生
+      相同的目標路徑集合，`RenamePlannerTests` 有明確對比測試。
+- [x] [邊界] `targetFolderPath` 為空時，`GetExistingRenameTargetPaths` 回傳空集合且不呼叫 planner。
+- [x] [一致性] 所有現有測試（`dotnet test`）通過，無迴歸。
 
 ## 清空全部與剔除檔案功能
 
