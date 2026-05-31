@@ -69,6 +69,68 @@ public sealed class FrameDeletePlannerTests
         result[4].Action.Should().Be("保留");
     }
 
+    [Fact]
+    public void Plan_複製保留幀到指定資料夾_保留幀應標記複製並設定目標路徑()
+    {
+        var targetFolder = @"D:\out";
+        var files = Enumerable.Range(1, 4)
+            .Select(i => MakeFile($"frame{i}.png"))
+            .ToList();
+
+        var result = _sut.Plan(
+            files,
+            interval: 3,
+            outputMode: FrameDeleteOutputMode.CopyKeptToTargetFolder,
+            targetFolderPath: targetFolder);
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[0].TargetName.Should().Be(@"D:\out\frame1.png");
+        result[0].TargetPath.Should().Be(@"D:\out\frame1.png");
+        result[1].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[2].ActionKind.Should().Be(OperationActionKind.Keep);
+        result[2].Status.Should().Contain("不輸出");
+        result[3].ActionKind.Should().Be(OperationActionKind.Copy);
+    }
+
+    [Fact]
+    public void Plan_複製模式未指定資料夾_應標示執行時選擇資料夾()
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(
+            files,
+            interval: 3,
+            outputMode: FrameDeleteOutputMode.CopyKeptToTargetFolder,
+            targetFolderPath: "");
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[0].HasError.Should().BeFalse();
+        result[0].TargetName.Should().Be("執行時選擇資料夾");
+        result[0].TargetPath.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Plan_指定資料夾目標檔已存在_應標記錯誤()
+    {
+        var targetFolder = @"D:\out";
+        var files = new[] { MakeFile("a.png") };
+        var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            @"D:\out\a.png",
+        };
+
+        var result = _sut.Plan(
+            files,
+            interval: 3,
+            outputMode: FrameDeleteOutputMode.CopyKeptToTargetFolder,
+            targetFolderPath: targetFolder,
+            existingPaths: existingPaths);
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
+        result[0].HasError.Should().BeTrue();
+        result[0].Status.Should().Be("目標檔案已存在");
+    }
+
     // ---- 子資料夾計數各自獨立 ----
 
     [Fact]

@@ -9,4 +9,6 @@ public interface IFileOperationExecutor
 {
     public OperationResult DeleteToRecycleBin(IEnumerable<OperationPreviewItem> previewItems);
     public OperationResult RenameFiles(IEnumerable<OperationPreviewItem> previewItems);
+    public OperationResult CopyFilesToTargetFolder(IEnumerable<OperationPreviewItem> previewItems);
+    public OperationResult CopyRenamedFilesToTargetFolder(IEnumerable<OperationPreviewItem> previewItems);
 }

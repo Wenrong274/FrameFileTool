@@ -21,13 +21,17 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
             var inclusionConflictItems = GetInclusionConflictItems();
             var renameCount = includedItems.Count(
                 i => i.ActionKind == OperationActionKind.Rename && !i.HasError && !inclusionConflictItems.Contains(i));
+            var copyCount = includedItems.Count(
+                i => i.ActionKind == OperationActionKind.Copy && !i.HasError && !inclusionConflictItems.Contains(i));
             var staticErrorCount = Items.Count(i => i.HasError);
             var errorCount = staticErrorCount + inclusionConflictItems.Count;
             var displayCount = includedItems.Count + staticErrorCount;
+            var actionText = copyCount > 0 ? "複製改名" : "改名";
+            var actionCount = copyCount > 0 ? copyCount : renameCount;
 
             return errorCount > 0
-                ? $"共 {displayCount} 個項目，預計改名 {renameCount} 個，{errorCount} 個錯誤（執行已停用）"
-                : $"共 {displayCount} 個項目，預計改名 {renameCount} 個";
+                ? $"共 {displayCount} 個項目，預計{actionText} {actionCount} 個，{errorCount} 個錯誤（執行已停用）"
+                : $"共 {displayCount} 個項目，預計{actionText} {actionCount} 個";
         }
     }
 
@@ -38,7 +42,7 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
     public bool HasExecutableItems =>
         Items.Any(i =>
             i.IsIncluded &&
-            i.ActionKind == OperationActionKind.Rename &&
+            i.ActionKind is OperationActionKind.Rename or OperationActionKind.Copy &&
             !i.HasError &&
             !GetInclusionConflictItems().Contains(i));
 
@@ -94,6 +98,11 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
 
     private static string BuildTargetPath(OperationPreviewItem item)
     {
+        if (!string.IsNullOrWhiteSpace(item.TargetPath))
+        {
+            return item.TargetPath;
+        }
+
         var directory = Path.GetDirectoryName(item.FullPath) ?? string.Empty;
         return Path.Combine(directory, item.TargetName);
     }

@@ -39,6 +39,30 @@ internal static class PathSafetyValidator
             name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
     }
 
+    public static bool IsSafeTargetDirectoryPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var trimmed = path.Trim();
+        if (trimmed.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            return Path.IsPathFullyQualified(trimmed) &&
+                !string.IsNullOrWhiteSpace(Path.GetPathRoot(trimmed));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+    }
+
     private static bool ContainsPathSeparator(string value) =>
         value.Contains(Path.DirectorySeparatorChar) ||
         value.Contains(Path.AltDirectorySeparatorChar);

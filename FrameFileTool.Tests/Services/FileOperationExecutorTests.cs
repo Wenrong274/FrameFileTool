@@ -124,19 +124,60 @@ public sealed class FileOperationExecutorTests
         File.Exists(source).Should().BeTrue();
     }
 
+    [Fact]
+    public void CopyFilesToTargetFolder_指定資料夾不存在_應自動建立並複製Copy項目()
+    {
+        using var sandbox = TestDirectory.Create();
+        var source = sandbox.WriteFile("a.png");
+        var keep = sandbox.WriteFile("b.png");
+        var targetPath = Path.Combine(sandbox.Path, "out", "a.png");
+
+        var result = _sut.CopyFilesToTargetFolder(
+        [
+            MakePreview(source, "a.png", OperationActionKind.Copy, targetPath, targetPath: targetPath),
+            MakePreview(keep, "b.png", OperationActionKind.Keep, string.Empty),
+        ]);
+
+        result.SuccessCount.Should().Be(1);
+        result.SkippedCount.Should().Be(1);
+        result.Errors.Should().BeEmpty();
+        File.Exists(source).Should().BeTrue();
+        File.Exists(targetPath).Should().BeTrue();
+    }
+
+    [Fact]
+    public void CopyRenamedFilesToTargetFolder_應依TargetPath複製並改名()
+    {
+        using var sandbox = TestDirectory.Create();
+        var source = sandbox.WriteFile("a.png");
+        var targetPath = Path.Combine(sandbox.Path, "out", "F_1.png");
+
+        var result = _sut.CopyRenamedFilesToTargetFolder(
+        [
+            MakePreview(source, "a.png", OperationActionKind.Copy, targetPath, targetPath: targetPath),
+        ]);
+
+        result.SuccessCount.Should().Be(1);
+        result.Errors.Should().BeEmpty();
+        File.Exists(source).Should().BeTrue();
+        File.Exists(targetPath).Should().BeTrue();
+    }
+
     private static OperationPreviewItem MakePreview(
         string fullPath,
         string originalName,
         OperationActionKind actionKind,
         string targetName,
         bool hasError = false,
-        bool isIncluded = true) =>
+        bool isIncluded = true,
+        string targetPath = "") =>
         new()
         {
             FullPath = fullPath,
             OriginalName = originalName,
             ActionKind = actionKind,
             TargetName = targetName,
+            TargetPath = targetPath,
             HasError = hasError,
             IsIncluded = isIncluded,
         };

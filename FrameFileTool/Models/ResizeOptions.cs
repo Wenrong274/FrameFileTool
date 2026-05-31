@@ -11,5 +11,5 @@ public sealed record ResizeOptions(
     int TargetHeight,
     bool KeepAspectRatio,
     ResizeOutputMode OutputMode,
-    string SubfolderName,
+    string TargetFolderPath,
     ResamplerType Resampler);

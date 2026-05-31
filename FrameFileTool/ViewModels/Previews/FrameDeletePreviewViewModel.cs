@@ -18,12 +18,15 @@ public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
         {
             var includedItems = Items.Where(i => i.IsIncluded).ToList();
             var deleteCount = includedItems.Count(i => i.ActionKind == OperationActionKind.Delete && !i.HasError);
+            var copyCount = includedItems.Count(i => i.ActionKind == OperationActionKind.Copy && !i.HasError);
             var errorCount = Items.Count(i => i.HasError);
             var displayCount = includedItems.Count + errorCount;
+            var actionText = copyCount > 0 ? "複製" : "刪除";
+            var actionCount = copyCount > 0 ? copyCount : deleteCount;
 
             return errorCount > 0
-                ? $"共 {displayCount} 個項目，預計刪除 {deleteCount} 個，{errorCount} 個錯誤"
-                : $"共 {displayCount} 個項目，預計刪除 {deleteCount} 個";
+                ? $"共 {displayCount} 個項目，預計{actionText} {actionCount} 個，{errorCount} 個錯誤"
+                : $"共 {displayCount} 個項目，預計{actionText} {actionCount} 個";
         }
     }
 
@@ -32,7 +35,10 @@ public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
 
     /// <inheritdoc/>
     public bool HasExecutableItems =>
-        Items.Any(i => i.IsIncluded && i.ActionKind == OperationActionKind.Delete && !i.HasError);
+        Items.Any(i =>
+            i.IsIncluded &&
+            i.ActionKind is OperationActionKind.Delete or OperationActionKind.Copy &&
+            !i.HasError);
 
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;

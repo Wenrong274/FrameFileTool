@@ -22,9 +22,32 @@ public sealed class RenamePlanner : IRenamePlanner
         string prefix,
         int startIndex,
         int padding,
-        IReadOnlySet<string>? existingPaths = null)
+        IReadOnlySet<string>? existingPaths = null,
+        RenameOutputMode outputMode = RenameOutputMode.RenameInPlace,
+        string targetFolderPath = "")
     {
         var plannedItems = new List<OperationPreviewItem>(files.Count);
+
+        var chooseTargetFolderOnExecute = outputMode == RenameOutputMode.CopyToTargetFolder &&
+            string.IsNullOrWhiteSpace(targetFolderPath);
+
+        if (outputMode == RenameOutputMode.CopyToTargetFolder &&
+            !chooseTargetFolderOnExecute &&
+            !PathSafetyValidator.IsSafeTargetDirectoryPath(targetFolderPath))
+        {
+            return files
+                .Select((file, index) => new OperationPreviewItem
+                {
+                    Index = index + 1,
+                    FullPath = file.FullPath,
+                    OriginalName = file.Name,
+                    ActionKind = OperationActionKind.Error,
+                    TargetName = string.Empty,
+                    Status = "目標資料夾路徑不安全",
+                    HasError = true,
+                })
+                .ToList();
+        }
 
         // 追蹤本次計畫已使用的目標路徑，用來偵測計畫內重複
         var targetPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -68,23 +91,33 @@ public sealed class RenamePlanner : IRenamePlanner
                 continue;
             }
 
-            var targetPath = Path.Combine(file.DirectoryPath, targetName);
+            var targetPath = outputMode == RenameOutputMode.CopyToTargetFolder && !chooseTargetFolderOnExecute
+                ? Path.Combine(targetFolderPath, targetName)
+                : Path.Combine(file.DirectoryPath, targetName);
 
             // 衝突偵測
-            var hasDuplicateTarget = !targetPaths.Add(targetPath);
-            var targetExistsOutsidePlan = knownExistingPaths.Contains(targetPath) && !sourcePaths.Contains(targetPath);
-            var sameName = string.Equals(file.FullPath, targetPath, StringComparison.OrdinalIgnoreCase);
+            var hasDuplicateTarget = !chooseTargetFolderOnExecute && !targetPaths.Add(targetPath);
+            var targetExistsOutsidePlan = knownExistingPaths.Contains(targetPath) &&
+                (outputMode == RenameOutputMode.CopyToTargetFolder && !chooseTargetFolderOnExecute || !sourcePaths.Contains(targetPath));
+            var sameName = outputMode == RenameOutputMode.RenameInPlace &&
+                string.Equals(file.FullPath, targetPath, StringComparison.OrdinalIgnoreCase);
             var hasError = hasDuplicateTarget || targetExistsOutsidePlan;
 
-            var status = DetermineStatus(hasDuplicateTarget, targetExistsOutsidePlan, sameName);
+            var status = DetermineStatus(hasDuplicateTarget, targetExistsOutsidePlan, sameName, outputMode);
+            var actionKind = outputMode == RenameOutputMode.CopyToTargetFolder
+                ? OperationActionKind.Copy
+                : sameName ? OperationActionKind.Keep : OperationActionKind.Rename;
 
             plannedItems.Add(new OperationPreviewItem
             {
                 Index = i + 1,
                 FullPath = file.FullPath,
                 OriginalName = file.Name,
-                ActionKind = sameName ? OperationActionKind.Keep : OperationActionKind.Rename,
-                TargetName = targetName,
+                ActionKind = actionKind,
+                TargetName = outputMode == RenameOutputMode.CopyToTargetFolder
+                    ? chooseTargetFolderOnExecute ? "執行時選擇資料夾" : targetPath
+                    : targetName,
+                TargetPath = chooseTargetFolderOnExecute ? string.Empty : targetPath,
                 Status = status,
                 HasError = hasError,
             });
@@ -97,7 +130,8 @@ public sealed class RenamePlanner : IRenamePlanner
     private static string DetermineStatus(
         bool hasDuplicateTarget,
         bool targetExistsOutsidePlan,
-        bool sameName)
+        bool sameName,
+        RenameOutputMode outputMode)
     {
         if (hasDuplicateTarget)
         {
@@ -114,6 +148,8 @@ public sealed class RenamePlanner : IRenamePlanner
             return "檔名相同，不處理";
         }
 
-        return "可改名";
+        return outputMode == RenameOutputMode.CopyToTargetFolder
+            ? "可複製並改名"
+            : "可改名";
     }
 }

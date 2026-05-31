@@ -12,5 +12,7 @@ public interface IRenamePlanner
         string prefix,
         int startIndex,
         int padding,
-        IReadOnlySet<string>? existingPaths = null);
+        IReadOnlySet<string>? existingPaths = null,
+        RenameOutputMode outputMode = RenameOutputMode.RenameInPlace,
+        string targetFolderPath = "");
 }

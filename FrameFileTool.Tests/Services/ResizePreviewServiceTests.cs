@@ -40,14 +40,14 @@ public sealed class ResizePreviewServiceTests
     }
 
     [Fact]
-    public async Task BuildPreviewAsync_子資料夾輸出_應查詢目標檔案是否存在()
+    public async Task BuildPreviewAsync_指定資料夾輸出_應查詢目標檔案是否存在()
     {
         var dimensionReader = Substitute.For<IImageDimensionReader>();
         var fileExistenceService = Substitute.For<IFileExistenceService>();
         var resizePlanner = Substitute.For<IResizePlanner>();
         var file = new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10);
         var options = CreateOptions();
-        var expectedPath = Path.Combine(@"C:\imgs", "resized", "a.png");
+        var expectedPath = Path.Combine(@"D:\out", "a.png");
         var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { expectedPath };
 
         dimensionReader.Read(file.FullPath).Returns((100, 50));
@@ -172,7 +172,7 @@ public sealed class ResizePreviewServiceTests
             TargetWidth: 0,
             TargetHeight: 0,
             KeepAspectRatio: true,
-            OutputMode: ResizeOutputMode.Subfolder,
-            SubfolderName: "resized",
+            OutputMode: ResizeOutputMode.TargetFolder,
+            TargetFolderPath: @"D:\out",
             Resampler: ResamplerType.Bicubic);
 }

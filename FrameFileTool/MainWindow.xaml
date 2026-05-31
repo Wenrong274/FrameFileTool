@@ -172,7 +172,23 @@
                                            Style="{StaticResource HintText}"
                                            Margin="0,0,0,6" />
 
-                                <Button Content="執行刪除"
+                                <TextBlock Text="輸出模式"
+                                           Style="{StaticResource FieldLabel}" />
+                                <StackPanel Margin="0,2,0,4">
+                                    <RadioButton Content="移到回收桶"
+                                                 GroupName="FrameDeleteOutputMode"
+                                                 Margin="0,0,0,4"
+                                                 IsChecked="{Binding FrameDeleteOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=DeleteToRecycleBin}" />
+                                    <RadioButton Content="複製保留幀到指定資料夾"
+                                                 GroupName="FrameDeleteOutputMode"
+                                                 IsChecked="{Binding FrameDeleteOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=CopyKeptToTargetFolder}" />
+                                </StackPanel>
+
+                                <Button Content="{Binding FrameDeleteExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"
                                         Command="{Binding ExecuteFrameDeleteCommand}"
                                         HorizontalAlignment="Stretch" />
@@ -200,7 +216,23 @@
                                            Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding RenamePadding, UpdateSourceTrigger=PropertyChanged}" />
 
-                                <Button Content="執行改名"
+                                <TextBlock Text="輸出模式"
+                                           Style="{StaticResource FieldLabel}" />
+                                <StackPanel Margin="0,2,0,4">
+                                    <RadioButton Content="原地改名"
+                                                 GroupName="RenameOutputMode"
+                                                 Margin="0,0,0,4"
+                                                 IsChecked="{Binding RenameOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=RenameInPlace}" />
+                                    <RadioButton Content="複製改名到指定資料夾"
+                                                 GroupName="RenameOutputMode"
+                                                 IsChecked="{Binding RenameOutputMode,
+                                                     Converter={StaticResource EnumToBoolConverter},
+                                                     ConverterParameter=CopyToTargetFolder}" />
+                                </StackPanel>
+
+                                <Button Content="{Binding RenameExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"
                                         Command="{Binding ExecuteRenameCommand}"
                                         HorizontalAlignment="Stretch" />
@@ -296,26 +328,17 @@
                                            Style="{StaticResource FieldLabel}" />
                                 <StackPanel Orientation="Horizontal"
                                             Margin="0,2,0,4">
-                                    <RadioButton Content="另存子資料夾"
+                                    <RadioButton Content="覆寫原始"
                                                  GroupName="ResizeOutputMode"
                                                  Margin="0,0,14,0"
                                                  IsChecked="{Binding ResizeOutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
-                                                     ConverterParameter=Subfolder}" />
-                                    <RadioButton Content="覆寫原始"
+                                                     ConverterParameter=Overwrite}" />
+                                    <RadioButton Content="指定資料夾"
                                                  GroupName="ResizeOutputMode"
                                                  IsChecked="{Binding ResizeOutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
-                                                     ConverterParameter=Overwrite}" />
-                                </StackPanel>
-
-                                <!-- 子資料夾名稱（覆寫模式時隱藏） -->
-                                <StackPanel Visibility="{Binding ResizeOutputMode,
-                                                Converter={StaticResource EnumToVisibilityConverter},
-                                                ConverterParameter=Subfolder}">
-                                    <TextBlock Text="子資料夾名稱"
-                                               Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding ResizeSubfolderName, UpdateSourceTrigger=PropertyChanged}" />
+                                                     ConverterParameter=TargetFolder}" />
                                 </StackPanel>
 
                                 <!-- 覆寫警示 -->

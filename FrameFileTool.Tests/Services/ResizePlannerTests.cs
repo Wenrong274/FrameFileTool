@@ -16,18 +16,18 @@ public sealed class ResizePlannerTests
 
     private static ResizeOptions Scale(
         double factor,
-        ResizeOutputMode output = ResizeOutputMode.Subfolder,
-        string subfolder = "resized",
+        ResizeOutputMode output = ResizeOutputMode.Overwrite,
+        string targetFolderPath = "",
         ResamplerType resampler = ResamplerType.Bicubic) =>
-        new(ResizeMode.ScaleFactor, factor, 0, 0, true, output, subfolder, resampler);
+        new(ResizeMode.ScaleFactor, factor, 0, 0, true, output, targetFolderPath, resampler);
 
     private static ResizeOptions Absolute(
         int width,
         int height,
         bool keepAspect = true,
-        ResizeOutputMode output = ResizeOutputMode.Subfolder,
-        string subfolder = "resized") =>
-        new(ResizeMode.Absolute, 1, width, height, keepAspect, output, subfolder, ResamplerType.Bicubic);
+        ResizeOutputMode output = ResizeOutputMode.Overwrite,
+        string targetFolderPath = "") =>
+        new(ResizeMode.Absolute, 1, width, height, keepAspect, output, targetFolderPath, ResamplerType.Bicubic);
 
     // ── 邊界案例 ─────────────────────────────────────────────────
 
@@ -167,29 +167,29 @@ public sealed class ResizePlannerTests
     }
 
     [Fact]
-    public void Plan_輸出模式子資料夾_TargetName應含子資料夾路徑()
+    public void Plan_輸出模式指定資料夾_TargetName應為完整目標路徑()
     {
         var files = new[] { MakeFile("frame01.png") };
 
-        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: "resized"));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.TargetFolder, targetFolderPath: @"D:\out"));
 
-        result[0].TargetName.Should().Be(@"resized\frame01.png");
+        result[0].TargetName.Should().Be(@"D:\out\frame01.png");
+        result[0].TargetPath.Should().Be(@"D:\out\frame01.png");
     }
 
     [Fact]
-    public void Plan_子資料夾輸出目標檔已存在_應標記錯誤()
+    public void Plan_指定資料夾輸出目標檔已存在_應標記錯誤()
     {
-        var folder = @"C:\imgs";
         var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            Path.Combine(folder, "resized", "frame01.png"),
+            @"D:\out\frame01.png",
         };
 
-        var files = new[] { MakeFile("frame01.png", folder) };
+        var files = new[] { MakeFile("frame01.png") };
 
         var result = _sut.Plan(
             files,
-            Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: "resized"),
+            Scale(0.5, output: ResizeOutputMode.TargetFolder, targetFolderPath: @"D:\out"),
             existingPaths);
 
         result[0].HasError.Should().BeTrue();
@@ -198,40 +198,57 @@ public sealed class ResizePlannerTests
     }
 
     [Fact]
-    public void Plan_子資料夾名稱為空字串_所有項目應標記錯誤()
+    public void Plan_指定資料夾同名輸出_後續項目應標記錯誤()
     {
-        var files = new[] { MakeFile("a.png") };
+        var files = new[]
+        {
+            MakeFile("frame.png", @"C:\imgs\a"),
+            MakeFile("frame.png", @"C:\imgs\b"),
+        };
 
-        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: ""));
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.TargetFolder, targetFolderPath: @"D:\out"));
 
-        result[0].HasError.Should().BeTrue();
-        result[0].ActionKind.Should().Be(OperationActionKind.Error);
-    }
-
-    [Theory]
-    [InlineData(@"..\out")]
-    [InlineData(@"nested\out")]
-    [InlineData("nested/out")]
-    [InlineData(@"C:\out")]
-    [InlineData(".")]
-    [InlineData("..")]
-    public void Plan_子資料夾名稱包含路徑語意_所有項目應標記錯誤(string subfolder)
-    {
-        var files = new[] { MakeFile("a.png") };
-
-        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.Subfolder, subfolder: subfolder));
-
-        result[0].HasError.Should().BeTrue();
-        result[0].ActionKind.Should().Be(OperationActionKind.Error);
-        result[0].Status.Should().Contain("子資料夾名稱");
+        result[0].HasError.Should().BeFalse();
+        result[1].ActionKind.Should().Be(OperationActionKind.Error);
+        result[1].HasError.Should().BeTrue();
+        result[1].Status.Should().Be("目標檔名重複");
     }
 
     [Fact]
-    public void Plan_輸出模式覆寫時子資料夾名稱不影響結果()
+    public void Plan_指定資料夾模式未指定路徑_應標示執行時選擇資料夾()
     {
         var files = new[] { MakeFile("a.png") };
 
-        // 覆寫模式下 SubfolderName 為空也合法
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.TargetFolder, targetFolderPath: ""));
+
+        result[0].HasError.Should().BeFalse();
+        result[0].ActionKind.Should().Be(OperationActionKind.Resize);
+        result[0].TargetName.Should().Be("執行時選擇資料夾");
+        result[0].TargetPath.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("\"")]
+    [InlineData("<")]
+    [InlineData(">")]
+    [InlineData("|")]
+    public void Plan_指定資料夾路徑含非法字元_所有項目應標記錯誤(string targetFolderPath)
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(files, Scale(0.5, output: ResizeOutputMode.TargetFolder, targetFolderPath: targetFolderPath));
+
+        result[0].HasError.Should().BeTrue();
+        result[0].ActionKind.Should().Be(OperationActionKind.Error);
+        result[0].Status.Should().Contain("目標資料夾");
+    }
+
+    [Fact]
+    public void Plan_輸出模式覆寫時指定資料夾路徑不影響結果()
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        // 覆寫模式下 TargetFolderPath 為空也合法
         var result = _sut.Plan(files,
             new ResizeOptions(ResizeMode.ScaleFactor, 0.5, 0, 0, true,
                 ResizeOutputMode.Overwrite, "", ResamplerType.Bicubic));
