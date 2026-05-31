@@ -28,6 +28,37 @@
 
 ## 近期功能計劃
 
+### GetExistingRenameTargetPaths 邏輯重複重構
+
+ID：`rename-planner-project-paths`
+優先度：中
+分支：refactor/rename-planner-project-paths（開始時建立）
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：`IRenamePlanner`（新增方法）→ `RenamePlanner`（實作）→
+`MainViewModel.GetExistingRenameTargetPaths()`（改呼叫 planner）→
+所有 `IRenamePlanner` 的 NSubstitute substitute（自動繼承，不需手動更新）
+
+⚠ 邊界案例：`targetFolderPath` 為空時應回傳空集合（不呼叫 ProjectTargetPaths）；
+多個子資料夾各自獨立計數行為必須與 Plan() 完全一致
+
+- [ ] [Service] 在 `IRenamePlanner` 新增 `ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)`
+      介面方法，回傳 `IEnumerable<string>`。
+- [ ] [Service] 在 `RenamePlanner` 實作 `ProjectTargetPaths`，
+      將 `Plan()` 的逐資料夾計數與目標路徑公式提取至此方法，兩處共用同一邏輯。
+- [ ] [Test] 補上 `RenamePlannerTests.ProjectTargetPaths_*`：
+      單檔無補零、多檔有補零、多個子資料夾各自獨立計數、空清單回傳空序列。
+- [ ] [ViewModel] `MainViewModel.GetExistingRenameTargetPaths()` 改為
+      呼叫 `_renamePlanner.ProjectTargetPaths(...)`，移除重複的計數與命名邏輯。
+
+完成判定：
+
+- [ ] [正確性] `GetExistingRenameTargetPaths` 與 `RenamePlanner.Plan()` 對相同輸入產生
+      相同的目標路徑集合，`RenamePlannerTests` 有明確對比測試。
+- [ ] [邊界] `targetFolderPath` 為空時，`GetExistingRenameTargetPaths` 回傳空集合且不呼叫 planner。
+- [ ] [一致性] 所有現有測試（`dotnet test`）通過，無迴歸。
+
 ### Spritesheet 打包工具
 
 ID：`spritesheet-packer`
@@ -166,22 +197,6 @@ ID：`resize-denoise`
 - [ ] [錯誤狀態] 若強度設計為可調且使用者輸入無效值，預覽顯示錯誤且執行按鈕停用。
 - [ ] [效能] 對 20 張 1920×1080 圖片啟用降噪縮放的總耗時，
       相對於未啟用時的增幅在可接受範圍內（研究階段定義具體閾值）。
-
-## 技術債追蹤
-
-### GetExistingRenameTargetPaths 邏輯重複
-
-`MainViewModel.GetExistingRenameTargetPaths()` 在 ViewModel 內複製了
-`RenamePlanner` 的逐資料夾計數與目標檔名公式（`startIndex + folderIndex`、
-`PadLeft(padding, '0')`、`prefix + numberText + extension`），
-導致兩份邏輯必須同步更新。
-
-建議修正方向：在 `IRenamePlanner` 新增
-`ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)` 方法，
-讓 ViewModel 呼叫 planner 計算路徑，而非自行重現命名邏輯。
-
-影響範圍：`IRenamePlanner` 介面變更 → `RenamePlanner`、`MainViewModel`、
-相關測試均需同步調整，屬中型重構。
 
 ## 通用驗證
 
