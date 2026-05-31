@@ -23,6 +23,68 @@
 
 ---
 
+## 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
+
+ID：`output-folder`
+完成日期：2026-05-31
+發布版本：未發布
+
+優先度：中
+分支：feat/output-folder
+前置條件：`checkbox` 已完成（已於 [DONE.md](./DONE.md) 歸檔）
+被依賴：無
+
+影響範圍：`FrameDeletePlanner` / `RenamePlanner` / `ResizePlanner` / `ResizeOptions` /
+`ResizeOutputMode` → 對應 executor → MainViewModel → 三個操作面板 View
+
+邊界案例：目標資料夾路徑含非法字元、目標資料夾不存在、同名檔案輸出至同一資料夾
+
+實作結果：
+
+- 新增 `FrameDeleteOutputMode` 與 `RenameOutputMode`，支援抽幀複製保留幀與複製改名。
+- `OperationPreviewItem` 新增 `TargetPath`，讓 executor 使用完整目標路徑執行複製。
+- 批次縮放不再提供另存子資料夾模式，只保留「覆寫原始」與「指定資料夾」。
+- 抽幀刪除、批次改名與批次縮放的指定資料夾輸出，均改為按下執行時跳出資料夾選擇視窗。
+- 執行時選完目標資料夾後會重新規劃並檢查目標檔已存在與同名衝突；有錯誤則停止執行。
+- 目標資料夾不存在時由 executor 自動建立，建立或寫入失敗會寫入 log 的錯誤清單。
+- README 已同步指定資料夾輸出的執行時選擇流程。
+
+### 抽幀刪除
+
+- [x] [Model] 新增 `FrameDeleteOutputMode`，加入「複製保留幀到指定資料夾」選項。
+- [x] [Service] 調整 `FrameDeletePlanner`：檢查指定資料夾路徑是否合法，偵測目標衝突。
+- [x] [Test] 補上 `FrameDeletePlannerTests`：合法路徑、非法路徑、目標衝突的測試。
+- [x] [Service] 調整 `FileOperationExecutor`：支援複製保留幀到指定資料夾的執行路徑，目標資料夾不存在時自動建立。
+- [x] [Test] 補上 executor 指定資料夾路徑的測試：正常執行、建立資料夾、衝突處理。
+- [x] [View] 抽幀刪除操作面板加入輸出模式；複製模式在執行時選擇目標資料夾。
+
+### 批次改名
+
+- [x] [Model] 新增 `RenameOutputMode`，加入「複製改名到指定資料夾」選項。
+- [x] [Service] 調整 `RenamePlanner`：檢查指定資料夾路徑是否合法，偵測目標衝突。
+- [x] [Test] 補上 `RenamePlannerTests`：合法路徑、非法路徑、目標衝突的測試。
+- [x] [Service] 調整 `FileOperationExecutor`：支援複製改名到指定資料夾的執行路徑，目標資料夾不存在時自動建立。
+- [x] [Test] 補上 executor 指定資料夾路徑的測試。
+- [x] [View] 批次改名操作面板加入輸出模式；複製模式在執行時選擇目標資料夾。
+
+### 批次縮放
+
+- [x] [Model] 調整 `ResizeOutputMode`，保留覆寫原始並加入指定資料夾輸出模式。
+- [x] [Model] 擴充 `ResizeOptions`，加入指定輸出資料夾路徑欄位。
+- [x] [Service] 調整 `ResizePlanner`：檢查指定資料夾路徑是否合法，偵測同名衝突。
+- [x] [Test] 補上 `ResizePlannerTests`：合法路徑、非法路徑、同名衝突的測試。
+- [x] [Service] 調整 `ImageResizeExecutor`：輸出到指定資料夾，目標資料夾不存在時自動建立。
+- [x] [Test] 補上 `ImageResizeExecutorTests` 指定資料夾路徑的測試。
+- [x] [MainViewModel] 指定資料夾輸出模式在執行時選擇目標資料夾並重新檢查預覽。
+- [x] [View] 批次縮放輸出位置加入「指定資料夾」模式；目標資料夾在執行時選擇。
+
+完成判定：
+
+- [x] [正常路徑] 抽幀複製、複製改名與縮放指定資料夾輸出，均在執行時選擇資料夾並完成輸出。
+- [x] [邊界] 目標資料夾不存在時，執行前自動建立；建立失敗時 log 記錄錯誤且該項目標記失敗。
+- [x] [錯誤狀態] 目標檔已存在或同名衝突時，預覽標示錯誤且執行按鈕停用。
+- [x] [一致性] 批次縮放：覆寫原檔、指定資料夾兩種輸出模式都維持可用。
+
 ## 批次縮放改用倍率輸入
 
 ID：`scale-factor`

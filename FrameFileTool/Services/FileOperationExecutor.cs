@@ -119,6 +119,53 @@ public sealed class FileOperationExecutor : IFileOperationExecutor
         return result;
     }
 
+    /// <inheritdoc/>
+    public OperationResult CopyFilesToTargetFolder(IEnumerable<OperationPreviewItem> previewItems) =>
+        CopyItems(previewItems);
+
+    /// <inheritdoc/>
+    public OperationResult CopyRenamedFilesToTargetFolder(IEnumerable<OperationPreviewItem> previewItems) =>
+        CopyItems(previewItems);
+
+    private static OperationResult CopyItems(IEnumerable<OperationPreviewItem> previewItems)
+    {
+        var result = new OperationResult();
+        var items = previewItems.ToList();
+
+        var targets = items
+            .Where(item => item.IsIncluded && item.ActionKind == OperationActionKind.Copy && !item.HasError)
+            .ToList();
+        result.SkippedCount = items.Count - targets.Count;
+
+        foreach (var item in targets)
+        {
+            try
+            {
+                if (!File.Exists(item.FullPath))
+                {
+                    result.Errors.Add($"{item.OriginalName}: 檔案不存在");
+                    continue;
+                }
+
+                if (!PathSafetyValidator.IsSafeTargetDirectoryPath(Path.GetDirectoryName(item.TargetPath) ?? string.Empty))
+                {
+                    result.Errors.Add($"{item.OriginalName}: 目標路徑不安全");
+                    continue;
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(item.TargetPath)!);
+                File.Copy(item.FullPath, item.TargetPath);
+                result.SuccessCount++;
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"{item.OriginalName}: 複製失敗，{ex.Message}");
+            }
+        }
+
+        return result;
+    }
+
     /// <summary>最終改名失敗時，嘗試把暫存檔移回原始路徑。</summary>
     private static string TryRestoreOriginalPath(string tempPath, string originalPath)
     {

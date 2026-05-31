@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FrameFileTool.Models;
@@ -28,6 +29,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IFolderPickerService _folderPicker;
     private readonly IImageResizeExecutor _resizeExecutor;
     private readonly IResizePreviewService _resizePreviewService;
+    private readonly IFileExistenceService _fileExistenceService;
     private readonly IFileImportService _fileImportService;
 
     // ── 掃描選項 ──────────────────────────────────────────────
@@ -58,6 +60,10 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private int _frameDeleteInterval = 2;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FrameDeleteExecuteButtonText))]
+    private FrameDeleteOutputMode _frameDeleteOutputMode = FrameDeleteOutputMode.DeleteToRecycleBin;
+
     // ── 縮放設定 ──────────────────────────────────────────────
 
     [ObservableProperty]
@@ -82,10 +88,7 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _keepAspectRatio = true;
 
     [ObservableProperty]
-    private ResizeOutputMode _resizeOutputMode = ResizeOutputMode.Subfolder;
-
-    [ObservableProperty]
-    private string _resizeSubfolderName = "resized";
+    private ResizeOutputMode _resizeOutputMode = ResizeOutputMode.TargetFolder;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ResamplerHint))]
@@ -101,6 +104,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private int _renamePadding;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RenameExecuteButtonText))]
+    private RenameOutputMode _renameOutputMode = RenameOutputMode.RenameInPlace;
 
     // ── UI 狀態 ───────────────────────────────────────────────
 
@@ -200,6 +207,14 @@ public sealed partial class MainViewModel : ObservableObject
         _ => "大多數縮放情境的穩定選擇",
     };
 
+    public string FrameDeleteExecuteButtonText => FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+        ? "執行複製"
+        : "執行刪除";
+
+    public string RenameExecuteButtonText => RenameOutputMode == RenameOutputMode.CopyToTargetFolder
+        ? "執行複製改名"
+        : "執行改名";
+
     public MainViewModel(
         IFileScanner scanner,
         IFrameDeletePlanner frameDeletePlanner,
@@ -208,6 +223,7 @@ public sealed partial class MainViewModel : ObservableObject
         IFolderPickerService folderPicker,
         IImageResizeExecutor resizeExecutor,
         IResizePreviewService resizePreviewService,
+        IFileExistenceService fileExistenceService,
         IFileImportService fileImportService,
         TimeSpan debounceDelay = default)
     {
@@ -218,6 +234,7 @@ public sealed partial class MainViewModel : ObservableObject
         _folderPicker = folderPicker;
         _resizeExecutor = resizeExecutor;
         _resizePreviewService = resizePreviewService;
+        _fileExistenceService = fileExistenceService;
         _fileImportService = fileImportService;
         _debounceDelay = debounceDelay == default
             ? TimeSpan.FromMilliseconds(350)
@@ -334,14 +351,27 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void TriggerFrameDeletePreview()
     {
-        var items = _frameDeletePlanner.Plan(Files.ToList(), FrameDeleteInterval);
+        var files = Files.ToList();
+        var items = FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+            ? _frameDeletePlanner.Plan(
+                files,
+                FrameDeleteInterval,
+                FrameDeleteOutputMode,
+                targetFolderPath: string.Empty)
+            : _frameDeletePlanner.Plan(files, FrameDeleteInterval);
         if (items is null)
             return;
 
         var vm = new FrameDeletePreviewViewModel(items);
+        var actionText = FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+            ? "複製"
+            : "刪除";
+        var actionKind = FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+            ? OperationActionKind.Copy
+            : OperationActionKind.Delete;
         SetCurrentPreview(
             vm,
-            $"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計刪除 {items.Count(i => i.ActionKind == OperationActionKind.Delete && !i.HasError)} 個檔案。");
+            $"抽幀預覽完成：每 {FrameDeleteInterval} 張刪除 1 張，預計{actionText} {items.Count(i => i.ActionKind == actionKind && !i.HasError)} 個檔案。");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableDeletePreview))]
@@ -350,27 +380,76 @@ public sealed partial class MainViewModel : ObservableObject
         if (CurrentPreview is not FrameDeletePreviewViewModel vm)
             return;
 
-        var result = _executor.DeleteToRecycleBin(vm.Items);
-        AddLog($"抽幀執行完成：已移到回收桶 {result.SuccessCount} 個檔案。");
+        OperationResult result;
+        if (FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder)
+        {
+            var targetFolder = _folderPicker.PickFolder(SelectedFolder);
+            if (targetFolder is null)
+            {
+                AddLog("抽幀複製已取消：未選擇目標資料夾。");
+                return;
+            }
+
+            var plannedItems = _frameDeletePlanner.Plan(
+                Files.ToList(),
+                FrameDeleteInterval,
+                FrameDeleteOutputMode.CopyKeptToTargetFolder,
+                targetFolder,
+                GetExistingTargetPaths(Files.ToList(), targetFolder, file => file.Name));
+
+            var plannedPreview = new FrameDeletePreviewViewModel(plannedItems);
+            CurrentPreview = plannedPreview;
+
+            if (plannedPreview.HasErrors)
+            {
+                AddLog("抽幀複製已停止：目標資料夾存在衝突或路徑錯誤。");
+                RefreshCommands();
+                return;
+            }
+
+            result = _executor.CopyFilesToTargetFolder(plannedItems);
+        }
+        else
+        {
+            result = _executor.DeleteToRecycleBin(vm.Items);
+        }
+
+        AddLog(FrameDeleteOutputMode == FrameDeleteOutputMode.CopyKeptToTargetFolder
+            ? $"抽幀複製完成：成功 {result.SuccessCount} 個檔案。"
+            : $"抽幀執行完成：已移到回收桶 {result.SuccessCount} 個檔案。");
         AddErrors(result);
         RefreshScanFilesCore(keepExclusions: true);
     }
 
     private void TriggerRenamePreview()
     {
-        var existingPaths = Files
-            .Select(f => f.FullPath)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var items = _renamePlanner.Plan(
-            Files.ToList(), RenamePrefix, RenameStartIndex, RenamePadding, existingPaths);
+        var files = Files.ToList();
+        var items = RenameOutputMode == RenameOutputMode.CopyToTargetFolder
+            ? _renamePlanner.Plan(
+                files,
+                RenamePrefix,
+                RenameStartIndex,
+                RenamePadding,
+                GetExistingRenameTargetPaths(files),
+                RenameOutputMode,
+                targetFolderPath: string.Empty)
+            : _renamePlanner.Plan(
+                files,
+                RenamePrefix,
+                RenameStartIndex,
+                RenamePadding,
+                files.Select(f => f.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase));
         if (items is null)
             return;
 
         var vm = new RenamePreviewViewModel(items);
+        var actionText = RenameOutputMode == RenameOutputMode.CopyToTargetFolder ? "複製改名" : "改名";
+        var actionKind = RenameOutputMode == RenameOutputMode.CopyToTargetFolder
+            ? OperationActionKind.Copy
+            : OperationActionKind.Rename;
         SetCurrentPreview(
             vm,
-            $"改名預覽完成：預計改名 {items.Count(i => i.ActionKind == OperationActionKind.Rename && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+            $"改名預覽完成：預計{actionText} {items.Count(i => i.ActionKind == actionKind && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
     }
 
     [RelayCommand(CanExecute = nameof(HasExecutableRenamePreview))]
@@ -379,8 +458,45 @@ public sealed partial class MainViewModel : ObservableObject
         if (CurrentPreview is not RenamePreviewViewModel vm)
             return;
 
-        var result = _executor.RenameFiles(vm.Items);
-        AddLog($"改名執行完成：成功 {result.SuccessCount} 個檔案。");
+        OperationResult result;
+        if (RenameOutputMode == RenameOutputMode.CopyToTargetFolder)
+        {
+            var targetFolder = _folderPicker.PickFolder(SelectedFolder);
+            if (targetFolder is null)
+            {
+                AddLog("複製改名已取消：未選擇目標資料夾。");
+                return;
+            }
+
+            var plannedItems = _renamePlanner.Plan(
+                Files.ToList(),
+                RenamePrefix,
+                RenameStartIndex,
+                RenamePadding,
+                GetExistingRenameTargetPaths(Files.ToList(), targetFolder),
+                RenameOutputMode.CopyToTargetFolder,
+                targetFolder);
+
+            var plannedPreview = new RenamePreviewViewModel(plannedItems);
+            CurrentPreview = plannedPreview;
+
+            if (plannedPreview.HasErrors)
+            {
+                AddLog("複製改名已停止：目標資料夾存在衝突或路徑錯誤。");
+                RefreshCommands();
+                return;
+            }
+
+            result = _executor.CopyRenamedFilesToTargetFolder(plannedItems);
+        }
+        else
+        {
+            result = _executor.RenameFiles(vm.Items);
+        }
+
+        AddLog(RenameOutputMode == RenameOutputMode.CopyToTargetFolder
+            ? $"複製改名完成：成功 {result.SuccessCount} 個檔案。"
+            : $"改名執行完成：成功 {result.SuccessCount} 個檔案。");
         AddErrors(result);
         RefreshScanFilesCore(keepExclusions: true);
     }
@@ -466,8 +582,31 @@ public sealed partial class MainViewModel : ObservableObject
         {
             AddLog("⚠ 覆寫模式：原始圖片將被取代，無法還原。");
         }
+        else if (options.OutputMode == ResizeOutputMode.TargetFolder)
+        {
+            var targetFolder = _folderPicker.PickFolder(SelectedFolder);
+            if (targetFolder is null)
+            {
+                AddLog("縮放已取消：未選擇目標資料夾。");
+                return;
+            }
 
-        var snapshot = previewVm.Items;
+            options = options with { TargetFolderPath = targetFolder };
+            var plannedItems = await _resizePreviewService.BuildPreviewAsync(Files.ToList(), options);
+            var plannedPreview = new ResizePreviewViewModel(plannedItems);
+            CurrentPreview = plannedPreview;
+
+            if (plannedPreview.HasErrors)
+            {
+                AddLog("縮放已停止：目標資料夾存在衝突或路徑錯誤。");
+                RefreshCommands();
+                return;
+            }
+        }
+
+        var snapshot = CurrentPreview is ResizePreviewViewModel latestPreview
+            ? latestPreview.Items
+            : previewVm.Items;
         var total = snapshot.Count(item => item.IsIncluded && item.ActionKind == OperationActionKind.Resize && !item.HasError);
 
         IsResizing = true;
@@ -597,6 +736,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnFrameDeleteIntervalChanged(int value) => InvalidatePreviewFor(PreviewTool.FrameDelete);
 
+    partial void OnFrameDeleteOutputModeChanged(FrameDeleteOutputMode value) => InvalidatePreviewFor(PreviewTool.FrameDelete);
+
     partial void OnResizeModeChanged(ResizeMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
     partial void OnScaleFactorChanged(double value) => InvalidatePreviewFor(PreviewTool.Resize);
@@ -609,8 +750,6 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnResizeOutputModeChanged(ResizeOutputMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnResizeSubfolderNameChanged(string value) => InvalidatePreviewFor(PreviewTool.Resize);
-
     partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreviewFor(PreviewTool.Resize);
 
     partial void OnRenamePrefixChanged(string value) => InvalidatePreviewFor(PreviewTool.Rename);
@@ -618,6 +757,8 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnRenameStartIndexChanged(int value) => InvalidatePreviewFor(PreviewTool.Rename);
 
     partial void OnRenamePaddingChanged(int value) => InvalidatePreviewFor(PreviewTool.Rename);
+
+    partial void OnRenameOutputModeChanged(RenameOutputMode value) => InvalidatePreviewFor(PreviewTool.Rename);
 
     partial void OnSelectedToolIndexChanged(int value)
     {
@@ -749,6 +890,44 @@ public sealed partial class MainViewModel : ObservableObject
         return extensions;
     }
 
+    private IReadOnlySet<string> GetExistingTargetPaths(
+        IReadOnlyList<FileItem> files,
+        string targetFolderPath,
+        Func<FileItem, string> targetNameSelector)
+    {
+        if (string.IsNullOrWhiteSpace(targetFolderPath))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var targetPaths = files.Select(file => Path.Combine(targetFolderPath, targetNameSelector(file)));
+        return _fileExistenceService.GetExistingPaths(targetPaths);
+    }
+
+    private IReadOnlySet<string> GetExistingRenameTargetPaths(IReadOnlyList<FileItem> files, string targetFolderPath = "")
+    {
+        if (string.IsNullOrWhiteSpace(targetFolderPath))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var targetPaths = files.Select(file =>
+        {
+            folderCounters.TryGetValue(file.DirectoryPath, out var folderIndex);
+            folderCounters[file.DirectoryPath] = folderIndex + 1;
+
+            var number = RenameStartIndex + folderIndex;
+            var numberText = RenamePadding > 0
+                ? number.ToString().PadLeft(RenamePadding, '0')
+                : number.ToString();
+
+            return Path.Combine(targetFolderPath, $"{RenamePrefix}{numberText}{file.Extension}");
+        });
+
+        return _fileExistenceService.GetExistingPaths(targetPaths);
+    }
+
     private bool HasFiles() => Files.Count > 0;
 
     private bool CanBrowseOrScan() => !IsResizing && !IsPreparingPreview;
@@ -809,7 +988,7 @@ public sealed partial class MainViewModel : ObservableObject
             TargetHeight: TargetHeight,
             KeepAspectRatio: KeepAspectRatio,
             OutputMode: ResizeOutputMode,
-            SubfolderName: ResizeSubfolderName,
+            TargetFolderPath: string.Empty,
             Resampler: SelectedResampler);
 
     /// <summary>將訊息插入 log 最上方，附上時間戳記。</summary>

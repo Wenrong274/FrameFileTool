@@ -113,8 +113,8 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         IReadOnlyCollection<OperationPreviewItem> targets,
         OperationResult result)
     {
-        if (options.OutputMode != ResizeOutputMode.Subfolder ||
-            PathSafetyValidator.IsSafeSingleDirectoryName(options.SubfolderName))
+        if (options.OutputMode != ResizeOutputMode.TargetFolder ||
+            PathSafetyValidator.IsSafeTargetDirectoryPath(options.TargetFolderPath))
         {
             if (options.Mode != ResizeMode.ScaleFactor ||
                 (!double.IsNaN(options.ScaleFactor) && !double.IsInfinity(options.ScaleFactor) && options.ScaleFactor > 0))
@@ -128,7 +128,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
         }
 
         result.SkippedCount += targets.Count;
-        result.Errors.Add("子資料夾名稱不安全");
+        result.Errors.Add("目標資料夾路徑不安全");
         return false;
     }
 
@@ -262,8 +262,8 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
     {
         var directory = Path.GetDirectoryName(item.FullPath) ?? string.Empty;
 
-        return options.OutputMode == ResizeOutputMode.Subfolder
-            ? Path.Combine(directory, options.SubfolderName, item.OriginalName)
+        return options.OutputMode == ResizeOutputMode.TargetFolder
+            ? Path.Combine(options.TargetFolderPath, item.OriginalName)
             : item.FullPath;
     }
 

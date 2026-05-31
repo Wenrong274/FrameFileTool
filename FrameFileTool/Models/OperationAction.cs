@@ -14,6 +14,9 @@ public enum OperationActionKind
     /// <summary>批次改名。</summary>
     Rename,
 
+    /// <summary>複製到另一個位置。</summary>
+    Copy,
+
     /// <summary>批次縮放尺寸。</summary>
     Resize,
 
@@ -32,6 +35,7 @@ public static class OperationAction
         OperationActionKind.Delete => "刪除",
         OperationActionKind.Keep => "保留",
         OperationActionKind.Rename => "改名",
+        OperationActionKind.Copy => "複製",
         OperationActionKind.Resize => "縮放",
         OperationActionKind.Error => "錯誤",
         _ => string.Empty,

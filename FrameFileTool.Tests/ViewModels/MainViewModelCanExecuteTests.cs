@@ -18,17 +18,29 @@ public sealed class MainViewModelCanExecuteTests
     private static MainViewModel CreateSut(
         IFrameDeletePlanner? frameDeletePlanner = null,
         IRenamePlanner? renamePlanner = null,
+        IFileOperationExecutor? executor = null,
+        IFolderPickerService? folderPicker = null,
+        IImageResizeExecutor? resizeExecutor = null,
+        IFileExistenceService? fileExistenceService = null,
         IResizePreviewService? resizePreviewService = null,
-        TimeSpan debounceDelay = default) => new(
-        Substitute.For<IFileScanner>(),
+        TimeSpan debounceDelay = default)
+    {
+        var scanner = Substitute.For<IFileScanner>();
+        scanner.Scan(Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<bool>())
+            .Returns(new FileScanResult([], []));
+
+        return new MainViewModel(
+        scanner,
         frameDeletePlanner ?? Substitute.For<IFrameDeletePlanner>(),
         renamePlanner ?? Substitute.For<IRenamePlanner>(),
-        Substitute.For<IFileOperationExecutor>(),
-        Substitute.For<IFolderPickerService>(),
-        Substitute.For<IImageResizeExecutor>(),
+        executor ?? Substitute.For<IFileOperationExecutor>(),
+        folderPicker ?? Substitute.For<IFolderPickerService>(),
+        resizeExecutor ?? Substitute.For<IImageResizeExecutor>(),
         resizePreviewService ?? Substitute.For<IResizePreviewService>(),
+        fileExistenceService ?? Substitute.For<IFileExistenceService>(),
         Substitute.For<IFileImportService>(),
         debounceDelay);
+    }
 
     // ── 預覽 ViewModel 建立輔助 ───────────────────────────────
 
@@ -142,6 +154,68 @@ public sealed class MainViewModelCanExecuteTests
         sut.ExecuteFrameDeleteCommand.CanExecute(null).Should().BeFalse();
     }
 
+    [Fact]
+    public void ExecuteFrameDelete_複製模式_應先選擇資料夾再呼叫複製執行器()
+    {
+        var planner = Substitute.For<IFrameDeletePlanner>();
+        planner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<int>(),
+                FrameDeleteOutputMode.CopyKeptToTargetFolder,
+                @"D:\out",
+                Arg.Any<IReadOnlySet<string>>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy, TargetPath = @"D:\out\a.png" }]);
+        var executor = Substitute.For<IFileOperationExecutor>();
+        executor.CopyFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>())
+            .Returns(new OperationResult { SuccessCount = 1 });
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"D:\out");
+        var fileExistenceService = Substitute.For<IFileExistenceService>();
+        fileExistenceService.GetExistingPaths(Arg.Any<IEnumerable<string>>())
+            .Returns(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        var sut = CreateSut(
+            frameDeletePlanner: planner,
+            executor: executor,
+            folderPicker: folderPicker,
+            fileExistenceService: fileExistenceService);
+        sut.FrameDeleteOutputMode = FrameDeleteOutputMode.CopyKeptToTargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.CurrentPreview = new FrameDeletePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Copy },
+        ]);
+
+        sut.ExecuteFrameDeleteCommand.Execute(null);
+
+        folderPicker.Received(1).PickFolder(Arg.Any<string>());
+        planner.Received(1).Plan(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Any<int>(),
+            FrameDeleteOutputMode.CopyKeptToTargetFolder,
+            @"D:\out",
+            Arg.Any<IReadOnlySet<string>>());
+        executor.Received(1).CopyFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>());
+        executor.DidNotReceive().DeleteToRecycleBin(Arg.Any<IEnumerable<OperationPreviewItem>>());
+    }
+
+    [Fact]
+    public void ExecuteFrameDelete_複製模式取消選擇資料夾_不應執行複製()
+    {
+        var executor = Substitute.For<IFileOperationExecutor>();
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns((string?)null);
+        var sut = CreateSut(executor: executor, folderPicker: folderPicker);
+        sut.FrameDeleteOutputMode = FrameDeleteOutputMode.CopyKeptToTargetFolder;
+        sut.CurrentPreview = new FrameDeletePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Copy },
+        ]);
+
+        sut.ExecuteFrameDeleteCommand.Execute(null);
+
+        executor.DidNotReceive().CopyFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>());
+    }
+
     // ════════════════════════════════════════════════════════
     // ExecuteRename CanExecute
     // ════════════════════════════════════════════════════════
@@ -225,6 +299,72 @@ public sealed class MainViewModelCanExecuteTests
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeFalse();
     }
 
+    [Fact]
+    public void ExecuteRename_複製模式_應先選擇資料夾再呼叫複製改名執行器()
+    {
+        var planner = Substitute.For<IRenamePlanner>();
+        planner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<string>(),
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<IReadOnlySet<string>>(),
+                RenameOutputMode.CopyToTargetFolder,
+                @"D:\out")
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy, TargetPath = @"D:\out\F_0.png" }]);
+        var executor = Substitute.For<IFileOperationExecutor>();
+        executor.CopyRenamedFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>())
+            .Returns(new OperationResult { SuccessCount = 1 });
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"D:\out");
+        var fileExistenceService = Substitute.For<IFileExistenceService>();
+        fileExistenceService.GetExistingPaths(Arg.Any<IEnumerable<string>>())
+            .Returns(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        var sut = CreateSut(
+            renamePlanner: planner,
+            executor: executor,
+            folderPicker: folderPicker,
+            fileExistenceService: fileExistenceService);
+        sut.RenameOutputMode = RenameOutputMode.CopyToTargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.CurrentPreview = new RenamePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Copy },
+        ]);
+
+        sut.ExecuteRenameCommand.Execute(null);
+
+        folderPicker.Received(1).PickFolder(Arg.Any<string>());
+        planner.Received(1).Plan(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<int>(),
+            Arg.Any<IReadOnlySet<string>>(),
+            RenameOutputMode.CopyToTargetFolder,
+            @"D:\out");
+        executor.Received(1).CopyRenamedFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>());
+        executor.DidNotReceive().RenameFiles(Arg.Any<IEnumerable<OperationPreviewItem>>());
+    }
+
+    [Fact]
+    public void ExecuteRename_複製模式取消選擇資料夾_不應執行複製改名()
+    {
+        var executor = Substitute.For<IFileOperationExecutor>();
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns((string?)null);
+        var sut = CreateSut(executor: executor, folderPicker: folderPicker);
+        sut.RenameOutputMode = RenameOutputMode.CopyToTargetFolder;
+        sut.CurrentPreview = new RenamePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Copy },
+        ]);
+
+        sut.ExecuteRenameCommand.Execute(null);
+
+        executor.DidNotReceive().CopyRenamedFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>());
+    }
+
     // ════════════════════════════════════════════════════════
     // ExecuteResize CanExecute
     // ════════════════════════════════════════════════════════
@@ -288,6 +428,69 @@ public sealed class MainViewModelCanExecuteTests
         sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ExecuteResize_指定資料夾模式_應先選擇資料夾再執行縮放()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Is<ResizeOptions>(options => options.TargetFolderPath == @"D:\out"),
+                Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize, TargetPath = @"D:\out\a.png" }]);
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"D:\out");
+        var resizeExecutor = Substitute.For<IImageResizeExecutor>();
+        resizeExecutor.ExecuteAsync(
+                Arg.Any<IEnumerable<OperationPreviewItem>>(),
+                Arg.Is<ResizeOptions>(options => options.TargetFolderPath == @"D:\out"),
+                Arg.Any<IProgress<ResizeProgressReport>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new OperationResult { SuccessCount = 1 });
+        var sut = CreateSut(
+            folderPicker: folderPicker,
+            resizePreviewService: resizePreviewService,
+            resizeExecutor: resizeExecutor,
+            debounceDelay: TimeSpan.Zero);
+        sut.ResizeOutputMode = ResizeOutputMode.TargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.CurrentPreview = new ResizePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Resize },
+        ]);
+
+        await sut.ExecuteResizeCommand.ExecuteAsync(null);
+
+        folderPicker.Received(1).PickFolder(Arg.Any<string>());
+        await resizeExecutor.Received(1).ExecuteAsync(
+            Arg.Any<IEnumerable<OperationPreviewItem>>(),
+            Arg.Is<ResizeOptions>(options => options.TargetFolderPath == @"D:\out"),
+            Arg.Any<IProgress<ResizeProgressReport>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteResize_指定資料夾模式取消選擇資料夾_不應執行縮放()
+    {
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns((string?)null);
+        var resizeExecutor = Substitute.For<IImageResizeExecutor>();
+        var sut = CreateSut(folderPicker: folderPicker, resizeExecutor: resizeExecutor);
+        sut.ResizeOutputMode = ResizeOutputMode.TargetFolder;
+        sut.CurrentPreview = new ResizePreviewViewModel(
+        [
+            new() { ActionKind = OperationActionKind.Resize },
+        ]);
+
+        await sut.ExecuteResizeCommand.ExecuteAsync(null);
+
+        await resizeExecutor.DidNotReceive().ExecuteAsync(
+            Arg.Any<IEnumerable<OperationPreviewItem>>(),
+            Arg.Any<ResizeOptions>(),
+            Arg.Any<IProgress<ResizeProgressReport>>(),
+            Arg.Any<CancellationToken>());
+    }
+
     // ════════════════════════════════════════════════════════
     // 即時預覽觸發（Live Preview）
     // ════════════════════════════════════════════════════════
@@ -320,6 +523,22 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
+    public void FrameDeleteOutputMode_指定資料夾模式變更且有檔案_應即時更新預覽但不選資料夾()
+    {
+        var planner = Substitute.For<IFrameDeletePlanner>();
+        planner.Plan(Arg.Any<IReadOnlyList<FileItem>>(), Arg.Any<int>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy }]);
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        var sut = CreateSut(frameDeletePlanner: planner, folderPicker: folderPicker);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        sut.FrameDeleteOutputMode = FrameDeleteOutputMode.CopyKeptToTargetFolder;
+
+        sut.CurrentPreview.Should().BeOfType<FrameDeletePreviewViewModel>();
+        folderPicker.DidNotReceive().PickFolder(Arg.Any<string>());
+    }
+
+    [Fact]
     public void RenamePrefix_變更且有檔案_應即時更新預覽()
     {
         var planner = Substitute.For<IRenamePlanner>();
@@ -339,6 +558,38 @@ public sealed class MainViewModelCanExecuteTests
         sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
         sut.Logs.Should().Contain(log => log.Contains("改名預覽完成"));
         sut.ExecuteRenameCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RenameOutputMode_指定資料夾模式變更且有檔案_應即時更新預覽但不選資料夾()
+    {
+        var planner = Substitute.For<IRenamePlanner>();
+        planner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<string>(),
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<IReadOnlySet<string>>(),
+                RenameOutputMode.CopyToTargetFolder,
+                "")
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy }]);
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        var sut = CreateSut(renamePlanner: planner, folderPicker: folderPicker);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 1;
+
+        sut.RenameOutputMode = RenameOutputMode.CopyToTargetFolder;
+
+        sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
+        folderPicker.DidNotReceive().PickFolder(Arg.Any<string>());
+        planner.Received(1).Plan(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<int>(),
+            Arg.Any<IReadOnlySet<string>>(),
+            RenameOutputMode.CopyToTargetFolder,
+            "");
     }
 
     [Fact]
@@ -365,6 +616,36 @@ public sealed class MainViewModelCanExecuteTests
             Arg.Any<IReadOnlyList<FileItem>>(),
             Arg.Is<ResizeOptions>(options => options.ScaleFactor == 0.75),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResizeOutputMode_指定資料夾模式變更且有檔案_應預覽但不選資料夾()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        var sut = CreateSut(
+            folderPicker: folderPicker,
+            resizePreviewService: resizePreviewService,
+            debounceDelay: TimeSpan.Zero);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 2;
+
+        sut.ResizeOutputMode = ResizeOutputMode.TargetFolder;
+        await sut.LivePreviewTask;
+
+        await resizePreviewService.Received().BuildPreviewAsync(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Is<ResizeOptions>(options =>
+                options.OutputMode == ResizeOutputMode.TargetFolder &&
+                options.TargetFolderPath == ""),
+            Arg.Any<CancellationToken>());
+        folderPicker.DidNotReceive().PickFolder(Arg.Any<string>());
     }
 
     [Fact]

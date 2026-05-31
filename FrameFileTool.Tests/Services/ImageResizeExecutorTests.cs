@@ -59,7 +59,7 @@ public sealed class ImageResizeExecutorTests
     }
 
     [Fact]
-    public void Execute_子資料夾名稱包含路徑_應拒絕執行()
+    public void Execute_指定資料夾路徑空白_應拒絕執行()
     {
         var items = new[]
         {
@@ -71,15 +71,15 @@ public sealed class ImageResizeExecutorTests
             },
         };
 
-        var result = _sut.Execute(items, Options(subfolderName: @"..\out"));
+        var result = _sut.Execute(items, Options(outputMode: ResizeOutputMode.TargetFolder, targetFolderPath: ""));
 
         result.SuccessCount.Should().Be(0);
         result.Errors.Should().ContainSingle()
-            .Which.Should().Contain("子資料夾名稱不安全");
+            .Which.Should().Contain("目標資料夾路徑不安全");
     }
 
     [Fact]
-    public void Execute_取消勾選項目_應略過且不驗證目標子資料夾()
+    public void Execute_取消勾選項目_應略過且不驗證目標資料夾()
     {
         var items = new[]
         {
@@ -92,7 +92,7 @@ public sealed class ImageResizeExecutorTests
             },
         };
 
-        var result = _sut.Execute(items, Options(subfolderName: @"..\out"));
+        var result = _sut.Execute(items, Options(outputMode: ResizeOutputMode.TargetFolder, targetFolderPath: ""));
 
         result.SuccessCount.Should().Be(0);
         result.SkippedCount.Should().Be(1);
@@ -100,7 +100,7 @@ public sealed class ImageResizeExecutorTests
     }
 
     [Fact]
-    public void Execute_倍率0點5_應輸出一半尺寸且至少保留1像素()
+    public void Execute_指定資料夾不存在_應自動建立並輸出一半尺寸()
     {
         var root = Path.Combine(Path.GetTempPath(), "FrameFileToolTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -120,8 +120,8 @@ public sealed class ImageResizeExecutorTests
                 ActionKind = OperationActionKind.Resize,
             };
 
-            var result = _sut.Execute([item], Options(factor: 0.5));
-            var targetPath = Path.Combine(root, "resized", "a.png");
+            var targetPath = Path.Combine(root, "out", "a.png");
+            var result = _sut.Execute([item], Options(factor: 0.5, targetFolderPath: Path.Combine(root, "out")));
 
             result.SuccessCount.Should().Be(1);
             result.Errors.Should().BeEmpty();
@@ -140,14 +140,17 @@ public sealed class ImageResizeExecutorTests
         }
     }
 
-    private static ResizeOptions Options(double factor = 0.5, string subfolderName = "resized") =>
+    private static ResizeOptions Options(
+        double factor = 0.5,
+        ResizeOutputMode outputMode = ResizeOutputMode.TargetFolder,
+        string? targetFolderPath = null) =>
         new(
             ResizeMode.ScaleFactor,
             ScaleFactor: factor,
             TargetWidth: 0,
             TargetHeight: 0,
             KeepAspectRatio: true,
-            ResizeOutputMode.Subfolder,
-            SubfolderName: subfolderName,
+            outputMode,
+            TargetFolderPath: targetFolderPath ?? Path.Combine(Path.GetTempPath(), "FrameFileToolTests", "out"),
             ResamplerType.Bicubic);
 }

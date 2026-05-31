@@ -91,6 +91,10 @@
                                                     <Setter Property="Background" Value="#FEE2E2" />
                                                     <Setter Property="BorderBrush" Value="#FCA5A5" />
                                                 </DataTrigger>
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Copy}">
+                                                    <Setter Property="Background" Value="#DBEAFE" />
+                                                    <Setter Property="BorderBrush" Value="#93C5FD" />
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                     <Setter Property="Background" Value="#FEF3C7" />
                                                     <Setter Property="BorderBrush" Value="#FBBF24" />
@@ -108,6 +112,9 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Delete}">
                                                         <Setter Property="Foreground" Value="#B91C1C" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Copy}">
+                                                        <Setter Property="Foreground" Value="#1D4ED8" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                         <Setter Property="Foreground" Value="#B45309" />
@@ -153,6 +160,10 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Delete}">
                                             <Setter Property="Foreground" Value="#DC2626" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Copy}">
+                                            <Setter Property="Foreground" Value="#2563EB" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -229,6 +240,10 @@
                                                     <Setter Property="Background" Value="#DBEAFE" />
                                                     <Setter Property="BorderBrush" Value="#93C5FD" />
                                                 </DataTrigger>
+                                                <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Copy}">
+                                                    <Setter Property="Background" Value="#DBEAFE" />
+                                                    <Setter Property="BorderBrush" Value="#93C5FD" />
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">
                                                     <Setter Property="Background" Value="#FEF3C7" />
                                                     <Setter Property="BorderBrush" Value="#FBBF24" />
@@ -245,6 +260,9 @@
                                                 <Setter Property="Foreground" Value="#64748B" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Rename}">
+                                                        <Setter Property="Foreground" Value="#1D4ED8" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Copy}">
                                                         <Setter Property="Foreground" Value="#1D4ED8" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="{x:Static models:OperationActionKind.Error}">

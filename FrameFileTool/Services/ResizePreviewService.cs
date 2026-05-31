@@ -43,13 +43,14 @@ public sealed class ResizePreviewService(
         IReadOnlyList<FileItem> files,
         ResizeOptions options)
     {
-        if (options.OutputMode != ResizeOutputMode.Subfolder)
+        if (options.OutputMode != ResizeOutputMode.TargetFolder ||
+            string.IsNullOrWhiteSpace(options.TargetFolderPath))
         {
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         var targetPaths = files
-            .Select(file => Path.Combine(file.DirectoryPath, options.SubfolderName, file.Name))
+            .Select(file => Path.Combine(options.TargetFolderPath, file.Name))
             .ToList();
 
         return fileExistenceService.GetExistingPaths(targetPaths);

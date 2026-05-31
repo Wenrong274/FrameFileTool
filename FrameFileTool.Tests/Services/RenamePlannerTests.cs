@@ -112,6 +112,69 @@ public sealed class RenamePlannerTests
         result[0].HasError.Should().BeFalse();
     }
 
+    [Fact]
+    public void Plan_複製改名到指定資料夾_應設定完整目標路徑()
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(
+            files,
+            prefix: "F_",
+            startIndex: 1,
+            padding: 0,
+            existingPaths: null,
+            outputMode: RenameOutputMode.CopyToTargetFolder,
+            targetFolderPath: @"D:\out");
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[0].TargetName.Should().Be(@"D:\out\F_1.png");
+        result[0].TargetPath.Should().Be(@"D:\out\F_1.png");
+        result[0].Status.Should().Be("可複製並改名");
+    }
+
+    [Fact]
+    public void Plan_複製改名未指定資料夾_應標示執行時選擇資料夾()
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var result = _sut.Plan(
+            files,
+            prefix: "F_",
+            startIndex: 1,
+            padding: 0,
+            existingPaths: null,
+            outputMode: RenameOutputMode.CopyToTargetFolder,
+            targetFolderPath: "");
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[0].HasError.Should().BeFalse();
+        result[0].TargetName.Should().Be("執行時選擇資料夾");
+        result[0].TargetPath.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Plan_複製改名目標檔已存在_應標記錯誤()
+    {
+        var files = new[] { MakeFile("a.png") };
+        var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            @"D:\out\F_1.png",
+        };
+
+        var result = _sut.Plan(
+            files,
+            prefix: "F_",
+            startIndex: 1,
+            padding: 0,
+            existingPaths: existingPaths,
+            outputMode: RenameOutputMode.CopyToTargetFolder,
+            targetFolderPath: @"D:\out");
+
+        result[0].ActionKind.Should().Be(OperationActionKind.Copy);
+        result[0].HasError.Should().BeTrue();
+        result[0].Status.Should().Be("目標檔案已存在");
+    }
+
     [Theory]
     [InlineData(@"..\F_")]
     [InlineData(@"nested\F_")]

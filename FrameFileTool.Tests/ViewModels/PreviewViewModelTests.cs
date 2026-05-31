@@ -45,6 +45,17 @@ public sealed class PreviewViewModelTests
     }
 
     [Fact]
+    public void FrameDeletePreview_複製保留幀_摘要與可執行狀態應以複製項目計算()
+    {
+        var copyItem = PreviewItem(OperationActionKind.Copy);
+        var skippedItem = PreviewItem(OperationActionKind.Keep);
+        var sut = new FrameDeletePreviewViewModel([copyItem, skippedItem]);
+
+        sut.Summary.Should().Be("共 2 個項目，預計複製 1 個");
+        sut.HasExecutableItems.Should().BeTrue();
+    }
+
+    [Fact]
     public void RenamePreview_取消勾選改名項目_摘要與可執行狀態應同步更新()
     {
         var renameItem = PreviewItem(OperationActionKind.Rename);
@@ -56,6 +67,17 @@ public sealed class PreviewViewModelTests
 
         sut.Summary.Should().Be("共 0 個項目，預計改名 0 個");
         sut.HasExecutableItems.Should().BeFalse();
+        sut.HasErrors.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RenamePreview_複製改名項目_摘要與可執行狀態應以複製項目計算()
+    {
+        var copyItem = PreviewItem(OperationActionKind.Copy, targetName: @"D:\out\F_1.png");
+        var sut = new RenamePreviewViewModel([copyItem]);
+
+        sut.Summary.Should().Be("共 1 個項目，預計複製改名 1 個");
+        sut.HasExecutableItems.Should().BeTrue();
         sut.HasErrors.Should().BeFalse();
     }
 

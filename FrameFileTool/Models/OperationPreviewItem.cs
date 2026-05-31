@@ -34,6 +34,11 @@ public class OperationPreviewItem : INotifyPropertyChanged
     /// </summary>
     public string TargetName { get; init; } = string.Empty;
 
+    /// <summary>
+    /// executor 使用的完整目標路徑。空字串代表依既有規則由來源路徑與 TargetName 推導。
+    /// </summary>
+    public string TargetPath { get; init; } = string.Empty;
+
     /// <summary>操作狀態說明，供使用者確認計畫內容。</summary>
     public string Status { get; init; } = string.Empty;
 

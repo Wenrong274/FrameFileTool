@@ -20,6 +20,8 @@ public sealed class ResizePlanner : IResizePlanner
         // 優先驗證共用參數，有錯就讓全部項目標記錯誤
         var globalError = ValidateOptions(options);
 
+        var targetPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         return files
             .Select((file, index) =>
             {
@@ -37,9 +39,14 @@ public sealed class ResizePlanner : IResizePlanner
                 var status = BuildStatus(options);
                 var originalDimensions = file.Width > 0 ? $"{file.Width}×{file.Height}" : string.Empty;
                 var targetDimensions = BuildTargetDimensions(file, options);
-                var targetExists = TargetFileExists(file, options, existingPaths);
+                var chooseTargetFolderOnExecute = ShouldChooseTargetFolderOnExecute(options);
+                var targetPath = BuildTargetPath(file, options);
+                var hasDuplicateTarget = options.OutputMode == ResizeOutputMode.TargetFolder &&
+                    !chooseTargetFolderOnExecute &&
+                    !targetPaths.Add(targetPath);
+                var targetExists = TargetFileExists(targetPath, options, existingPaths);
 
-                if (targetExists)
+                if (hasDuplicateTarget || targetExists)
                 {
                     return new ResizePreviewItem
                     {
@@ -48,7 +55,8 @@ public sealed class ResizePlanner : IResizePlanner
                         OriginalName = file.Name,
                         ActionKind = OperationActionKind.Error,
                         TargetName = targetName,
-                        Status = "目標檔案已存在",
+                        TargetPath = targetPath,
+                        Status = hasDuplicateTarget ? "目標檔名重複" : "目標檔案已存在",
                         HasError = true,
                     };
                 }
@@ -60,6 +68,7 @@ public sealed class ResizePlanner : IResizePlanner
                     OriginalName = file.Name,
                     ActionKind = OperationActionKind.Resize,
                     TargetName = targetName,
+                    TargetPath = targetPath,
                     Status = status,
                     HasError = false,
                     OriginalDimensions = originalDimensions,
@@ -77,17 +86,11 @@ public sealed class ResizePlanner : IResizePlanner
     /// </summary>
     private static string? ValidateOptions(ResizeOptions options)
     {
-        // 子資料夾模式必須提供子資料夾名稱
-        if (options.OutputMode == ResizeOutputMode.Subfolder &&
-            string.IsNullOrWhiteSpace(options.SubfolderName))
+        if (options.OutputMode == ResizeOutputMode.TargetFolder &&
+            !ShouldChooseTargetFolderOnExecute(options) &&
+            !PathSafetyValidator.IsSafeTargetDirectoryPath(options.TargetFolderPath))
         {
-            return "子資料夾名稱不可為空";
-        }
-
-        if (options.OutputMode == ResizeOutputMode.Subfolder &&
-            !PathSafetyValidator.IsSafeSingleDirectoryName(options.SubfolderName))
-        {
-            return "子資料夾名稱不可包含路徑、上一層符號或不允許的字元";
+            return "目標資料夾路徑不安全";
         }
 
         return options.Mode switch
@@ -124,21 +127,29 @@ public sealed class ResizePlanner : IResizePlanner
     // ── 目標路徑建立 ─────────────────────────────────────────────
 
     private static string BuildTargetName(string originalName, ResizeOptions options) =>
-        options.OutputMode == ResizeOutputMode.Subfolder
-            ? Path.Combine(options.SubfolderName, originalName)
+        options.OutputMode == ResizeOutputMode.TargetFolder
+            ? ShouldChooseTargetFolderOnExecute(options)
+                ? "執行時選擇資料夾"
+                : Path.Combine(options.TargetFolderPath, originalName)
             : originalName;
 
+    private static string BuildTargetPath(FileItem file, ResizeOptions options) =>
+        options.OutputMode == ResizeOutputMode.TargetFolder
+            ? ShouldChooseTargetFolderOnExecute(options)
+                ? string.Empty
+                : Path.Combine(options.TargetFolderPath, file.Name)
+            : file.FullPath;
+
     private static bool TargetFileExists(
-        FileItem file,
+        string targetPath,
         ResizeOptions options,
         IReadOnlySet<string>? existingPaths)
     {
-        if (options.OutputMode != ResizeOutputMode.Subfolder)
+        if (options.OutputMode != ResizeOutputMode.TargetFolder || ShouldChooseTargetFolderOnExecute(options))
         {
             return false;
         }
 
-        var targetPath = Path.Combine(file.DirectoryPath, options.SubfolderName, file.Name);
         return existingPaths?.Contains(targetPath) ?? false;
     }
 
@@ -233,6 +244,10 @@ public sealed class ResizePlanner : IResizePlanner
 
     private static string FormatScaleFactor(double factor) =>
         factor.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private static bool ShouldChooseTargetFolderOnExecute(ResizeOptions options) =>
+        options.OutputMode == ResizeOutputMode.TargetFolder &&
+        string.IsNullOrWhiteSpace(options.TargetFolderPath);
 
     // ── 輔助：建立錯誤項目 ───────────────────────────────────────
 

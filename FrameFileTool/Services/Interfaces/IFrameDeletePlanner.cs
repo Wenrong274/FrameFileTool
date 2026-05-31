@@ -8,4 +8,11 @@ namespace FrameFileTool.Services.Interfaces;
 public interface IFrameDeletePlanner
 {
     public IReadOnlyList<OperationPreviewItem> Plan(IReadOnlyList<FileItem> files, int interval);
+
+    public IReadOnlyList<OperationPreviewItem> Plan(
+        IReadOnlyList<FileItem> files,
+        int interval,
+        FrameDeleteOutputMode outputMode,
+        string targetFolderPath,
+        IReadOnlySet<string>? existingPaths = null);
 }

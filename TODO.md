@@ -28,57 +28,6 @@
 
 ## 近期功能計劃
 
-### 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
-
-ID：`output-folder`
-優先度：中
-分支：feat/output-folder（開始時建立）
-前置條件：`checkbox` 已完成（已於 [DONE.md](./DONE.md) 歸檔）
-被依賴：無
-
-⚠ 影響範圍：`FrameDeletePlanner` / `RenamePlanner` / `ResizePlanner` / `ResizeOptions` /
-`ResizeOutputMode` → 對應 executor → MainViewModel → 三個操作面板 View
-
-⚠ 邊界案例：目標資料夾路徑含非法字元、目標資料夾不存在、同名檔案輸出至同一資料夾
-
-⚠ 待確認：目標資料夾不存在時，執行前自動建立，還是顯示錯誤並停用執行按鈕？（完成判定第二條預設為自動建立，需確認後同步子任務）
-
-#### 抽幀刪除
-
-- [ ] [Model] 新增或擴充輸出模式，加入「複製保留幀到指定資料夾」選項。
-- [ ] [Service] 調整 `FrameDeletePlanner`：檢查指定資料夾路徑是否合法，偵測目標衝突。
-- [ ] [Test] 補上 `FrameDeletePlannerTests`：合法路徑、非法路徑、目標衝突的測試。
-- [ ] [Service] 調整 `FileOperationExecutor`：支援複製保留幀到指定資料夾的執行路徑，目標資料夾不存在時自動建立。
-- [ ] [Test] 補上 executor 指定資料夾路徑的測試：正常執行、建立資料夾、衝突處理。
-- [ ] [View] 抽幀刪除操作面板加入輸出資料夾選項與選擇按鈕。
-
-#### 批次改名
-
-- [ ] [Model] 新增或擴充輸出模式，加入「複製改名到指定資料夾」選項。
-- [ ] [Service] 調整 `RenamePlanner`：檢查指定資料夾路徑是否合法，偵測目標衝突。
-- [ ] [Test] 補上 `RenamePlannerTests`：合法路徑、非法路徑、目標衝突的測試。
-- [ ] [Service] 調整 `FileOperationExecutor`：支援複製改名到指定資料夾的執行路徑，目標資料夾不存在時自動建立。
-- [ ] [Test] 補上 executor 指定資料夾路徑的測試。
-- [ ] [View] 批次改名操作面板加入輸出資料夾選項與選擇按鈕。
-
-#### 批次縮放
-
-- [ ] [Model] 擴充 `ResizeOutputMode`，加入指定資料夾輸出模式。
-- [ ] [Model] 擴充 `ResizeOptions`，加入指定輸出資料夾路徑欄位。
-- [ ] [Service] 調整 `ResizePlanner`：檢查指定資料夾路徑是否合法，偵測同名衝突。
-- [ ] [Test] 補上 `ResizePlannerTests`：合法路徑、非法路徑、同名衝突的測試。
-- [ ] [Service] 調整 `ImageResizeExecutor`：輸出到指定資料夾，目標資料夾不存在時自動建立。
-- [ ] [Test] 補上 `ImageResizeExecutorTests` 指定資料夾路徑的測試。
-- [ ] [MainViewModel] 指定資料夾路徑變更時使既有預覽失效。
-- [ ] [View] 批次縮放輸出位置加入「指定資料夾」選項與選擇按鈕。
-
-完成判定：
-
-- [ ] [正常路徑] 三個工具均可選擇指定輸出資料夾並產生對應預覽。
-- [ ] [邊界] 目標資料夾不存在時，執行前自動建立；建立失敗時 log 記錄錯誤且該項目標記失敗。
-- [ ] [錯誤狀態] 目標檔已存在或同名衝突時，預覽標示錯誤且執行按鈕停用。
-- [ ] [一致性] 批次縮放：覆寫原檔、另存子資料夾、指定資料夾三種輸出模式都維持可用。
-
 ### 自動檢查 GitHub 發布更新與橫幅通知
 
 ID：`auto-update-check`

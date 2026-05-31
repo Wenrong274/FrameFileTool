@@ -84,6 +84,7 @@ public sealed class MainViewModelScanTests
             Substitute.For<IFolderPickerService>(),
             Substitute.For<IImageResizeExecutor>(),
             Substitute.For<IResizePreviewService>(),
+            Substitute.For<IFileExistenceService>(),
             Substitute.For<IFileImportService>());
 
         sut.SelectedFolder = @"C:\imgs";
@@ -109,5 +110,6 @@ public sealed class MainViewModelScanTests
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
+        Substitute.For<IFileExistenceService>(),
         Substitute.For<IFileImportService>());
 }
