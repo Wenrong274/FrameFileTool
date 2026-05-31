@@ -44,6 +44,18 @@
 dotnet run --project .\FrameFileTool\FrameFileTool.csproj
 ```
 
+## 下載執行檔
+
+從 [Releases](https://github.com/Wenrong274/FrameFileTool/releases) 下載最新版的 zip，
+解壓縮後執行 `FrameFileTool.exe`。
+
+> **Windows SmartScreen 警告**
+>
+> 首次執行時 Windows 可能顯示「Microsoft Defender SmartScreen 已防止某個無法辨識的應用程式啟動」。
+> 這是因為執行檔尚未取得數位簽章，屬正常現象。
+>
+> 繞過方式：點選「**其他資訊**」→ 再點「**仍要執行**」即可正常啟動。
+
 ## 測試
 
 ```powershell
