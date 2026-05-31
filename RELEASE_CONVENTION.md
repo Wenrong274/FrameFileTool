@@ -48,6 +48,9 @@
    git push origin v1.2.0
 ```
 
+Release workflow 會以 tag 去除 `v` 後的版本號寫入 assembly、file 與 informational version，
+供應用程式啟動時比對 GitHub 最新發布版本。
+
 ### Hotfix 版本（緊急修補）
 
 ```text
