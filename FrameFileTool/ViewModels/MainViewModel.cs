@@ -954,19 +954,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        var targetPaths = files.Select(file =>
-        {
-            folderCounters.TryGetValue(file.DirectoryPath, out var folderIndex);
-            folderCounters[file.DirectoryPath] = folderIndex + 1;
-
-            var number = RenameStartIndex + folderIndex;
-            var numberText = RenamePadding > 0
-                ? number.ToString().PadLeft(RenamePadding, '0')
-                : number.ToString();
-
-            return Path.Combine(targetFolderPath, $"{RenamePrefix}{numberText}{file.Extension}");
-        });
+        var targetPaths = _renamePlanner.ProjectTargetPaths(
+            files, RenamePrefix, RenameStartIndex, RenamePadding, targetFolderPath);
 
         return _fileExistenceService.GetExistingPaths(targetPaths);
     }

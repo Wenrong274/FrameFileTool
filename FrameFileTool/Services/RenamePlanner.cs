@@ -126,6 +126,27 @@ public sealed class RenamePlanner : IRenamePlanner
         return plannedItems;
     }
 
+    /// <inheritdoc/>
+    public IEnumerable<string> ProjectTargetPaths(
+        IReadOnlyList<FileItem> files,
+        string prefix,
+        int startIndex,
+        int padding,
+        string targetFolderPath)
+    {
+        var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        return files.Select(file =>
+        {
+            folderCounters.TryGetValue(file.DirectoryPath, out var folderIndex);
+            folderCounters[file.DirectoryPath] = folderIndex + 1;
+            var number = startIndex + folderIndex;
+            var numberText = padding > 0
+                ? number.ToString().PadLeft(padding, '0')
+                : number.ToString();
+            return Path.Combine(targetFolderPath, $"{prefix}{numberText}{file.Extension}");
+        });
+    }
+
     /// <summary>依衝突類型決定狀態說明文字。</summary>
     private static string DetermineStatus(
         bool hasDuplicateTarget,

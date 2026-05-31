@@ -229,4 +229,64 @@ public sealed class RenamePlannerTests
 
         result.Select(i => i.Index).Should().BeEquivalentTo([1, 2, 3, 4]);
     }
+
+    // ---- ProjectTargetPaths ----
+
+    [Fact]
+    public void ProjectTargetPaths_空清單_應回傳空序列()
+    {
+        var result = _sut.ProjectTargetPaths([], prefix: "F_", startIndex: 0, padding: 0, targetFolderPath: @"C:\out");
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ProjectTargetPaths_單檔無補零_路徑應與Plan一致()
+    {
+        var files = new[] { MakeFile("a.png") };
+
+        var projected = _sut.ProjectTargetPaths(files, "F_", startIndex: 0, padding: 0, @"C:\out").ToList();
+        var planned = _sut.Plan(files, "F_", startIndex: 0, padding: 0,
+            outputMode: RenameOutputMode.CopyToTargetFolder, targetFolderPath: @"C:\out");
+
+        projected.Should().ContainSingle().Which.Should().Be(planned[0].TargetPath);
+    }
+
+    [Fact]
+    public void ProjectTargetPaths_多檔有補零_路徑應與Plan一致()
+    {
+        var files = new[]
+        {
+            MakeFile("a.png"),
+            MakeFile("b.png"),
+            MakeFile("c.png"),
+        };
+
+        var projected = _sut.ProjectTargetPaths(files, "Sym_", startIndex: 1, padding: 3, @"C:\out").ToList();
+        var planned = _sut.Plan(files, "Sym_", startIndex: 1, padding: 3,
+            outputMode: RenameOutputMode.CopyToTargetFolder, targetFolderPath: @"C:\out");
+
+        projected.Should().Equal(planned.Select(p => p.TargetPath));
+    }
+
+    [Fact]
+    public void ProjectTargetPaths_多個子資料夾_每個資料夾各自從startIndex計數()
+    {
+        var files = new[]
+        {
+            MakeFile("a.png", @"C:\imgs\folderA"),
+            MakeFile("b.png", @"C:\imgs\folderB"),
+            MakeFile("c.png", @"C:\imgs\folderA"),
+        };
+
+        var result = _sut.ProjectTargetPaths(files, "F_", startIndex: 0, padding: 0, @"C:\out").ToList();
+
+        // folderA: index 0 → F_0.png, index 1 → F_1.png；folderB: index 0 → F_0.png
+        result.Should().Equal(
+        [
+            @"C:\out\F_0.png",
+            @"C:\out\F_0.png",
+            @"C:\out\F_1.png",
+        ]);
+    }
 }

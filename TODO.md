@@ -43,13 +43,13 @@ ID：`rename-planner-project-paths`
 ⚠ 邊界案例：`targetFolderPath` 為空時應回傳空集合（不呼叫 ProjectTargetPaths）；
 多個子資料夾各自獨立計數行為必須與 Plan() 完全一致
 
-- [ ] [Service] 在 `IRenamePlanner` 新增 `ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)`
+- [x] [Service] 在 `IRenamePlanner` 新增 `ProjectTargetPaths(files, prefix, startIndex, padding, targetFolderPath)`
       介面方法，回傳 `IEnumerable<string>`。
-- [ ] [Service] 在 `RenamePlanner` 實作 `ProjectTargetPaths`，
+- [x] [Service] 在 `RenamePlanner` 實作 `ProjectTargetPaths`，
       將 `Plan()` 的逐資料夾計數與目標路徑公式提取至此方法，兩處共用同一邏輯。
-- [ ] [Test] 補上 `RenamePlannerTests.ProjectTargetPaths_*`：
+- [x] [Test] 補上 `RenamePlannerTests.ProjectTargetPaths_*`：
       單檔無補零、多檔有補零、多個子資料夾各自獨立計數、空清單回傳空序列。
-- [ ] [ViewModel] `MainViewModel.GetExistingRenameTargetPaths()` 改為
+- [x] [ViewModel] `MainViewModel.GetExistingRenameTargetPaths()` 改為
       呼叫 `_renamePlanner.ProjectTargetPaths(...)`，移除重複的計數與命名邏輯。
 
 完成判定：

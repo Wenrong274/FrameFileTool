@@ -15,4 +15,15 @@ public interface IRenamePlanner
         IReadOnlySet<string>? existingPaths = null,
         RenameOutputMode outputMode = RenameOutputMode.RenameInPlace,
         string targetFolderPath = "");
+
+    /// <summary>
+    /// 依相同的逐資料夾計數與命名公式，計算每個檔案的目標完整路徑，
+    /// 供呼叫端用於執行前的目標檔案存在性查詢。
+    /// </summary>
+    public IEnumerable<string> ProjectTargetPaths(
+        IReadOnlyList<FileItem> files,
+        string prefix,
+        int startIndex,
+        int padding,
+        string targetFolderPath);
 }
