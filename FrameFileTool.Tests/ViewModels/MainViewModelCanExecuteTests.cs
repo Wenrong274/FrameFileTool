@@ -39,6 +39,8 @@ public sealed class MainViewModelCanExecuteTests
         resizePreviewService ?? Substitute.For<IResizePreviewService>(),
         fileExistenceService ?? Substitute.For<IFileExistenceService>(),
         Substitute.For<IFileImportService>(),
+        Substitute.For<IUpdateService>(),
+        Substitute.For<IExternalLinkService>(),
         debounceDelay);
     }
 

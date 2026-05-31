@@ -88,7 +88,6 @@ public sealed class MainViewModelUpdateCheckTests
             Substitute.For<IResizePreviewService>(),
             Substitute.For<IFileExistenceService>(),
             Substitute.For<IFileImportService>(),
-            TimeSpan.Zero,
             updateService,
             externalLinkService ?? Substitute.For<IExternalLinkService>());
     }

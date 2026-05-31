@@ -85,7 +85,9 @@ public sealed class MainViewModelScanTests
             Substitute.For<IImageResizeExecutor>(),
             Substitute.For<IResizePreviewService>(),
             Substitute.For<IFileExistenceService>(),
-            Substitute.For<IFileImportService>());
+            Substitute.For<IFileImportService>(),
+            Substitute.For<IUpdateService>(),
+            Substitute.For<IExternalLinkService>());
 
         sut.SelectedFolder = @"C:\imgs";
         sut.ScanFilesCommand.Execute(null);
@@ -111,5 +113,7 @@ public sealed class MainViewModelScanTests
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
         Substitute.For<IFileExistenceService>(),
-        Substitute.For<IFileImportService>());
+        Substitute.For<IFileImportService>(),
+        Substitute.For<IUpdateService>(),
+        Substitute.For<IExternalLinkService>());
 }

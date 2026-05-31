@@ -33,7 +33,7 @@ public partial class App : WpfApplication
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
         services.AddSingleton<IImageDimensionReader, ImageDimensionReader>();
         services.AddSingleton<IFileExistenceService, FileExistenceService>();
-        services.AddSingleton(new HttpClient
+        services.AddSingleton<HttpClient>(_ => new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(5),
         });

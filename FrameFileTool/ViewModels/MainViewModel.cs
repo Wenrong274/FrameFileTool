@@ -31,8 +31,8 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IResizePreviewService _resizePreviewService;
     private readonly IFileExistenceService _fileExistenceService;
     private readonly IFileImportService _fileImportService;
-    private readonly IUpdateService? _updateService;
-    private readonly IExternalLinkService? _externalLinkService;
+    private readonly IUpdateService _updateService;
+    private readonly IExternalLinkService _externalLinkService;
     private bool _isUpdateBannerDismissed;
 
     // ── 掃描選項 ──────────────────────────────────────────────
@@ -242,9 +242,9 @@ public sealed partial class MainViewModel : ObservableObject
         IResizePreviewService resizePreviewService,
         IFileExistenceService fileExistenceService,
         IFileImportService fileImportService,
-        TimeSpan debounceDelay = default,
-        IUpdateService? updateService = null,
-        IExternalLinkService? externalLinkService = null)
+        IUpdateService updateService,
+        IExternalLinkService externalLinkService,
+        TimeSpan debounceDelay = default)
     {
         _scanner = scanner;
         _frameDeletePlanner = frameDeletePlanner;
@@ -735,15 +735,8 @@ public sealed partial class MainViewModel : ObservableObject
     private void ToggleLog() => IsLogExpanded = !IsLogExpanded;
 
     [RelayCommand(CanExecute = nameof(CanGoToDownloadPage))]
-    private void GoToDownloadPage()
-    {
-        if (!CanGoToDownloadPage())
-        {
-            return;
-        }
-
-        _externalLinkService?.Open(LatestReleaseUrl);
-    }
+    private void GoToDownloadPage() =>
+        _externalLinkService.Open(LatestReleaseUrl);
 
     [RelayCommand]
     private void DismissUpdateBanner()
@@ -752,8 +745,6 @@ public sealed partial class MainViewModel : ObservableObject
         IsUpdateAvailable = false;
         GoToDownloadPageCommand.NotifyCanExecuteChanged();
     }
-
-    // ── 預覽失效管理 ──────────────────────────────────────────
 
     // ── 預覽失效管理 ──────────────────────────────────────────
 
@@ -996,15 +987,8 @@ public sealed partial class MainViewModel : ObservableObject
     private bool CanGoToDownloadPage() =>
         IsUpdateAvailable && !string.IsNullOrWhiteSpace(LatestReleaseUrl);
 
-    private void StartUpdateCheck()
-    {
-        if (_updateService is null)
-        {
-            return;
-        }
-
+    private void StartUpdateCheck() =>
         UpdateCheckTask = RunUpdateCheckAsync(_updateService);
-    }
 
     private async Task RunUpdateCheckAsync(IUpdateService updateService)
     {

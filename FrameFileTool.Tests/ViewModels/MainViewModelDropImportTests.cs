@@ -152,5 +152,7 @@ public sealed class MainViewModelDropImportTests
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
         Substitute.For<IFileExistenceService>(),
-        importService);
+        importService,
+        Substitute.For<IUpdateService>(),
+        Substitute.For<IExternalLinkService>());
 }
