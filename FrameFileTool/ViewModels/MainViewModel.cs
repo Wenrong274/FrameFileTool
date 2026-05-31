@@ -29,7 +29,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IFolderPickerService _folderPicker;
     private readonly IImageResizeExecutor _resizeExecutor;
     private readonly IResizePreviewService _resizePreviewService;
+    private readonly IDenoisePreviewService _denoisePreviewService;
     private readonly IFileExistenceService _fileExistenceService;
+    private CancellationTokenSource? _denoisePreviewCts;
     private readonly IFileImportService _fileImportService;
     private readonly IUpdateService _updateService;
     private readonly IExternalLinkService _externalLinkService;
@@ -99,7 +101,33 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private ResamplerType _selectedResampler = ResamplerType.Bicubic;
 
     [ObservableProperty]
-    private bool _denoiseEnabled;
+    [NotifyPropertyChangedFor(nameof(SelectedDenoiseModeHint))]
+    [NotifyCanExecuteChangedFor(nameof(GenerateDenoisePreviewCommand))]
+    private DenoiseMode _selectedDenoiseMode = DenoiseMode.Off;
+
+    // 降噪局部預覽狀態
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GenerateDenoisePreviewCommand))]
+    private bool _isGeneratingDenoisePreview;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDenoisePreviewError))]
+    private string _denoisePreviewErrorMessage = string.Empty;
+
+    public bool HasDenoisePreviewError => !string.IsNullOrEmpty(DenoisePreviewErrorMessage);
+
+    /// <summary>降噪預覽產生成功時觸發，供 View 自動開啟比較視窗。</summary>
+    public event Action<DenoisePreviewResult>? DenoisePreviewGenerated;
+
+    /// <summary>依選取的降噪模式顯示對應的使用建議說明，供 UI HintText 繫結。</summary>
+    public string SelectedDenoiseModeHint => SelectedDenoiseMode switch
+    {
+        DenoiseMode.Off => "不套用任何降噪",
+        DenoiseMode.Detail => "輕度 Wavelet 降噪，保留邊緣與細節",
+        DenoiseMode.Standard => "中度降噪，平衡顆粒消除與細節保留",
+        DenoiseMode.Strong => "強力降噪，顆粒明顯降低；影像可能偏柔和，建議先產生預覽確認",
+        _ => string.Empty,
+    };
 
     // ── 改名設定 ──────────────────────────────────────────────
 
@@ -244,6 +272,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         IFolderPickerService folderPicker,
         IImageResizeExecutor resizeExecutor,
         IResizePreviewService resizePreviewService,
+        IDenoisePreviewService denoisePreviewService,
         IFileExistenceService fileExistenceService,
         IFileImportService fileImportService,
         IUpdateService updateService,
@@ -257,6 +286,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _folderPicker = folderPicker;
         _resizeExecutor = resizeExecutor;
         _resizePreviewService = resizePreviewService;
+        _denoisePreviewService = denoisePreviewService;
         _fileExistenceService = fileExistenceService;
         _fileImportService = fileImportService;
         _updateService = updateService;
@@ -273,6 +303,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>縮放演算法選項清單，供 ComboBox 繫結。</summary>
     public IReadOnlyList<ResamplerType> ResamplerOptions { get; } =
         Enum.GetValues<ResamplerType>().ToList();
+
+    /// <summary>降噪模式選項清單，供 ComboBox 繫結。</summary>
+    public IReadOnlyList<DenoiseMode> DenoiseModeOptions { get; } =
+        Enum.GetValues<DenoiseMode>().ToList();
 
     /// <summary>操作 log，最新訊息在最上方。</summary>
     public ObservableCollection<string> Logs { get; } = [];
@@ -696,6 +730,52 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         AddLog("正在取消縮放…");
     }
 
+    [RelayCommand(CanExecute = nameof(CanGenerateDenoisePreview))]
+    private async Task GenerateDenoisePreview()
+    {
+        var sourceFile = Files.FirstOrDefault();
+        if (sourceFile is null)
+            return;
+
+        _denoisePreviewCts?.Cancel();
+        _denoisePreviewCts?.Dispose();
+        _denoisePreviewCts = new CancellationTokenSource();
+        var cts = _denoisePreviewCts;
+
+        IsGeneratingDenoisePreview = true;
+        DenoisePreviewErrorMessage = string.Empty;
+
+        try
+        {
+            var modes = new[] { DenoiseMode.Detail, DenoiseMode.Standard, DenoiseMode.Strong };
+            var result = await _denoisePreviewService.GeneratePreviewAsync(
+                sourceFile.FullPath, modes, cts.Token);
+
+            if (cts.IsCancellationRequested)
+                return;
+
+            if (result.HasError)
+            {
+                DenoisePreviewErrorMessage = result.ErrorMessage!;
+            }
+            else
+            {
+                DenoisePreviewGenerated?.Invoke(result);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (!cts.IsCancellationRequested)
+                IsGeneratingDenoisePreview = false;
+        }
+    }
+
+    private bool CanGenerateDenoisePreview() =>
+        !IsGeneratingDenoisePreview && Files.Count > 0;
+
     [RelayCommand]
     private void ClearLog() => Logs.Clear();
 
@@ -798,7 +878,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreviewFor(PreviewTool.Resize);
 
-    partial void OnDenoiseEnabledChanged(bool value) => InvalidatePreviewFor(PreviewTool.Resize);
+    partial void OnSelectedDenoiseModeChanged(DenoiseMode value) => InvalidatePreviewFor(PreviewTool.Resize);
 
     partial void OnRenamePrefixChanged(string value) => InvalidatePreviewFor(PreviewTool.Rename);
 
@@ -1024,6 +1104,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         _updateCheckCts.Cancel();
         _updateCheckCts.Dispose();
+        _denoisePreviewCts?.Cancel();
+        _denoisePreviewCts?.Dispose();
     }
 
     partial void OnCurrentPreviewChanged(IPreviewViewModel? oldValue, IPreviewViewModel? newValue)
@@ -1064,7 +1146,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             OutputMode: ResizeOutputMode,
             TargetFolderPath: string.Empty,
             Resampler: SelectedResampler,
-            DenoiseEnabled: DenoiseEnabled);
+            DenoiseMode: SelectedDenoiseMode);
 
     /// <summary>將訊息插入 log 最上方，附上時間戳記。</summary>
     private void AddLog(string message) =>
@@ -1092,5 +1174,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         ExecuteRenameCommand.NotifyCanExecuteChanged();
         ExecuteResizeCommand.NotifyCanExecuteChanged();
         CancelResizeCommand.NotifyCanExecuteChanged();
+        GenerateDenoisePreviewCommand.NotifyCanExecuteChanged();
     }
 }

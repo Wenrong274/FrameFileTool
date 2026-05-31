@@ -428,9 +428,41 @@
                                 <TextBlock Text="{Binding ResamplerHint}"
                                            Style="{StaticResource HintText}" />
 
-                                <CheckBox Content="降低像素噪點"
-                                          IsChecked="{Binding DenoiseEnabled}"
-                                          Margin="0,4,0,8" />
+                                <!-- 降噪模式 -->
+                                <TextBlock Text="降噪模式"
+                                           Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding DenoiseModeOptions}"
+                                          SelectedItem="{Binding SelectedDenoiseMode}"
+                                          Margin="0,2,0,2"
+                                          Height="32">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource DenoiseModeDisplayNameConverter}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Text="{Binding SelectedDenoiseModeHint}"
+                                           Style="{StaticResource HintText}" />
+
+                                <!-- 放大比較 -->
+                                <Button Content="放大比較"
+                                        Command="{Binding GenerateDenoisePreviewCommand}"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,0,0,4" />
+                                <TextBlock Text="產生預覽中…"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Visibility="{Binding IsGeneratingDenoisePreview,
+                                               Converter={StaticResource BoolToVis}}"
+                                           Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding DenoisePreviewErrorMessage}"
+                                           FontSize="11"
+                                           Foreground="{StaticResource DangerBrush}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="{Binding DenoisePreviewErrorMessage}"
+                                           Visibility="{Binding HasDenoisePreviewError,
+                                               Converter={StaticResource BoolToVis}}"
+                                           Margin="0,0,0,4" />
 
                                 <!-- 執行按鈕 -->
                                 <Button Content="執行縮放"

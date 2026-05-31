@@ -1,14 +1,20 @@
+using System.IO;
 using System.Windows;
+using System.Windows.Media.Imaging;
+using FrameFileTool.Models;
 using FrameFileTool.ViewModels;
 
 namespace FrameFileTool;
 
 public partial class MainWindow : Window
 {
+    private DenoiseCompareWindow? _denoiseCompareWindow;
+
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
+        viewModel.DenoisePreviewGenerated += OpenDenoiseCompareWindow;
     }
 
     private void PreviewDropTarget_DragEnter(object sender, System.Windows.DragEventArgs e) =>
@@ -60,6 +66,34 @@ public partial class MainWindow : Window
         e.Effects = canDrop ? System.Windows.DragDropEffects.Copy : System.Windows.DragDropEffects.None;
         viewModel.IsPreviewDropTargetActive = isActive && canDrop;
         e.Handled = true;
+    }
+
+    private void OpenDenoiseCompareWindow(DenoisePreviewResult result)
+    {
+        _denoiseCompareWindow?.Close();
+        _denoiseCompareWindow = new DenoiseCompareWindow(
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Detail)),
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Standard)),
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Strong)))
+        {
+            Owner = this,
+        };
+        _denoiseCompareWindow.Show();
+    }
+
+    private static System.Windows.Media.Imaging.BitmapSource? ToBitmapSource(byte[]? data)
+    {
+        if (data is null)
+            return null;
+
+        using var stream = new MemoryStream(data);
+        var bi = new BitmapImage();
+        bi.BeginInit();
+        bi.StreamSource = stream;
+        bi.CacheOption = BitmapCacheOption.OnLoad;
+        bi.EndInit();
+        bi.Freeze();
+        return bi;
     }
 
     private static string[] GetDroppedPaths(System.Windows.DragEventArgs e) =>
