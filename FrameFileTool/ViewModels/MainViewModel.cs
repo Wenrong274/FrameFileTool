@@ -102,7 +102,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private ResamplerType _selectedResampler = ResamplerType.Bicubic;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStrongDenoiseModeSelected))]
+    [NotifyPropertyChangedFor(nameof(SelectedDenoiseModeHint))]
     [NotifyCanExecuteChangedFor(nameof(GenerateDenoisePreviewCommand))]
     private DenoiseMode _selectedDenoiseMode = DenoiseMode.Off;
 
@@ -125,7 +125,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         DenoisePreviewStandard is not null ||
         DenoisePreviewStrong is not null;
 
-    public bool IsStrongDenoiseModeSelected => SelectedDenoiseMode == DenoiseMode.Strong;
+    public bool ShowDenoisePreviewPlaceholder => !HasDenoisePreview;
+
+    /// <summary>依選取的降噪模式顯示對應的使用建議說明，供 UI HintText 繫結。</summary>
+    public string SelectedDenoiseModeHint => SelectedDenoiseMode switch
+    {
+        DenoiseMode.Off => "不套用任何降噪",
+        DenoiseMode.Detail => "輕度 Wavelet 降噪，保留邊緣與細節",
+        DenoiseMode.Standard => "中度降噪，平衡顆粒消除與細節保留",
+        DenoiseMode.Strong => "強力降噪，顆粒明顯降低；影像可能偏柔和，建議先產生預覽確認",
+        _ => string.Empty,
+    };
 
     // ── 改名設定 ──────────────────────────────────────────────
 
@@ -301,6 +311,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>縮放演算法選項清單，供 ComboBox 繫結。</summary>
     public IReadOnlyList<ResamplerType> ResamplerOptions { get; } =
         Enum.GetValues<ResamplerType>().ToList();
+
+    /// <summary>降噪模式選項清單，供 ComboBox 繫結。</summary>
+    public IReadOnlyList<DenoiseMode> DenoiseModeOptions { get; } =
+        Enum.GetValues<DenoiseMode>().ToList();
 
     /// <summary>操作 log，最新訊息在最上方。</summary>
     public ObservableCollection<string> Logs { get; } = [];
@@ -762,6 +776,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 OnPropertyChanged(nameof(DenoisePreviewStandard));
                 OnPropertyChanged(nameof(DenoisePreviewStrong));
                 OnPropertyChanged(nameof(HasDenoisePreview));
+                OnPropertyChanged(nameof(ShowDenoisePreviewPlaceholder));
             }
         }
         catch (OperationCanceledException)
