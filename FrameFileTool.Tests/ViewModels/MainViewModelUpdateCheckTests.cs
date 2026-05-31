@@ -86,6 +86,7 @@ public sealed class MainViewModelUpdateCheckTests
             Substitute.For<IFolderPickerService>(),
             Substitute.For<IImageResizeExecutor>(),
             Substitute.For<IResizePreviewService>(),
+            Substitute.For<IDenoisePreviewService>(),
             Substitute.For<IFileExistenceService>(),
             Substitute.For<IFileImportService>(),
             updateService,

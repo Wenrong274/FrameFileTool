@@ -13,4 +13,4 @@ public sealed record ResizeOptions(
     ResizeOutputMode OutputMode,
     string TargetFolderPath,
     ResamplerType Resampler,
-    bool DenoiseEnabled = false);
+    DenoiseMode DenoiseMode = DenoiseMode.Off);

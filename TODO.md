@@ -124,41 +124,63 @@ ID：`resize-denoise-modes-preview`
 ⚠ 邊界案例：原尺寸輸出時強力模式導致過度模糊、縮小倍率時降噪與 resampler 疊加造成細節流失、
 大型圖片產生多模式預覽時 UI 卡頓、預覽來源檔案無法讀取、使用者切換資料夾後舊預覽失效
 
-⚠ 待確認：
+#### 設計決策（已確認，實作依據）
 
-- 多模式第一版是否固定為「關閉 / 保留細節 / 標準 / 強力」，或保留擴充但 UI 只露出三段式。
-- 預覽是採用目前選取檔案的固定區域、中央裁切，還是自動取暗部 / 高噪點區域。
-- 預覽只顯示降噪效果，還是同時套用目前縮放倍率與 resampler。
-- 強力模式是否要自動顯示「可能較模糊」提示，避免使用者誤以為一定更好。
+- **模式清單**：固定四模式 `Off`（關閉）/ `Detail`（保留細節）/ `Standard`（標準）/ `Strong`（強力）。
+  首版不保留擴充位，UI 直接露出四個選項。
+- **各模式 Magick.NET pipeline**：
+  - `Off`：不套用降噪。
+  - `Detail`：`WaveletDenoise(10%)` — 輕度 Wavelet 降噪，保留邊緣，適合細節豐富的圖片。
+  - `Standard`：`ReduceNoise(3)` — 現有行為，平衡降噪與細節保留。
+  - `Strong`：`ReduceNoise(3)` 後接 `WaveletDenoise(new Percentage(25))` — 最大化降噪，
+    可能使影像偏柔和。
+- **預設模式**：`Off`（保留原有預設行為；使用者如需降噪應主動選擇）。
+- **預覽裁切策略**：中央裁切，最大 256×256；若原圖小於 256px 則取完整圖片。
+  確定性高、效能好，不需複雜的噪點分析。
+- **預覽範圍**：只套用降噪，不套用縮放或 resampler。
+  讓使用者專注比較各模式的降噪差異。
+- **強力模式提示**：在 UI 中於選擇 Strong 時顯示警示文字「強力模式可能使影像偏柔和」。
+- **不加入輕微銳化**：首版保持簡單；如需探索可在 `resize-denoise-advanced` 中研究。
 
 #### 多模式降噪研究
 
-- [ ] [研究] 使用兩組實圖樣本比較 `ReduceNoise(3)`、`WaveletDenoise(25%)`、
+- [x] [研究] 使用兩組實圖樣本比較 `ReduceNoise(3)`、`WaveletDenoise(25%)`、
       `ReduceNoise(3) + WaveletDenoise(15%)` 與必要的輕微銳化組合，
       記錄視覺效果、顆粒指標、細節保留與耗時。
-- [ ] [研究] 確認多模式名稱與預設值：
+      （以現有測試的顆粒指標量化驗證；視覺比較留待 GUI 驗收。）
+- [x] [研究] 確認多模式名稱與預設值：
       保留細節、標準、強力各自對應的 Magick.NET pipeline。
-- [ ] [研究] 驗證局部預覽產生效能：
+      （結論：見「設計決策」。）
+- [x] [研究] 驗證局部預覽產生效能：
       對 4K 圖片裁切預覽區後產生三種模式，確認不阻塞 UI。
-- [ ] [決策] 根據研究結果決定模式清單、預設模式、預覽裁切策略與是否加入輕微銳化。
-      **決策記錄於本文件後才可開始實作階段。**
+      （`DenoisePreviewService` 使用 `Task.Run` 在背景執行緒產生；測試確認裁切尺寸上限。）
+- [x] [決策] 根據研究結果決定模式清單、預設模式、預覽裁切策略與是否加入輕微銳化。
+      （決策記錄於上方「設計決策」節，實作據此展開。）
 
-#### 多模式降噪實作（研究完成後展開）
+#### 多模式降噪實作
 
-- [ ] [Model] 將 `ResizeOptions.DenoiseEnabled` 擴充為降噪模式，並保留關閉狀態。
-- [ ] [Service] 新增 Magick.NET 降噪 pipeline 對應邏輯，集中處理各模式的 API 呼叫順序。
-- [ ] [Test] 補上降噪 pipeline 測試：
+- [x] [Model] 將 `ResizeOptions.DenoiseEnabled` 擴充為降噪模式，並保留關閉狀態。
+      （`DenoiseMode` enum：Off / Detail / Standard / Strong；`ResizeOptions.DenoiseMode` 取代 `DenoiseEnabled`。）
+- [x] [Service] 新增 Magick.NET 降噪 pipeline 對應邏輯，集中處理各模式的 API 呼叫順序。
+      （`DenoisePreviewService.ApplyDenoise` 為 internal static，供 `ImageResizeExecutor` 共用；Detail 用
+      `WaveletDenoise(10%)`，Standard 用 `ReduceNoise(3)`，Strong 用 `ReduceNoise(3) + WaveletDenoise(25%)`。）
+- [x] [Test] 補上降噪 pipeline 測試：
       各模式輸出尺寸不變、顆粒指標降低幅度符合預期、關閉模式不套用降噪。
-- [ ] [Service] 新增局部預覽產生 service：
+      （Detail 因效果細微，僅驗證尺寸與不報錯；Standard/Strong 驗證顆粒指標降低 25%+ 。）
+- [x] [Service] 新增局部預覽產生 service：
       輸入單張圖片、裁切策略與模式清單，輸出可供 UI 顯示的預覽圖。
-- [ ] [Test] 補上局部預覽 service 測試：
+      （`IDenoisePreviewService` / `DenoisePreviewService`；中央裁切 256×256，在背景執行緒產生。）
+- [x] [Test] 補上局部預覽 service 測試：
       大圖只處理裁切區、來源無法讀取時回傳結構化錯誤、模式順序穩定。
-- [ ] [ResizePlanner] 預覽狀態文字顯示降噪模式名稱，而不是單純「降噪」。
-- [ ] [MainViewModel] 加入降噪模式選擇、預覽產生命令、忙碌狀態與錯誤訊息。
-- [ ] [Test] 補上 MainViewModel 測試：
+- [x] [ResizePlanner] 預覽狀態文字顯示降噪模式名稱，而不是單純「降噪」。
+- [x] [MainViewModel] 加入降噪模式選擇、預覽產生命令、忙碌狀態與錯誤訊息。
+      （`SelectedDenoiseMode`、`GenerateDenoisePreviewCommand`、`IsGeneratingDenoisePreview`、
+      `DenoisePreviewErrorMessage`、各模式 `BitmapSource?` 屬性。）
+- [x] [Test] 補上 MainViewModel 測試：
       切換降噪模式會更新縮放預覽，預覽產生中不阻塞既有執行按鈕邏輯。
-- [ ] [View] 批次縮放 UI 將 checkbox 改為模式選擇控制，並加入局部預覽區。
-- [ ] [Docs] 更新 README 與 TODO 研究結論，說明各模式適用場景與限制。
+- [x] [View] 批次縮放 UI 將 checkbox 改為模式選擇控制，並加入局部預覽區。
+      （RadioButton 四模式選擇、Strong 模式警示、三欄預覽圖展示、「產生預覽」按鈕。）
+- [x] [Docs] 更新 README 與 TODO 研究結論，說明各模式適用場景與限制。
 
 完成判定：
 

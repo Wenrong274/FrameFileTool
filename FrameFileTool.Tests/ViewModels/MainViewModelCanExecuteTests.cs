@@ -23,6 +23,7 @@ public sealed class MainViewModelCanExecuteTests
         IImageResizeExecutor? resizeExecutor = null,
         IFileExistenceService? fileExistenceService = null,
         IResizePreviewService? resizePreviewService = null,
+        IDenoisePreviewService? denoisePreviewService = null,
         TimeSpan debounceDelay = default)
     {
         var scanner = Substitute.For<IFileScanner>();
@@ -37,6 +38,7 @@ public sealed class MainViewModelCanExecuteTests
         folderPicker ?? Substitute.For<IFolderPickerService>(),
         resizeExecutor ?? Substitute.For<IImageResizeExecutor>(),
         resizePreviewService ?? Substitute.For<IResizePreviewService>(),
+        denoisePreviewService ?? Substitute.For<IDenoisePreviewService>(),
         fileExistenceService ?? Substitute.For<IFileExistenceService>(),
         Substitute.For<IFileImportService>(),
         Substitute.For<IUpdateService>(),
@@ -621,7 +623,7 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public async Task DenoiseEnabled_變更且有檔案_應觸發防抖縮放預覽()
+    public async Task SelectedDenoiseMode_變更且有檔案_應觸發防抖縮放預覽()
     {
         var resizePreviewService = Substitute.For<IResizePreviewService>();
         resizePreviewService
@@ -634,13 +636,13 @@ public sealed class MainViewModelCanExecuteTests
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
         sut.SelectedToolIndex = 2;
 
-        sut.DenoiseEnabled = true;
+        sut.SelectedDenoiseMode = DenoiseMode.Standard;
         await sut.LivePreviewTask;
 
         sut.CurrentPreview.Should().BeOfType<ResizePreviewViewModel>();
         await resizePreviewService.Received(1).BuildPreviewAsync(
             Arg.Any<IReadOnlyList<FileItem>>(),
-            Arg.Is<ResizeOptions>(options => options.DenoiseEnabled),
+            Arg.Is<ResizeOptions>(options => options.DenoiseMode == DenoiseMode.Standard),
             Arg.Any<CancellationToken>());
     }
 
@@ -964,5 +966,71 @@ public sealed class MainViewModelCanExecuteTests
         planner.Received(1).Plan(
             Arg.Is<IReadOnlyList<FileItem>>(list => list.Count == 1 && list[0] == itemB),
             Arg.Any<int>());
+    }
+
+    // ════════════════════════════════════════════════════════
+    // 降噪預覽 CanExecute
+    // ════════════════════════════════════════════════════════
+
+    [Fact]
+    public void GenerateDenoisePreviewCommand_無檔案_CanExecute應為False()
+    {
+        var sut = CreateSut();
+
+        sut.GenerateDenoisePreviewCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void GenerateDenoisePreviewCommand_有檔案_CanExecute應為True()
+    {
+        var sut = CreateSut();
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        sut.GenerateDenoisePreviewCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GenerateDenoisePreview_執行中_不影響ExecuteResizeCommand的CanExecute()
+    {
+        var denoiseService = Substitute.For<IDenoisePreviewService>();
+        var tcs = new TaskCompletionSource<DenoisePreviewResult>();
+        denoiseService
+            .GeneratePreviewAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<DenoiseMode>>(), Arg.Any<CancellationToken>())
+            .Returns(tcs.Task);
+
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(Arg.Any<IReadOnlyList<FileItem>>(), Arg.Any<ResizeOptions>(), Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize }]);
+
+        var sut = CreateSut(
+            resizePreviewService: resizePreviewService,
+            denoisePreviewService: denoiseService,
+            debounceDelay: TimeSpan.Zero);
+
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedToolIndex = 2;
+        await sut.LivePreviewTask;
+
+        // 啟動降噪預覽（不等待完成）
+        sut.GenerateDenoisePreviewCommand.Execute(null);
+        sut.IsGeneratingDenoisePreview.Should().BeTrue();
+
+        // 執行縮放的 CanExecute 不受影響
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeTrue();
+
+        tcs.SetResult(new DenoisePreviewResult(new Dictionary<DenoiseMode, byte[]>()));
+    }
+
+    [Fact]
+    public void SelectedDenoiseMode_變更後_應清除既有縮放預覽()
+    {
+        var sut = CreateSut();
+        sut.CurrentPreview = ResizePreview();
+
+        sut.SelectedDenoiseMode = DenoiseMode.Strong;
+
+        sut.CurrentPreview.Should().BeNull();
+        sut.ExecuteResizeCommand.CanExecute(null).Should().BeFalse();
     }
 }

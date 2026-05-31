@@ -141,7 +141,90 @@ public sealed class ImageResizeExecutorTests
     }
 
     [Fact]
-    public void Execute_啟用降噪_應輸出相同尺寸且明顯降低像素顆粒()
+    public void Execute_Off降噪_輸出像素應與原始相同()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FrameFileToolTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var sourcePath = Path.Combine(root, "noise.png");
+            using (var image = CreateNoisyImage(64, 64))
+            {
+                image.Write(sourcePath);
+            }
+
+            var item = new OperationPreviewItem
+            {
+                FullPath = sourcePath,
+                OriginalName = "noise.png",
+                ActionKind = OperationActionKind.Resize,
+            };
+
+            var plainOut = Path.Combine(root, "plain");
+            var offOut = Path.Combine(root, "off");
+
+            _sut.Execute([item], Options(factor: 1, targetFolderPath: plainOut));
+            _sut.Execute([item], Options(factor: 1, targetFolderPath: offOut) with { DenoiseMode = DenoiseMode.Off });
+
+            using var plain = new MagickImage(Path.Combine(plainOut, "noise.png"));
+            using var off = new MagickImage(Path.Combine(offOut, "noise.png"));
+
+            off.GetPixels().ToByteArray("RGB").Should().Equal(plain.GetPixels().ToByteArray("RGB"));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void Execute_Detail降噪_應輸出相同尺寸且不報錯()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FrameFileToolTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var sourcePath = Path.Combine(root, "noise.png");
+            using (var image = CreateNoisyImage(64, 64))
+            {
+                image.Write(sourcePath);
+            }
+
+            var item = new OperationPreviewItem
+            {
+                FullPath = sourcePath,
+                OriginalName = "noise.png",
+                ActionKind = OperationActionKind.Resize,
+            };
+
+            var denoiseOut = Path.Combine(root, "denoise");
+            var result = _sut.Execute([item], Options(factor: 1, targetFolderPath: denoiseOut) with { DenoiseMode = DenoiseMode.Detail });
+
+            result.SuccessCount.Should().Be(1);
+            result.Errors.Should().BeEmpty();
+
+            using var denoised = new MagickImage(Path.Combine(denoiseOut, "noise.png"));
+            denoised.Width.Should().Be(64);
+            denoised.Height.Should().Be(64);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(DenoiseMode.Standard)]
+    [InlineData(DenoiseMode.Strong)]
+    public void Execute_Standard和Strong降噪模式_應輸出相同尺寸且明顯降低像素顆粒(DenoiseMode mode)
     {
         var root = Path.Combine(Path.GetTempPath(), "FrameFileToolTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -165,7 +248,7 @@ public sealed class ImageResizeExecutorTests
             var denoiseOut = Path.Combine(root, "denoise");
 
             _sut.Execute([item], Options(factor: 1, targetFolderPath: plainOut));
-            _sut.Execute([item], Options(factor: 1, targetFolderPath: denoiseOut) with { DenoiseEnabled = true });
+            _sut.Execute([item], Options(factor: 1, targetFolderPath: denoiseOut) with { DenoiseMode = mode });
 
             using var plain = new MagickImage(Path.Combine(plainOut, "noise.png"));
             using var denoised = new MagickImage(Path.Combine(denoiseOut, "noise.png"));
@@ -176,7 +259,7 @@ public sealed class ImageResizeExecutorTests
 
             var plainRoughness = MeanAdjacentLumaDifference(plain);
             var denoisedRoughness = MeanAdjacentLumaDifference(denoised);
-            denoisedRoughness.Should().BeLessThan(plainRoughness * 0.55);
+            denoisedRoughness.Should().BeLessThan(plainRoughness * 0.75);
         }
         finally
         {

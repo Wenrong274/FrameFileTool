@@ -162,7 +162,13 @@ public sealed class ResizePlanner : IResizePlanner
             : BuildAbsoluteSizeDesc(options);
 
         var resamplerDesc = ResamplerDescription(options.Resampler);
-        var denoiseDesc = options.DenoiseEnabled ? "，降噪" : string.Empty;
+        var denoiseDesc = options.DenoiseMode switch
+        {
+            DenoiseMode.Detail => "，保留細節降噪",
+            DenoiseMode.Standard => "，標準降噪",
+            DenoiseMode.Strong => "，強力降噪",
+            _ => string.Empty,
+        };
 
         return $"縮放至 {sizeDesc}，{resamplerDesc}{denoiseDesc}";
     }
