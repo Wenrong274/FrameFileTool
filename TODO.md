@@ -136,16 +136,18 @@ ID：`resize-denoise`
 
 決策日期：2026-06-01
 
-- MVP 採用 `ReduceNoise(1)`，在縮放前套用。
+- MVP 採用 `ReduceNoise(2)`，在縮放前套用。
 - 第一版只提供「啟用降噪」開關，不提供強度滑桿；避免 UI 複雜化，也降低使用者輸入錯誤。
+- 追加驗證發現 Magick.NET Q8 的 `ReduceNoise(1)` 對隨機噪點圖為 no-op，
+  因此改用 `ReduceNoise(2)` 作為第一版固定值。
 - `AdaptiveBlur(0.7, 0.4)` 在 20 張 1920×1080 測試中約 13.7–15.8 秒，明顯慢於其他方案，
   且視覺上容易讓線條變糊，不納入 MVP。
 - `UnsharpMask` 適合銳化但不是降噪；放大倍率 2.0 時 20 張測試約 23.5 秒，
   且會放大顆粒感，不納入 MVP。
-- `ReduceNoise(1)` 在 20 張 1920×1080 測試中：
-  倍率 0.5 約 2.0 秒、倍率 1.0 約 4.4 秒、倍率 2.0 約 4.8 秒；
+- `ReduceNoise(2)` 在 20 張 1920×1080 測試中：
+  倍率 0.5 約 5.4 秒、倍率 1.0 約 6.1 秒、倍率 2.0 約 9.5 秒；
   相較不降噪會增加耗時，但仍在可接受範圍。
-- 倍率 1.0 啟用 `ReduceNoise(1)` 時可降低顆粒，線條仍保留，視覺差異可接受。
+- 倍率 1.0 啟用 `ReduceNoise(2)` 時可降低顆粒，線條仍保留，視覺差異可接受。
 
 #### 降噪研究
 
@@ -158,14 +160,14 @@ ID：`resize-denoise`
 
 #### 降噪實作（研究完成後展開）
 
-- [ ] [Model] 在 `ResizeOptions` 新增 `DenoiseMode`（啟用 / 停用）
+- [x] [Model] 在 `ResizeOptions` 新增 `DenoiseMode`（啟用 / 停用）
       或等價布林欄位；第一版不提供強度值。
-- [ ] [Service] 調整 `ImageResizeExecutor`：
-      啟用降噪時在縮放前套用 Magick.NET `ReduceNoise(1)`。
-- [ ] [Test] 補上 `ImageResizeExecutorTests`：
+- [x] [Service] 調整 `ImageResizeExecutor`：
+      啟用降噪時在縮放前套用 Magick.NET `ReduceNoise(2)`。
+- [x] [Test] 補上 `ImageResizeExecutorTests`：
       啟用降噪時仍輸出正確尺寸、停用時維持原本縮放結果。
-- [ ] [ViewModel] 在 `MainViewModel` 新增降噪相關屬性與 `PropertyChanged` 觸發。
-- [ ] [View] 批次縮放 UI 面板加入降噪開關。
+- [x] [ViewModel] 在 `MainViewModel` 新增降噪相關屬性與 `PropertyChanged` 觸發。
+- [x] [View] 批次縮放 UI 面板加入降噪開關。
 
 完成判定：
 

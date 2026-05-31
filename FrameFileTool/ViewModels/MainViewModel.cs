@@ -98,6 +98,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(ResamplerHint))]
     private ResamplerType _selectedResampler = ResamplerType.Bicubic;
 
+    [ObservableProperty]
+    private bool _denoiseEnabled;
+
     // ── 改名設定 ──────────────────────────────────────────────
 
     [ObservableProperty]
@@ -795,6 +798,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedResamplerChanged(ResamplerType value) => InvalidatePreviewFor(PreviewTool.Resize);
 
+    partial void OnDenoiseEnabledChanged(bool value) => InvalidatePreviewFor(PreviewTool.Resize);
+
     partial void OnRenamePrefixChanged(string value) => InvalidatePreviewFor(PreviewTool.Rename);
 
     partial void OnRenameStartIndexChanged(int value) => InvalidatePreviewFor(PreviewTool.Rename);
@@ -1058,7 +1063,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             KeepAspectRatio: KeepAspectRatio,
             OutputMode: ResizeOutputMode,
             TargetFolderPath: string.Empty,
-            Resampler: SelectedResampler);
+            Resampler: SelectedResampler,
+            DenoiseEnabled: DenoiseEnabled);
 
     /// <summary>將訊息插入 log 最上方，附上時間戳記。</summary>
     private void AddLog(string message) =>

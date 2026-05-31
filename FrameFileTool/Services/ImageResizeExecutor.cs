@@ -206,6 +206,11 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
     {
         using var image = new MagickImage(sourcePath);
 
+        if (options.DenoiseEnabled)
+        {
+            image.ReduceNoise(2);
+        }
+
         var geometry = BuildGeometry(image, options);
         image.FilterType = ToFilterType(options.Resampler);
         image.Resize(geometry);

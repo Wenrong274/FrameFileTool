@@ -428,6 +428,10 @@
                                 <TextBlock Text="{Binding ResamplerHint}"
                                            Style="{StaticResource HintText}" />
 
+                                <CheckBox Content="降低像素噪點"
+                                          IsChecked="{Binding DenoiseEnabled}"
+                                          Margin="0,4,0,8" />
+
                                 <!-- 執行按鈕 -->
                                 <Button Content="執行縮放"
                                         Style="{StaticResource ExecuteButton}"
