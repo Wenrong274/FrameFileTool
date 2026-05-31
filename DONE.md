@@ -294,6 +294,75 @@ ID：`live-preview`
 - [x] [邊界] 切換工具 Tab 時，目標工具的預覽自動更新至最新狀態。
 - [x] [防抖] 批次縮放連續調整設定時不會同時發起多個非同步請求；預覽計算中顯示 loading 狀態，完成後自動解除。
 
+## 自動檢查 GitHub 發布更新與橫幅通知
+
+ID：`auto-update-check`
+完成日期：2026-05-31
+發布版本：未發布
+
+優先度：低
+分支：feat/auto-update-check
+前置條件：無
+被依賴：無
+
+影響範圍：`UpdateInfo` → `IUpdateService` → `GitHubUpdateService` →
+`IExternalLinkService` → `MainViewModel` → `MainWindow.xaml` →
+`App.xaml.cs` → `GitHubUpdateServiceTests` / `MainViewModelUpdateCheckTests`
+
+邊界案例：GitHub API 回傳非 200、JSON 格式不符、
+本地版本與遠端版本相同或較新、網路逾時、多開程式時的資源競爭、
+應用程式關閉時 HTTP 請求尚未完成
+
+實作結果：
+
+- 新增 `UpdateInfo` record 表示更新結果；`IUpdateService` 定義非同步更新檢查介面。
+- `GitHubUpdateService` 呼叫 GitHub Releases API，與 Assembly 版本比對，
+  網路異常、非 200、JSON 格式錯誤與取消均靜默回傳 `UpdateInfo.None`。
+- `IExternalLinkService` / `ExternalLinkService` 封裝瀏覽器開啟行為，
+  非合法絕對 URL 靜默忽略。
+- `MainViewModel` 啟動後非同步背景呼叫更新檢查；新增 `IsUpdateAvailable`、
+  `LatestVersionText`、`LatestReleaseUrl`、`GoToDownloadPageCommand`、
+  `DismissUpdateBannerCommand`。
+- `MainWindow.xaml` 頂端加入 Fluent 風格藍色橫幅，點選「下載更新」開啟瀏覽器，
+  點選「關閉」隱藏橫幅，本次程式執行期間不再顯示。
+- Release workflow 改為以 tag 版本號寫入 AssemblyVersion / FileVersion，
+  供執行期比對 GitHub 最新發布版本。
+- Code review 後補強：
+  - `GitHubUpdateService` 移除反向的 `OperationCanceledException when` 篩選，
+    取消（逾時或 app 關閉）一律靜默回傳 `UpdateInfo.None`。
+  - `MainViewModel` 實作 `IDisposable`，加入 `_updateCheckCts`；
+    app 關閉時由 `ServiceProvider.Dispose()` 觸發取消 HTTP 請求。
+  - bare `catch` 改為區分 `OperationCanceledException` 與其他例外，
+    非預期例外寫入 log 而非靜默吞掉。
+  - `IUpdateService` / `IExternalLinkService` 改為強制注入（非 nullable optional），
+    一致化 constructor 注入語意。
+  - `HttpClient` 改為 factory lambda，讓 DI 容器正確管理生命週期。
+
+- [x] [Model] 新增 `UpdateInfo` record，包含 `HasUpdate`、`LatestVersion`、`ReleaseUrl`。
+- [x] [Service] 新增 `IUpdateService` 介面，定義 `CheckForUpdateAsync(CancellationToken)`。
+- [x] [Service] 實作 `GitHubUpdateService`，呼叫 GitHub Releases API 並比對版本號。
+- [x] [Service] 新增 `IExternalLinkService` / `ExternalLinkService`，封裝瀏覽器開啟。
+- [x] [Test] 補上 `GitHubUpdateServiceTests`：版本比對、網路異常、逾時等情境。
+- [x] [Test] 補上 `ExternalLinkServiceTests`：合法 URL 正常通過，非法字串靜默忽略。
+- [x] [MainViewModel] 新增更新相關屬性與指令；啟動後非同步呼叫更新檢查。
+- [x] [MainViewModel] 實作 `IDisposable`，加入 `_updateCheckCts` 取消機制。
+- [x] [Test] 補上 `MainViewModelUpdateCheckTests`：版本比對結果、指令狀態、橫幅隱藏。
+- [x] [View] `MainWindow.xaml` 頂端新增更新提示橫幅，繫結下載與關閉命令。
+- [x] [DI] `App.xaml.cs` 註冊 `HttpClient`（factory lambda）、`IUpdateService`、`IExternalLinkService`。
+- [x] [DI] `App.xaml.cs` 覆寫 `OnExit`，呼叫 `ServiceProvider.Dispose()` 觸發 ViewModel 清理。
+- [x] [CI] Release workflow 寫入 AssemblyVersion / FileVersion 供執行期版本比對。
+- [x] [Bugfix] `GitHubUpdateService` 移除反向 when 篩選，取消一律靜默回傳 None。
+- [x] [Bugfix] `MainViewModel` bare catch 改為 log 型，非預期例外不再靜默吞掉。
+
+完成判定：
+
+- [x] [正常路徑] 當遠端 GitHub 有較新版本發布時，程式啟動後頂端會顯示藍色更新提示橫幅，
+  點擊「下載更新」會以瀏覽器開啟 Release 頁面。
+- [x] [邊界] 當遠端版本與本機相同或更舊時，橫幅保持隱藏，不干擾使用者。
+- [x] [錯誤狀態] 當網路連線異常或 GitHub API 呼叫逾時（設定為 5 秒）時，程式靜默失敗，
+  不彈出任何錯誤對話框且橫幅保持隱藏。
+- [x] [體驗] 點擊橫幅的「關閉」按鈕後，橫幅立刻隱藏，且在此次程式執行期間不再顯示。
+
 ## 清空全部與剔除檔案功能
 
 ID：`clear-remove`
