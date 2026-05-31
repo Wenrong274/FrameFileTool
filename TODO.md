@@ -79,40 +79,6 @@ ID：`output-folder`
 - [ ] [錯誤狀態] 目標檔已存在或同名衝突時，預覽標示錯誤且執行按鈕停用。
 - [ ] [一致性] 批次縮放：覆寫原檔、另存子資料夾、指定資料夾三種輸出模式都維持可用。
 
-### 批次縮放改用倍率輸入
-
-ID：`scale-factor`
-優先度：中
-分支：feat/scale-factor（開始時建立）
-前置條件：無（獨立改動，不依賴其他功能）
-被依賴：`output-folder` 若同期進行需注意 `ResizeOptions` 欄位版本一致性
-
-⚠ 影響範圍：`ResizeOptions.ScalePercent` (int) → `ScaleFactor` (double) →
-`ResizePlanner` → `ResizePreviewService` → `ImageResizeExecutor` →
-`MainViewModel._scalePercent` → `MainWindow.xaml` → `ResizePlannerTests` → `ResizePreviewServiceTests`
-
-⚠ 邊界案例：倍率輸入 0、負數、非數字字串；倍率 0.5 時 1px 下限保護
-
-- [x] [Model] 將 `ResizeOptions.ScalePercent` (int) 改為 `ScaleFactor` (double)。
-- [x] [Service] 調整 `ResizePlanner` 驗證規則：`ScaleFactor` 必須大於 0。
-- [x] [Service] 調整 `ResizePlanner` 目標尺寸計算，改用 `ScaleFactor` 乘以原始尺寸。
-- [x] [Test] 補上 `ResizePlannerTests`：`ScaleFactor` ≤ 0、等於 1、0.5、2 的驗證與尺寸計算測試。
-- [x] [Service] 調整 `ResizePreviewService` 預覽文字，改用倍率語意（移除百分比用詞）。
-- [x] [Test] 補上 `ResizePreviewServiceTests`：預覽文字包含倍率而非百分比。
-- [x] [Service] 調整 `ImageResizeExecutor` 的 Magick.NET resize geometry 建立方式，改用 `ScaleFactor`。
-- [x] [MainViewModel] 將 `_scalePercent` (int) 改為 `_scaleFactor` (double)。
-- [x] [View] 調整 `MainWindow.xaml`：輸入欄位改為 double 類型，label 文案改為倍率說明。
-- [x] [ViewModel] 新增倍率 Slider 範圍設定：最小 `0.1`、最大 `4.0`、步進 `0.1`。
-- [x] [View] 倍率模式同時提供 Slider 與手動輸入欄位，兩者共用 `ScaleFactor`。
-- [x] [View] 倍率輸入欄位顯示最多兩位小數，避免 Slider 浮點誤差造成過長數字。
-
-完成判定：
-
-- [x] [正常路徑] UI 顯示倍率 Slider 與輸入欄位；倍率 `1` 產生與原圖相同的目標尺寸，倍率 `0.5` 產生約一半尺寸，倍率 `2` 產生兩倍尺寸。
-- [x] [邊界] 倍率 `0.5` 對 1px 來源圖計算結果至少保留 1px。
-- [x] [錯誤狀態] 輸入倍率 `0` 或負數時，預覽顯示錯誤訊息且執行按鈕停用。
-- [x] [清理] 舊的百分比文案、log 與錯誤訊息已全部改為倍率語意，無殘留百分比用詞。
-
 ### 自動檢查 GitHub 發布更新與橫幅通知
 
 ID：`auto-update-check`
