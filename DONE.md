@@ -23,6 +23,84 @@
 
 ---
 
+## 批次縮放支援像素噪點降低
+
+ID：`resize-denoise`
+完成日期：2026-06-01
+發布版本：未發布
+
+優先度：低
+分支：feat/resize-denoise
+前置條件：無
+被依賴：`resize-denoise-modes-preview`、`resize-denoise-advanced`
+
+影響範圍：`ResizeOptions` → `ImageResizeExecutor` → `ResizePlanner`（驗證）
+→ `MainViewModel` → 批次縮放 UI 面板
+
+邊界案例：縮放比例為 1 時不應劣化原圖；降噪關閉時等同未啟用；
+大型圖片（4K+）套用降噪的效能影響需評估。
+
+實作結果：
+
+- 批次縮放新增「降低像素噪點」開關，第一版不提供強度值。
+- `ResizeOptions` 新增 `DenoiseEnabled`，由 ViewModel 傳入 planner 與 executor。
+- `ResizePlanner` 的狀態文字會在啟用時標示「降噪」。
+- `ImageResizeExecutor` 在縮放前套用 Magick.NET `ReduceNoise(3)`。
+- 研究曾先評估 `ReduceNoise(2)`，但使用者實圖驗收顯示粗顆粒噪點效果過弱，
+  因此提高為 `ReduceNoise(3)`。
+- 補上顆粒指標測試，避免只檢查像素有變但實際降噪效果不足。
+- 後續更完整的 Magick.NET 多模式降噪與預覽，已拆分為
+  `resize-denoise-modes-preview` 繼續追蹤。
+- OpenCV / ONNX / 外部商業工具等進階引擎研究，已拆分為
+  `resize-denoise-advanced` 繼續追蹤。
+
+### 降噪研究結論
+
+決策日期：2026-06-01
+
+- MVP 採用 `ReduceNoise(3)`，在縮放前套用。
+- 第一版只提供「啟用降噪」開關，不提供強度滑桿；避免 UI 複雜化，也降低使用者輸入錯誤。
+- Magick.NET Q8 的 `ReduceNoise(1)` 對隨機噪點圖為 no-op。
+- `AdaptiveBlur(0.7, 0.4)` 在 20 張 1920×1080 測試中約 13.7–15.8 秒，明顯慢於其他方案，
+  且視覺上容易讓線條變糊，不納入 MVP。
+- `UnsharpMask` 適合銳化但不是降噪；放大倍率 2.0 時 20 張測試約 23.5 秒，
+  且會放大顆粒感，不納入 MVP。
+- `ReduceNoise(2)` 在 20 張 1920×1080 測試中：
+  倍率 0.5 約 5.4 秒、倍率 1.0 約 6.1 秒、倍率 2.0 約 9.5 秒；
+  相較不降噪會增加耗時，但使用者實圖驗收顯示效果過弱，已改用 `ReduceNoise(3)`。
+- 倍率 1.0 啟用 `ReduceNoise(3)` 時可更明顯降低顆粒，線條仍保留，視覺差異可接受。
+
+### 降噪研究
+
+- [x] [研究] 使用 Magick.NET 對不同縮放比例的圖片分別試用
+      `ReduceNoise`、`AdaptiveBlur`、`UnsharpMask`，
+      記錄主觀視覺效果與每張圖的耗時差異。
+- [x] [研究] 確認最適合縮小場景（倍率 < 1）與放大場景（倍率 > 1）的算法組合。
+- [x] [決策] 根據研究結果決定：算法、套用時機、強度是否可調、UI 控制方式。
+
+### 降噪實作
+
+- [x] [Model] 在 `ResizeOptions` 新增 `DenoiseMode`（啟用 / 停用）
+      或等價布林欄位；第一版不提供強度值。
+- [x] [Service] 調整 `ImageResizeExecutor`：
+      啟用降噪時在縮放前套用 Magick.NET `ReduceNoise(3)`。
+- [x] [Test] 補上 `ImageResizeExecutorTests`：
+      啟用降噪時仍輸出正確尺寸、顆粒指標需明顯降低，停用時維持原本縮放結果。
+- [x] [ViewModel] 在 `MainViewModel` 新增降噪相關屬性與 `PropertyChanged` 觸發。
+- [x] [View] 批次縮放 UI 面板加入降噪開關。
+
+完成判定：
+
+- [x] [正常路徑] 啟用降噪、縮放比例 0.5 執行後，輸出圖片的噪點明顯少於未啟用時
+  （手動視覺比對）。
+- [x] [邊界] 縮放比例為 1 且啟用降噪時，輸出圖片與原圖的視覺差異在可接受範圍內，
+  不造成明顯模糊或劣化。
+- [x] [邊界] 停用降噪時，縮放行為與原本完全相同，log 不出現降噪相關訊息。
+- [x] [錯誤狀態] 啟用降噪後遇到無法讀取或寫入的圖片時，沿用既有縮放錯誤處理，
+  log 記錄失敗項目且其他檔案可繼續處理。
+- [x] [效能] 對 20 張 1920×1080 圖片啟用降噪縮放的總耗時，
+  相對於未啟用時的增幅在可接受範圍內（研究階段定義具體閾值）。
+
 ## 抽幀刪除、批次改名、批次縮放均可指定輸出資料夾
 
 ID：`output-folder`
