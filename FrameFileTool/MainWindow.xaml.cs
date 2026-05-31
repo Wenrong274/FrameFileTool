@@ -1,4 +1,7 @@
+using System.IO;
 using System.Windows;
+using System.Windows.Media.Imaging;
+using FrameFileTool.Models;
 using FrameFileTool.ViewModels;
 
 namespace FrameFileTool;
@@ -65,31 +68,32 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void OpenDenoiseCompare_Click(object sender, RoutedEventArgs e)
+    private void OpenDenoiseCompareWindow(DenoisePreviewResult result)
     {
-        if (_denoiseCompareWindow is { IsLoaded: true })
-        {
-            _denoiseCompareWindow.Activate();
-            return;
-        }
-
-        OpenDenoiseCompareWindow();
-    }
-
-    private void OpenDenoiseCompareWindow()
-    {
-        if (DataContext is not MainViewModel vm)
-            return;
-
         _denoiseCompareWindow?.Close();
         _denoiseCompareWindow = new DenoiseCompareWindow(
-            vm.DenoisePreviewDetail,
-            vm.DenoisePreviewStandard,
-            vm.DenoisePreviewStrong)
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Detail)),
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Standard)),
+            ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Strong)))
         {
             Owner = this,
         };
         _denoiseCompareWindow.Show();
+    }
+
+    private static System.Windows.Media.Imaging.BitmapSource? ToBitmapSource(byte[]? data)
+    {
+        if (data is null)
+            return null;
+
+        using var stream = new MemoryStream(data);
+        var bi = new BitmapImage();
+        bi.BeginInit();
+        bi.StreamSource = stream;
+        bi.CacheOption = BitmapCacheOption.OnLoad;
+        bi.EndInit();
+        bi.Freeze();
+        return bi;
     }
 
     private static string[] GetDroppedPaths(System.Windows.DragEventArgs e) =>

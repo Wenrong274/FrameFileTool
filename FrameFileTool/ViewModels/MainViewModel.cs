@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FrameFileTool.Models;
@@ -117,18 +116,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public bool HasDenoisePreviewError => !string.IsNullOrEmpty(DenoisePreviewErrorMessage);
 
-    public BitmapSource? DenoisePreviewDetail { get; private set; }
-    public BitmapSource? DenoisePreviewStandard { get; private set; }
-    public BitmapSource? DenoisePreviewStrong { get; private set; }
-    public bool HasDenoisePreview =>
-        DenoisePreviewDetail is not null ||
-        DenoisePreviewStandard is not null ||
-        DenoisePreviewStrong is not null;
-
-    public bool ShowDenoisePreviewPlaceholder => !HasDenoisePreview;
-
     /// <summary>降噪預覽產生成功時觸發，供 View 自動開啟比較視窗。</summary>
-    public event Action? DenoisePreviewGenerated;
+    public event Action<DenoisePreviewResult>? DenoisePreviewGenerated;
 
     /// <summary>依選取的降噪模式顯示對應的使用建議說明，供 UI HintText 繫結。</summary>
     public string SelectedDenoiseModeHint => SelectedDenoiseMode switch
@@ -755,7 +744,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         IsGeneratingDenoisePreview = true;
         DenoisePreviewErrorMessage = string.Empty;
-        ClearDenoisePreviewImages();
 
         try
         {
@@ -772,15 +760,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
             else
             {
-                DenoisePreviewDetail = ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Detail));
-                DenoisePreviewStandard = ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Standard));
-                DenoisePreviewStrong = ToBitmapSource(result.PreviewsByMode.GetValueOrDefault(DenoiseMode.Strong));
-                OnPropertyChanged(nameof(DenoisePreviewDetail));
-                OnPropertyChanged(nameof(DenoisePreviewStandard));
-                OnPropertyChanged(nameof(DenoisePreviewStrong));
-                OnPropertyChanged(nameof(HasDenoisePreview));
-                OnPropertyChanged(nameof(ShowDenoisePreviewPlaceholder));
-                DenoisePreviewGenerated?.Invoke();
+                DenoisePreviewGenerated?.Invoke(result);
             }
         }
         catch (OperationCanceledException)
@@ -795,32 +775,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private bool CanGenerateDenoisePreview() =>
         !IsGeneratingDenoisePreview && Files.Count > 0;
-
-    private void ClearDenoisePreviewImages()
-    {
-        DenoisePreviewDetail = null;
-        DenoisePreviewStandard = null;
-        DenoisePreviewStrong = null;
-        OnPropertyChanged(nameof(DenoisePreviewDetail));
-        OnPropertyChanged(nameof(DenoisePreviewStandard));
-        OnPropertyChanged(nameof(DenoisePreviewStrong));
-        OnPropertyChanged(nameof(HasDenoisePreview));
-    }
-
-    private static BitmapSource? ToBitmapSource(byte[]? data)
-    {
-        if (data is null)
-            return null;
-
-        using var stream = new MemoryStream(data);
-        var bi = new BitmapImage();
-        bi.BeginInit();
-        bi.StreamSource = stream;
-        bi.CacheOption = BitmapCacheOption.OnLoad;
-        bi.EndInit();
-        bi.Freeze();
-        return bi;
-    }
 
     [RelayCommand]
     private void ClearLog() => Logs.Clear();

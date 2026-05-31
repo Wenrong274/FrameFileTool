@@ -444,115 +444,25 @@
                                 <TextBlock Text="{Binding SelectedDenoiseModeHint}"
                                            Style="{StaticResource HintText}" />
 
-                                <!-- 降噪局部預覽容器 -->
-                                <Border Background="{StaticResource SurfaceSubtleBrush}"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="8"
-                                        Margin="0,0,0,8">
-                                    <StackPanel>
-
-                                        <!-- 標題列 + 按鈕 -->
-                                        <DockPanel Margin="0,0,0,6">
-                                            <Button Content="產生預覽"
-                                                    DockPanel.Dock="Right"
-                                                    Command="{Binding GenerateDenoisePreviewCommand}"
-                                                    Height="28"
-                                                    Padding="10,0"
-                                                    FontSize="11" />
-                                            <Button Content="放大比較"
-                                                    DockPanel.Dock="Right"
-                                                    Margin="0,0,4,0"
-                                                    Height="28"
-                                                    Padding="10,0"
-                                                    FontSize="11"
-                                                    IsEnabled="{Binding HasDenoisePreview}"
-                                                    Click="OpenDenoiseCompare_Click" />
-                                            <TextBlock Text="各模式效果比較"
-                                                       FontSize="11"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{StaticResource TextSecondary}"
-                                                       VerticalAlignment="Center" />
-                                        </DockPanel>
-
-                                        <!-- 狀態列：busy / error（佔位固定高度，避免版面跳動） -->
-                                        <Border Height="18" Margin="0,0,0,4">
-                                            <Grid>
-                                                <TextBlock Text="產生預覽中…"
-                                                           FontSize="11"
-                                                           Foreground="{StaticResource TextSecondary}"
-                                                           Visibility="{Binding IsGeneratingDenoisePreview,
-                                                               Converter={StaticResource BoolToVis}}" />
-                                                <TextBlock Text="{Binding DenoisePreviewErrorMessage}"
-                                                           FontSize="11"
-                                                           Foreground="{StaticResource DangerBrush}"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           ToolTip="{Binding DenoisePreviewErrorMessage}"
-                                                           Visibility="{Binding HasDenoisePreviewError,
-                                                               Converter={StaticResource BoolToVis}}" />
-                                            </Grid>
-                                        </Border>
-
-                                        <!-- 三模式預覽圖（有預覽才顯示） -->
-                                        <Grid Visibility="{Binding HasDenoisePreview,
-                                                  Converter={StaticResource BoolToVis}}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="6" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="6" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="保留細節"
-                                                           FontSize="11"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,0,0,3"
-                                                           Foreground="{StaticResource TextSecondary}" />
-                                                <Image Source="{Binding DenoisePreviewDetail}"
-                                                       Height="110"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                            </StackPanel>
-
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="標準"
-                                                           FontSize="11"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,0,0,3"
-                                                           Foreground="{StaticResource TextSecondary}" />
-                                                <Image Source="{Binding DenoisePreviewStandard}"
-                                                       Height="110"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                            </StackPanel>
-
-                                            <StackPanel Grid.Column="4">
-                                                <TextBlock Text="強力"
-                                                           FontSize="11"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,0,0,3"
-                                                           Foreground="{StaticResource TextSecondary}" />
-                                                <Image Source="{Binding DenoisePreviewStrong}"
-                                                       Height="110"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- 無預覽提示（尚未產生） -->
-                                        <TextBlock Text="選取圖片後點擊「產生預覽」比較各模式效果"
-                                                   FontSize="11"
-                                                   Foreground="{StaticResource TextMuted}"
-                                                   TextWrapping="Wrap"
-                                                   HorizontalAlignment="Center"
-                                                   TextAlignment="Center"
-                                                   Visibility="{Binding ShowDenoisePreviewPlaceholder,
-                                                       Converter={StaticResource BoolToVis}}" />
-                                    </StackPanel>
-                                </Border>
+                                <!-- 放大比較 -->
+                                <Button Content="放大比較"
+                                        Command="{Binding GenerateDenoisePreviewCommand}"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,0,0,4" />
+                                <TextBlock Text="產生預覽中…"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Visibility="{Binding IsGeneratingDenoisePreview,
+                                               Converter={StaticResource BoolToVis}}"
+                                           Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding DenoisePreviewErrorMessage}"
+                                           FontSize="11"
+                                           Foreground="{StaticResource DangerBrush}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="{Binding DenoisePreviewErrorMessage}"
+                                           Visibility="{Binding HasDenoisePreviewError,
+                                               Converter={StaticResource BoolToVis}}"
+                                           Margin="0,0,0,4" />
 
                                 <!-- 執行按鈕 -->
                                 <Button Content="執行縮放"
