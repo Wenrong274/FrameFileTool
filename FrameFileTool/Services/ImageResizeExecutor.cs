@@ -208,7 +208,7 @@ public sealed class ImageResizeExecutor : IImageResizeExecutor
 
         if (options.DenoiseEnabled)
         {
-            image.ReduceNoise(2);
+            image.ReduceNoise(3);
         }
 
         var geometry = BuildGeometry(image, options);
