@@ -575,10 +575,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
+            var resizeCount = items.Count(i => i.ActionKind == OperationActionKind.Resize && !i.HasError);
+            var resizeErrorCount = items.Count(i => i.HasError);
             var vm = new ResizePreviewViewModel(items);
             SetCurrentPreview(
                 vm,
-                $"縮放預覽完成：預計縮放 {items.Count(i => i.ActionKind == OperationActionKind.Resize && !i.HasError)} 個檔案，錯誤 {items.Count(i => i.HasError)} 個。");
+                $"縮放預覽完成：預計縮放 {resizeCount} 個檔案，錯誤 {resizeErrorCount} 個。");
         }
         catch (OperationCanceledException) when (previewCts.IsCancellationRequested)
         {

@@ -17,7 +17,11 @@ public sealed class ResizePreviewService(
         CancellationToken cancellationToken = default)
     {
         var enrichedFiles = await Task.Run(
-            () => files.Select(EnrichDimensions).ToList(),
+            () => files.AsParallel()
+                       .AsOrdered()
+                       .WithCancellation(cancellationToken)
+                       .Select(EnrichDimensions)
+                       .ToList(),
             cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
