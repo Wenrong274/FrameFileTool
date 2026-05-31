@@ -23,11 +23,84 @@
 
 ---
 
+## 批次縮放多模式降噪與比較視窗
+
+ID：`resize-denoise-modes-preview`
+完成日期：2026-06-01
+發布版本：v1.5.0
+
+優先度：中
+分支：feat/resize-denoise-modes-preview
+前置條件：`resize-denoise` 完成 GUI 驗收並歸檔
+被依賴：`resize-denoise-advanced`
+
+影響範圍：`ResizeOptions.DenoiseMode` → `ResizePlanner` 狀態文字 →
+`ImageResizeExecutor` 降噪 pipeline → `DenoisePreviewService` →
+`DenoisePreviewGenerated` 事件 → `MainWindow.xaml.cs` → `DenoiseCompareWindow`
+
+實作結果：
+
+- 降噪選項從 `bool DenoiseEnabled` 擴充為 `DenoiseMode` enum（Off / Detail / Standard / Strong）。
+- 各模式 pipeline：Detail → `WaveletDenoise(10%)`、Standard → `ReduceNoise(3)`、
+  Strong → `ReduceNoise(3) + WaveletDenoise(25%)`。
+  原計劃 Detail 用 `ReduceNoise(1)`，但對純隨機噪點圖片為 no-op，調整為 `WaveletDenoise(10%)`。
+- `DenoisePreviewService`：接受圖片路徑與模式清單，中央裁切 256×256，
+  在背景執行緒產生各模式 PNG 位元組，透過 `DenoisePreviewGenerated(DenoisePreviewResult)` 事件回傳。
+- `DenoisePreviewService.ApplyDenoise` 為 `internal static`，供 `ImageResizeExecutor` 共用。
+- `MainViewModel` 不持有 WPF 型別；`BitmapSource` 轉換在 `MainWindow.xaml.cs` 完成。
+- **範圍調整**：原計劃在側欄顯示三欄縮圖；使用者回饋縮圖過小，改為：
+  - 側欄只保留單一「放大比較」按鈕（ComboBox 選模式）。
+  - 新增 `DenoiseCompareWindow`（940×460，可調整大小，non-modal）：
+    三欄並排展示 256×256 的三種模式裁圖，auto-open 於產生完成後。
+- 229 個測試全數通過（包含 `DenoisePreviewServiceTests` 與 `MainViewModelCanExecuteTests`）。
+
+已知限制：
+
+- Detail 模式（`WaveletDenoise(10%)`）效果較細微，在高頻隨機噪點圖上與原圖差異不易量化。
+- 預覽僅取第一張圖中央 256×256，與實際批次結果可能有差異（裁切位置非自動分析噪點區域）。
+- 比較視窗不含縮放或 resampler 效果，僅反映降噪本身的差異。
+
+### 設計決策
+
+- 模式清單：固定四模式 Off / Detail / Standard / Strong，首版不保留擴充位。
+- 預設模式：Off（使用者主動啟用降噪）。
+- 預覽裁切：中央裁切，最大 256×256，確定性高，不需噪點分析。
+- 強力模式在 hint 文字中提示可能偏柔和；不加入輕微銳化（留待 `resize-denoise-advanced`）。
+
+### 多模式降噪研究
+
+- [x] [研究] 比較各 Magick.NET 降噪組合的視覺效果與顆粒指標。
+- [x] [研究] 確認各模式名稱與 pipeline 對應。
+- [x] [研究] 驗證背景產生不阻塞 UI。
+- [x] [決策] 決策記錄於上方「設計決策」節。
+
+### 多模式降噪實作
+
+- [x] [Model] `DenoiseMode` enum；`ResizeOptions.DenoiseMode` 取代 `DenoiseEnabled`。
+- [x] [Service] `DenoisePreviewService.ApplyDenoise` 集中各模式 pipeline。
+- [x] [Test] 降噪 pipeline 與局部預覽 service 的測試（含邊界與錯誤路徑）。
+- [x] [Service] `IDenoisePreviewService` / `DenoisePreviewService`（中央裁切 256×256）。
+- [x] [ResizePlanner] 狀態文字顯示降噪模式名稱。
+- [x] [MainViewModel] `SelectedDenoiseMode`、`GenerateDenoisePreviewCommand`、事件回傳。
+- [x] [Test] MainViewModel 降噪模式切換與 CanExecute 隔離。
+- [x] [View] ComboBox 模式選擇 + 單一「放大比較」按鈕 + `DenoiseCompareWindow`。
+- [x] [Docs] README 與 TODO 同步更新。
+
+完成判定：
+
+- [v] [正常路徑] 對人像粗顆粒圖片產生多模式預覽時，使用者能看出保留細節、標準與強力的差異。
+- [v] [正常路徑] 對夜景高 ISO 圖片選擇標準或強力模式後，輸出結果比舊單一模式更乾淨。
+- [v] [邊界] 縮放倍率為 1 且選擇強力模式時，UI hint 文字清楚提示可能偏柔和。
+- [v] [錯誤狀態] 預覽來源不存在或損毀時，比較視窗顯示錯誤訊息且不影響批次縮放執行。
+- [v] [效能] 對 4K 圖片產生三種模式預覽時，UI 不凍結。
+
+---
+
 ## 批次縮放支援像素噪點降低
 
 ID：`resize-denoise`
 完成日期：2026-06-01
-發布版本：未發布
+發布版本：v1.5.0
 
 優先度：低
 分支：feat/resize-denoise
