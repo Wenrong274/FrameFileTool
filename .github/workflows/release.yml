@@ -42,6 +42,7 @@ jobs:
       - name: Publish single-file app
         shell: pwsh
         run: |
+          $semanticVersion = $env:RELEASE_VERSION.TrimStart("v")
           dotnet publish .\FrameFileTool\FrameFileTool.csproj `
             -c Release `
             -r win-x64 `
@@ -49,6 +50,10 @@ jobs:
             /p:PublishSingleFile=true `
             /p:EnableCompressionInSingleFile=true `
             /p:IncludeNativeLibrariesForSelfExtract=true `
+            /p:Version=$semanticVersion `
+            /p:AssemblyVersion=$semanticVersion `
+            /p:FileVersion=$semanticVersion `
+            /p:InformationalVersion=$env:RELEASE_VERSION `
             -o .\artifacts\publish\win-x64
 
       - name: Create release archive
