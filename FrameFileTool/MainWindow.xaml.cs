@@ -5,10 +5,13 @@ namespace FrameFileTool;
 
 public partial class MainWindow : Window
 {
+    private DenoiseCompareWindow? _denoiseCompareWindow;
+
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
+        viewModel.DenoisePreviewGenerated += OpenDenoiseCompareWindow;
     }
 
     private void PreviewDropTarget_DragEnter(object sender, System.Windows.DragEventArgs e) =>
@@ -64,16 +67,29 @@ public partial class MainWindow : Window
 
     private void OpenDenoiseCompare_Click(object sender, RoutedEventArgs e)
     {
+        if (_denoiseCompareWindow is { IsLoaded: true })
+        {
+            _denoiseCompareWindow.Activate();
+            return;
+        }
+
+        OpenDenoiseCompareWindow();
+    }
+
+    private void OpenDenoiseCompareWindow()
+    {
         if (DataContext is not MainViewModel vm)
             return;
 
-        new DenoiseCompareWindow(
+        _denoiseCompareWindow?.Close();
+        _denoiseCompareWindow = new DenoiseCompareWindow(
             vm.DenoisePreviewDetail,
             vm.DenoisePreviewStandard,
             vm.DenoisePreviewStrong)
         {
             Owner = this,
-        }.ShowDialog();
+        };
+        _denoiseCompareWindow.Show();
     }
 
     private static string[] GetDroppedPaths(System.Windows.DragEventArgs e) =>

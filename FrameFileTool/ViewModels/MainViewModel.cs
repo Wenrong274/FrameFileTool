@@ -127,6 +127,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public bool ShowDenoisePreviewPlaceholder => !HasDenoisePreview;
 
+    /// <summary>降噪預覽產生成功時觸發，供 View 自動開啟比較視窗。</summary>
+    public event Action? DenoisePreviewGenerated;
+
     /// <summary>依選取的降噪模式顯示對應的使用建議說明，供 UI HintText 繫結。</summary>
     public string SelectedDenoiseModeHint => SelectedDenoiseMode switch
     {
@@ -777,6 +780,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 OnPropertyChanged(nameof(DenoisePreviewStrong));
                 OnPropertyChanged(nameof(HasDenoisePreview));
                 OnPropertyChanged(nameof(ShowDenoisePreviewPlaceholder));
+                DenoisePreviewGenerated?.Invoke();
             }
         }
         catch (OperationCanceledException)
