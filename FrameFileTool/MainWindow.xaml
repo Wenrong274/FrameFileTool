@@ -186,21 +186,59 @@
                     Style="{StaticResource Card}"
                     Padding="0"
                     ClipToBounds="True">
-                <!-- Tab 選取以 PreviewTool enum 繫結各 TabItem 的 IsSelected，
-                     與 Tab 顯示順序無關，調整順序不影響行為。 -->
-                <TabControl AutomationProperties.Name="操作工具"
-                            BorderThickness="0"
-                            Background="Transparent">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                    <TabItem Header="抽幀刪除" Margin="0,0,6,1"
-                             IsSelected="{Binding SelectedTool,
-                                 Converter={StaticResource EnumToBoolConverter},
-                                 ConverterParameter=FrameDelete}">
-                        <!-- 面板內容繫結到 FrameDeleteTool 子 ViewModel -->
-                        <ScrollViewer DataContext="{Binding FrameDeleteTool}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="12,10" Grid.IsSharedSizeScope="True">
+                    <!-- 工具選擇列：2×2 RadioButton 格，選取時位置絕對不移動 -->
+                    <Border Grid.Row="0"
+                            Background="{StaticResource SurfaceSubtleBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="6">
+                        <UniformGrid Rows="2" Columns="2"
+                            AutomationProperties.Name="操作工具">
+                            <RadioButton Content="抽幀刪除"
+                                         GroupName="ToolSelector"
+                                         Style="{StaticResource ToolTabButton}"
+                                         IsChecked="{Binding SelectedTool,
+                                             Converter={StaticResource EnumToBoolConverter},
+                                             ConverterParameter=FrameDelete}" />
+                            <RadioButton Content="批次改名"
+                                         GroupName="ToolSelector"
+                                         Style="{StaticResource ToolTabButton}"
+                                         IsChecked="{Binding SelectedTool,
+                                             Converter={StaticResource EnumToBoolConverter},
+                                             ConverterParameter=Rename}" />
+                            <RadioButton Content="批次縮放"
+                                         GroupName="ToolSelector"
+                                         Style="{StaticResource ToolTabButton}"
+                                         IsChecked="{Binding SelectedTool,
+                                             Converter={StaticResource EnumToBoolConverter},
+                                             ConverterParameter=Resize}" />
+                            <RadioButton Content="批次降噪"
+                                         GroupName="ToolSelector"
+                                         Style="{StaticResource ToolTabButton}"
+                                         IsChecked="{Binding SelectedTool,
+                                             Converter={StaticResource EnumToBoolConverter},
+                                             ConverterParameter=Denoise}" />
+                        </UniformGrid>
+                    </Border>
+
+                    <!-- 工具內容區：四個面板重疊，依 SelectedTool 顯示對應面板 -->
+                    <Grid Grid.Row="1">
+
+                        <!-- 抽幀刪除面板 -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding SelectedTool,
+                                          Converter={StaticResource EnumToVisibilityConverter},
+                                          ConverterParameter=FrameDelete}">
+                            <StackPanel Margin="12,10"
+                                        DataContext="{Binding FrameDeleteTool}"
+                                        Grid.IsSharedSizeScope="True">
 
                                 <!-- 間隔 -->
                                 <Grid Margin="0,0,0,4">
@@ -251,17 +289,16 @@
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
 
-                    <TabItem Header="批次改名" Margin="0,0,6,1"
-                             IsSelected="{Binding SelectedTool,
-                                 Converter={StaticResource EnumToBoolConverter},
-                                 ConverterParameter=Rename}">
-                        <!-- 面板內容繫結到 RenameTool 子 ViewModel -->
-                        <ScrollViewer DataContext="{Binding RenameTool}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="12,10" Grid.IsSharedSizeScope="True">
+                        <!-- 批次改名面板 -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding SelectedTool,
+                                          Converter={StaticResource EnumToVisibilityConverter},
+                                          ConverterParameter=Rename}">
+                            <StackPanel Margin="12,10"
+                                        DataContext="{Binding RenameTool}"
+                                        Grid.IsSharedSizeScope="True">
 
                                 <!-- 前綴 -->
                                 <Grid Margin="0,0,0,4">
@@ -340,18 +377,15 @@
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
 
-                    <!-- ── 批次縮放 Tab ────────────────────────── -->
-                    <TabItem Header="批次縮放" Margin="0,0,6,1"
-                             IsSelected="{Binding SelectedTool,
-                                 Converter={StaticResource EnumToBoolConverter},
-                                 ConverterParameter=Resize}">
-                        <!-- 面板內容繫結到 ResizeTool 子 ViewModel -->
-                        <ScrollViewer DataContext="{Binding ResizeTool}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="12,10">
+                        <!-- 批次縮放面板 -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding SelectedTool,
+                                          Converter={StaticResource EnumToVisibilityConverter},
+                                          ConverterParameter=Resize}">
+                            <StackPanel Margin="12,10"
+                                        DataContext="{Binding ResizeTool}">
 
                                 <!-- 縮放模式 -->
                                 <TextBlock Text="縮放模式"
@@ -382,7 +416,6 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="62" />
                                         </Grid.ColumnDefinitions>
-
                                         <Slider Grid.Column="0"
                                                 AutomationProperties.Name="縮放倍率"
                                                 Minimum="{Binding ScaleFactorSliderMinimum}"
@@ -396,7 +429,6 @@
                                                     UpdateSourceTrigger=PropertyChanged}"
                                                 VerticalAlignment="Center"
                                                 Margin="0,0,8,0" />
-
                                         <TextBox Grid.Column="1"
                                                  Text="{Binding ScaleFactor,
                                                      UpdateSourceTrigger=PropertyChanged,
@@ -416,7 +448,6 @@
                                             <ColumnDefinition Width="8" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="目標寬度"
                                                        Style="{StaticResource FieldLabel}"
@@ -424,7 +455,6 @@
                                             <TextBox Text="{Binding TargetWidth, UpdateSourceTrigger=PropertyChanged}"
                                                      Margin="0" />
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="目標高度"
                                                        Style="{StaticResource FieldLabel}"
@@ -433,11 +463,9 @@
                                                      Margin="0" />
                                         </StackPanel>
                                     </Grid>
-
                                     <TextBlock Text="單邊填 0 時會依原始比例自動計算"
                                                Style="{StaticResource HintText}"
                                                Margin="0,2,0,4" />
-
                                     <CheckBox Content="維持原始比例"
                                               IsChecked="{Binding KeepAspectRatio}"
                                               Margin="0,4,0,0" />
@@ -499,7 +527,7 @@
                                         Command="{Binding ExecuteCommand}"
                                         HorizontalAlignment="Stretch" />
 
-                                <!-- ── 執行進度區塊（執行中才顯示）──── -->
+                                <!-- 執行進度區塊（執行中才顯示） -->
                                 <Border Visibility="{Binding IsResizing, Converter={StaticResource BoolToVis}}"
                                         Background="#EFF6FF"
                                         BorderBrush="{StaticResource AccentBrush}"
@@ -507,21 +535,15 @@
                                         Padding="0,10,0,0"
                                         Margin="0,10,0,0">
                                     <StackPanel>
-
-                                        <!-- 進度條 -->
                                         <ProgressBar Style="{StaticResource ResizeProgressBar}"
                                                      AutomationProperties.Name="縮放進度"
                                                      Value="{Binding ProgressCurrent}"
                                                      Maximum="{Binding ProgressTotal}" />
-
-                                        <!-- 目前處理的檔名 -->
                                         <TextBlock Text="{Binding ProgressText}"
                                                    FontSize="11"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Margin="0,0,0,8" />
-
-                                        <!-- 取消按鈕 -->
                                         <Button Content="取消縮放"
                                                 Command="{Binding CancelCommand}"
                                                 HorizontalAlignment="Stretch"
@@ -536,18 +558,15 @@
 
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
 
-                    <!-- ── 批次降噪 Tab ────────────────────────── -->
-                    <TabItem Header="批次降噪" Margin="0,0,6,1"
-                             IsSelected="{Binding SelectedTool,
-                                 Converter={StaticResource EnumToBoolConverter},
-                                 ConverterParameter=Denoise}">
-                        <!-- 面板內容繫結到 DenoiseTool 子 ViewModel -->
-                        <ScrollViewer DataContext="{Binding DenoiseTool}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="12,10">
+                        <!-- 批次降噪面板 -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding SelectedTool,
+                                          Converter={StaticResource EnumToVisibilityConverter},
+                                          ConverterParameter=Denoise}">
+                            <StackPanel Margin="12,10"
+                                        DataContext="{Binding DenoiseTool}">
 
                                 <!-- 降噪模式 -->
                                 <TextBlock Text="降噪模式"
@@ -604,7 +623,7 @@
                                         Command="{Binding ExecuteCommand}"
                                         HorizontalAlignment="Stretch" />
 
-                                <!-- ── 執行進度區塊（執行中才顯示）──── -->
+                                <!-- 執行進度區塊（執行中才顯示） -->
                                 <Border Visibility="{Binding IsDenoising, Converter={StaticResource BoolToVis}}"
                                         Background="#EFF6FF"
                                         BorderBrush="{StaticResource AccentBrush}"
@@ -612,21 +631,15 @@
                                         Padding="0,10,0,0"
                                         Margin="0,10,0,0">
                                     <StackPanel>
-
-                                        <!-- 進度條 -->
                                         <ProgressBar Style="{StaticResource ResizeProgressBar}"
                                                      AutomationProperties.Name="降噪進度"
                                                      Value="{Binding ProgressCurrent}"
                                                      Maximum="{Binding ProgressTotal}" />
-
-                                        <!-- 目前處理的檔名 -->
                                         <TextBlock Text="{Binding ProgressText}"
                                                    FontSize="11"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Margin="0,0,0,8" />
-
-                                        <!-- 取消按鈕 -->
                                         <Button Content="取消降噪"
                                                 Command="{Binding CancelCommand}"
                                                 HorizontalAlignment="Stretch"
@@ -641,9 +654,9 @@
 
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
 
-                </TabControl>
+                    </Grid>
+                </Grid>
             </Border>
 
             <!-- 右側：預覽區 -->

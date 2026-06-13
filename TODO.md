@@ -29,53 +29,6 @@
 
 ## 近期功能計劃
 
-### UI/UX 排版優化
-
-ID：`ui-layout-optimize`
-優先度：高
-分支：feat/ui-layout-optimize
-前置條件：無
-被依賴：無
-
-⚠ 影響範圍：`MainWindowStyles.xaml`（間距 Token 調整）→
-`MainWindow.xaml`（視窗尺寸、頁首精簡、來源 Card、左側面板寬度、
-各工具欄位水平化、批次縮放寬高並排）
-
-⚠ 邊界案例：縮小至 MinWidth 900px 時各列不斷行或截斷；
-`SharedSizeGroup` 對齊在不同系統字型縮放下不破版
-
-- [x] [Style] `MainWindowStyles.xaml` 調整間距 Token：
-      `FieldLabel` Margin `0,8,0,2` → `0,6,0,2`；
-      `HintText` Margin `0,0,0,12` → `0,0,0,6`；
-      `SectionTitle` Margin `0,0,0,10` → `0,0,0,6`；
-      `TabItem` Margin `0,0,6,10` → `0,0,6,4`。
-- [x] [View] `MainWindow.xaml` 視窗尺寸：Width 960→1100、Height 660→720、
-      MinWidth 820→900、MinHeight 560→600。
-- [x] [View] 頁首 Card 精簡：移除副標題 TextBlock、logo 34→28px、
-      Card Padding `14,10`→`12,8`。
-- [x] [View] 來源設定 Card：Padding `14,12`→`12,10`；
-      FileSummary TextBlock 從頁首移至資料夾列右端同列。
-- [x] [View] 左側工具面板：ColumnDefinition Width `245`→`290`；
-      各工具 StackPanel Margin `14,12`→`12,10`。
-- [x] [View] 抽幀刪除面板：`間隔` 欄位改為水平 Grid（標籤左、TextBox 右）。
-- [x] [View] 批次改名面板：`前綴`、`起始編號`、`補零位數` 三欄位改為水平 Grid，
-      以 `Grid.IsSharedSizeScope="True"` + `SharedSizeGroup="FieldLabel"` 對齊標籤。
-- [x] [View] 批次縮放面板：`目標寬度` 與 `目標高度` 欄位並排為同列 Grid（2 欄）。
-- [x] [View] 批次降噪面板：確認現有欄位佈局，維持垂直排列（ComboBox + Hint 搭配仍清晰）。
-
-完成判定：
-
-- [ ] [正常路徑] 在 1100×720 視窗開啟批次改名 Tab，
-      三個欄位、輸出模式選項與執行按鈕均完整顯示，**不需捲動**。
-- [ ] [正常路徑] 在 1100×720 視窗開啟批次縮放 Tab、切換絕對尺寸模式，
-      目標寬高並排顯示，所有設定與執行按鈕完整顯示，log 展開時**不需捲動**。
-- [ ] [邊界] 縮小至 MinWidth 900px，來源資料夾的標籤、TextBox 與三顆按鈕仍可操作，
-      無截斷或換行。
-- [ ] [邊界] Log 展開後，主內容 DataGrid **至少可見 6 筆**資料列。
-- [ ] [錯誤狀態] 空狀態（無掃描結果）下，各工具的執行按鈕仍正確停用。
-
----
-
 ### Spritesheet 打包工具
 
 ID：`spritesheet-packer`
@@ -84,7 +37,7 @@ ID：`spritesheet-packer`
 前置條件：無
 被依賴：無
 
-⚠ 影響範圍：全新工具 Tab → 新增 `SpriteSheetOptions` / `SpriteFrame` /
+⚠ 影響範圍：全新工具選擇項與工具面板 → 新增 `SpriteSheetOptions` / `SpriteFrame` /
 `SpriteSheetResult` → `ISpriteSheetPlanner` + `SpriteSheetPlanner` →
 `ISpriteSheetExecutor` + `SpriteSheetExecutor` →
 `SpriteSheetPreviewViewModel` → `MainViewModel` → `MainWindow.xaml`
@@ -139,7 +92,7 @@ ID：`spritesheet-packer`
 - [ ] [MainViewModel] 新增 `TriggerSpriteSheetPreview()`、
       `HasExecutableSpriteSheetPreview()`、`ExecuteSpriteSheetCommand`。
 - [ ] [Test] 補上 CanExecute 邏輯測試。
-- [ ] [View] `MainWindow.xaml` 新增「Spritesheet」Tab，
+- [ ] [View] `MainWindow.xaml` 新增「Spritesheet」工具選擇項與工具面板，
       含 sheet 尺寸、padding、trim、輸出格式設定，
       並在 `ContentControl.Resources` 加入對應 `DataTemplate`。
 - [ ] [DI] 在 `App.xaml.cs` 註冊 `ISpriteSheetPlanner` 與 `ISpriteSheetExecutor`。

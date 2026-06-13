@@ -2,8 +2,8 @@ namespace FrameFileTool.Models;
 
 /// <summary>
 /// 主視窗工具的識別。
-/// 與 Tab 的顯示順序無關：XAML 以 EnumToBoolConverter 將各 TabItem 的
-/// IsSelected 繫結到對應的 enum 值，調整 Tab 順序不影響行為。
+/// 與工具選擇格的顯示順序無關：XAML 以 EnumToBoolConverter 將各 RadioButton 的
+/// IsChecked 繫結到對應的 enum 值，調整排列順序不影響行為。
 /// </summary>
 public enum PreviewTool
 {
