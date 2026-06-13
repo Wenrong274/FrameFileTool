@@ -45,6 +45,18 @@ public sealed class OutputFolderResolverTests
     }
 
     [Fact]
+    public void Resolve_自動改用子資料夾時Log應顯示原選擇與實際輸出()
+    {
+        var sut = new OutputFolderResolver();
+        var options = ScaleOptions(0.75);
+
+        var result = sut.ResolveForResize(@"C:\imgs\cloud", @"c:\IMGS\CLOUD", options);
+
+        result.LogMessage.Should().Contain(@"c:\IMGS\CLOUD");
+        result.LogMessage.Should().Contain(@"C:\imgs\cloud\cloud_x0.75");
+    }
+
+    [Fact]
     public void Resolve_絕對尺寸模式_應使用尺寸後綴()
     {
         var sut = new OutputFolderResolver();

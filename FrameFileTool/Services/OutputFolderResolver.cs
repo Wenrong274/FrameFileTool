@@ -29,7 +29,7 @@ public sealed class OutputFolderResolver : IOutputFolderResolver
         return new(
             targetFolder,
             WasAutoRedirected: true,
-            LogMessage: $"輸出資料夾與來源相同，已自動改用：{targetFolder}");
+            LogMessage: $"輸出資料夾與來源相同，原選擇：{selectedTargetFolderPath}，實際輸出：{targetFolder}");
     }
 
     private static string BuildSafeFolderName(string folderName)
