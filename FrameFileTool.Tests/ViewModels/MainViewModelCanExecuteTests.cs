@@ -603,6 +603,54 @@ public sealed class MainViewModelCanExecuteTests
     }
 
     [Fact]
+    public async Task ExecuteResize_自動子資料夾已有衝突_應停止執行並保留錯誤預覽()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([
+                new ResizePreviewItem
+                {
+                    ActionKind = OperationActionKind.Error,
+                    HasError = true,
+                    Status = "目標檔案已存在",
+                },
+            ]);
+        var resizeExecutor = Substitute.For<IImageResizeExecutor>();
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"C:\imgs\cloud");
+        var resolver = Substitute.For<IOutputFolderResolver>();
+        resolver
+            .ResolveForResize(@"C:\imgs\cloud", @"C:\imgs\cloud", Arg.Any<ResizeOptions>())
+            .Returns(new ResolvedOutputFolder(
+                @"C:\imgs\cloud\cloud_x0.5",
+                WasAutoRedirected: true,
+                LogMessage: @"輸出資料夾與來源相同，已自動改用：C:\imgs\cloud\cloud_x0.5"));
+        var sut = CreateSut(
+            folderPicker: folderPicker,
+            resizeExecutor: resizeExecutor,
+            resizePreviewService: resizePreviewService,
+            outputFolderResolver: resolver);
+        sut.SelectedFolder = @"C:\imgs\cloud";
+        sut.ResizeTool.OutputMode = ResizeOutputMode.TargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\cloud\a.png", @"C:\imgs\cloud", "a.png", ".png", 10));
+        sut.CurrentPreview = ResizePreview();
+
+        await sut.ResizeTool.ExecuteCommand.ExecuteAsync(null);
+
+        await resizeExecutor.DidNotReceive().ExecuteAsync(
+            Arg.Any<IEnumerable<OperationPreviewItem>>(),
+            Arg.Any<ResizeOptions>(),
+            Arg.Any<IProgress<ResizeProgressReport>>(),
+            Arg.Any<CancellationToken>());
+        sut.HasPreviewErrors.Should().BeTrue();
+        sut.Logs.Should().Contain(log => log.Contains("縮放已停止"));
+    }
+
+    [Fact]
     public async Task ExecuteResize_指定資料夾模式取消選擇資料夾_不應執行縮放()
     {
         var folderPicker = Substitute.For<IFolderPickerService>();
