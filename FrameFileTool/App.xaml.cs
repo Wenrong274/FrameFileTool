@@ -30,6 +30,7 @@ public partial class App : WpfApplication
         services.AddSingleton<IFileImportService, FileImportService>();
         services.AddSingleton<IResizePlanner, ResizePlanner>();
         services.AddSingleton<IResizePreviewService, ResizePreviewService>();
+        services.AddSingleton<IOutputFolderResolver, OutputFolderResolver>();
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
         services.AddSingleton<IDenoisePlanner, DenoisePlanner>();
         services.AddSingleton<IDenoiseExecutor, DenoiseExecutor>();

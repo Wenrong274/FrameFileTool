@@ -135,6 +135,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
         IFolderPickerService folderPicker,
         IImageResizeExecutor resizeExecutor,
         IResizePreviewService resizePreviewService,
+        IOutputFolderResolver outputFolderResolver,
         IDenoisePlanner denoisePlanner,
         IDenoiseExecutor denoiseExecutor,
         IDenoisePreviewService denoisePreviewService,
@@ -158,6 +159,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
         ResizeTool = new ResizeToolViewModel(
             resizeExecutor,
             resizePreviewService,
+            outputFolderResolver,
             this,
             debounceDelay == default ? TimeSpan.FromMilliseconds(350) : debounceDelay);
         DenoiseTool = new DenoiseToolViewModel(denoisePlanner, denoiseExecutor, denoisePreviewService, this);

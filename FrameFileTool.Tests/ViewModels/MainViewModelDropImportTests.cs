@@ -151,6 +151,7 @@ public sealed class MainViewModelDropImportTests
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
+        Substitute.For<IOutputFolderResolver>(),
         Substitute.For<IDenoisePlanner>(),
         Substitute.For<IDenoiseExecutor>(),
         Substitute.For<IDenoisePreviewService>(),
