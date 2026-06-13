@@ -5,10 +5,10 @@
         Icon="pack://application:,,,/Assets/AppIcon.ico"
         Background="#EEF2F7"
         FontFamily="Segoe UI"
-        Width="960"
-        Height="660"
-        MinWidth="820"
-        MinHeight="560"
+        Width="1100"
+        Height="720"
+        MinWidth="900"
+        MinHeight="600"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
@@ -31,33 +31,21 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ── 頁首：產品識別與當前狀態 ─────────────────────── -->
+        <!-- ── 頁首：產品識別 ─────────────────────────────────── -->
         <Border Grid.Row="0"
                 Style="{StaticResource Card}"
-                Padding="14,10"
+                Padding="12,8"
                 Margin="0,0,0,10">
             <DockPanel LastChildFill="True">
                 <Image DockPanel.Dock="Left"
                        Source="pack://application:,,,/Assets/AppIcon.png"
-                       Width="34"
-                       Height="34"
-                       Margin="0,0,12,0" />
+                       Width="28"
+                       Height="28"
+                       Margin="0,0,10,0" />
 
-                <TextBlock DockPanel.Dock="Right"
-                           Text="{Binding FileSummary}"
-                           Foreground="{StaticResource TextSecondary}"
-                           FontSize="12"
-                           Margin="16,0,0,0" />
-
-                <StackPanel>
-                    <TextBlock Text="影格整理工具"
-                               FontSize="17"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="FrameFileTool：序列圖片抽幀刪除、批次改名與批次縮放工具"
-                               Foreground="{StaticResource TextSecondary}"
-                               FontSize="12"
-                               Margin="0,2,0,0" />
-                </StackPanel>
+                <TextBlock Text="影格整理工具"
+                           FontSize="17"
+                           FontWeight="SemiBold" />
             </DockPanel>
         </Border>
 
@@ -102,7 +90,7 @@
         <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
         <Border Grid.Row="2"
                 Style="{StaticResource Card}"
-                Padding="14,12"
+                Padding="12,10"
                 Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
@@ -112,6 +100,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -144,6 +133,13 @@
                         Margin="6,0,0,0"
                         Command="{Binding ClearFolderAndFilesCommand}" />
 
+                <TextBlock Grid.Row="0"
+                           Grid.Column="5"
+                           Text="{Binding FileSummary}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="12"
+                           Margin="14,0,0,0" />
+
                 <TextBlock Grid.Row="1"
                            Text="掃描格式"
                            FontWeight="SemiBold"
@@ -151,7 +147,7 @@
 
                 <WrapPanel Grid.Row="1"
                            Grid.Column="1"
-                           Grid.ColumnSpan="4"
+                           Grid.ColumnSpan="5"
                            Margin="0,8,0,0"
                            VerticalAlignment="Center">
                     <CheckBox Content=".png"
@@ -180,7 +176,7 @@
         <!-- ── 主內容：左側工具 + 右側預覽 ─────────────────── -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="245" />
+                <ColumnDefinition Width="290" />
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -204,14 +200,22 @@
                         <ScrollViewer DataContext="{Binding FrameDeleteTool}"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="14,12">
+                            <StackPanel Margin="12,10" Grid.IsSharedSizeScope="True">
 
-                                <TextBlock Text="抽幀刪除"
-                                           Style="{StaticResource SectionTitle}" />
-
-                                <TextBlock Text="間隔"
-                                           Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged}" />
+                                <!-- 間隔 -->
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="間隔"
+                                               Style="{StaticResource FieldLabel}"
+                                               Margin="0,0,8,0"
+                                               Grid.Column="0" />
+                                    <TextBox Grid.Column="1"
+                                             Margin="0"
+                                             Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
 
                                 <TextBlock Text="刪除會移至回收桶"
                                            Style="{StaticResource HintText}"
@@ -257,22 +261,54 @@
                         <ScrollViewer DataContext="{Binding RenameTool}"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="14,12">
+                            <StackPanel Margin="12,10" Grid.IsSharedSizeScope="True">
 
-                                <TextBlock Text="批次改名"
-                                           Style="{StaticResource SectionTitle}" />
+                                <!-- 前綴 -->
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="前綴"
+                                               Style="{StaticResource FieldLabel}"
+                                               Margin="0,0,8,0"
+                                               Grid.Column="0" />
+                                    <TextBox Grid.Column="1"
+                                             Margin="0"
+                                             Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
 
-                                <TextBlock Text="前綴"
-                                           Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
+                                <!-- 起始編號 -->
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="起始編號"
+                                               Style="{StaticResource FieldLabel}"
+                                               Margin="0,0,8,0"
+                                               Grid.Column="0" />
+                                    <TextBox Grid.Column="1"
+                                             Margin="0"
+                                             Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
 
-                                <TextBlock Text="起始編號"
-                                           Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
-
-                                <TextBlock Text="補零位數（0 = 不補零）"
-                                           Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding ZeroPadding, UpdateSourceTrigger=PropertyChanged}" />
+                                <!-- 補零位數 -->
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="補零位數"
+                                               Style="{StaticResource FieldLabel}"
+                                               Margin="0,0,8,0"
+                                               Grid.Column="0"
+                                               ToolTip="輸入 0 時不補零" />
+                                    <TextBox Grid.Column="1"
+                                             Margin="0"
+                                             Text="{Binding ZeroPadding, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="輸入 0 時不補零" />
+                                </Grid>
 
                                 <TextBlock Text="輸出模式"
                                            Style="{StaticResource FieldLabel}" />
@@ -315,10 +351,7 @@
                         <ScrollViewer DataContext="{Binding ResizeTool}"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="14,12">
-
-                                <TextBlock Text="批次縮放"
-                                           Style="{StaticResource SectionTitle}" />
+                            <StackPanel Margin="12,10">
 
                                 <!-- 縮放模式 -->
                                 <TextBlock Text="縮放模式"
@@ -326,10 +359,10 @@
                                 <StackPanel Orientation="Horizontal"
                                             Margin="0,2,0,8">
                                     <RadioButton Content="倍率"
-                                                     GroupName="ResizeMode"
-                                                     Margin="0,0,14,0"
-                                                     IsChecked="{Binding Mode,
-                                                         Converter={StaticResource EnumToBoolConverter},
+                                                 GroupName="ResizeMode"
+                                                 Margin="0,0,14,0"
+                                                 IsChecked="{Binding Mode,
+                                                     Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=ScaleFactor}" />
                                     <RadioButton Content="絕對尺寸"
                                                  GroupName="ResizeMode"
@@ -377,17 +410,33 @@
                                 <StackPanel Visibility="{Binding Mode,
                                                 Converter={StaticResource EnumToVisibilityConverter},
                                                 ConverterParameter=Absolute}">
-                                    <TextBlock Text="目標寬度"
-                                               Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding TargetWidth, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,4,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="目標高度"
-                                               Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding TargetHeight, UpdateSourceTrigger=PropertyChanged}" />
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="目標寬度"
+                                                       Style="{StaticResource FieldLabel}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding TargetWidth, UpdateSourceTrigger=PropertyChanged}"
+                                                     Margin="0" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="目標高度"
+                                                       Style="{StaticResource FieldLabel}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding TargetHeight, UpdateSourceTrigger=PropertyChanged}"
+                                                     Margin="0" />
+                                        </StackPanel>
+                                    </Grid>
 
                                     <TextBlock Text="單邊填 0 時會依原始比例自動計算"
                                                Style="{StaticResource HintText}"
-                                               Margin="0,0,0,4" />
+                                               Margin="0,2,0,4" />
 
                                     <CheckBox Content="維持原始比例"
                                               IsChecked="{Binding KeepAspectRatio}"
@@ -498,10 +547,7 @@
                         <ScrollViewer DataContext="{Binding DenoiseTool}"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel Margin="14,12">
-
-                                <TextBlock Text="批次降噪"
-                                           Style="{StaticResource SectionTitle}" />
+                            <StackPanel Margin="12,10">
 
                                 <!-- 降噪模式 -->
                                 <TextBlock Text="降噪模式"
