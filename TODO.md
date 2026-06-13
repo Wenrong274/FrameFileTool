@@ -33,7 +33,7 @@
 
 ID：`same-folder-output-suffix`
 優先度：高
-分支：feat/same-folder-output-suffix（開始時建立）
+分支：feat/same-folder-output-suffix
 前置條件：無
 被依賴：無
 
@@ -63,20 +63,20 @@ Spec：[`docs/superpowers/specs/2026-06-14-same-folder-output-suffix-design.md`]
 當批次縮放指定輸出資料夾與來源資料夾相同時，自動改用來源內子資料夾；
 倍率模式以 `{來源資料夾名}_x{倍率}` 命名，例如 `cloud_x0.5`。
 
-- [ ] [Model] 新增 `ResolvedOutputFolder` record，包含解析後路徑、是否自動改用子資料夾與 log 訊息。
-- [ ] [Service] 定義 `IOutputFolderResolver` 介面。
-- [ ] [Service] 實作 `OutputFolderResolver` pure function：
+- [x] [Model] 新增 `ResolvedOutputFolder` record，包含解析後路徑、是否自動改用子資料夾與 log 訊息。
+- [x] [Service] 定義 `IOutputFolderResolver` 介面。
+- [x] [Service] 實作 `OutputFolderResolver` pure function：
       來源與目標不同時保留目標路徑；來源與目標相同時產生來源內子資料夾。
-- [ ] [Test] 補上 `OutputFolderResolverTests`：
+- [x] [Test] 補上 `OutputFolderResolverTests`：
       不同資料夾、同資料夾、大小寫不同但同路徑、倍率後綴、絕對尺寸後綴、非法字元安全化。
-- [ ] [ViewModel] `ResizeToolViewModel.ExecuteAsync()` 在使用者選擇目標資料夾後呼叫 resolver，
+- [x] [ViewModel] `ResizeToolViewModel.ExecuteAsync()` 在使用者選擇目標資料夾後呼叫 resolver，
       將解析後路徑寫回 `ResizeOptions.TargetFolderPath`，並在自動改用時寫入 log。
-- [ ] [Test] 補上 ViewModel 執行測試：
+- [x] [Test] 補上 ViewModel 執行測試：
       選到來源資料夾時 executor 收到自動子資料夾路徑，且 log 顯示自動改用資訊。
-- [ ] [Test] 補上衝突路徑測試：
+- [x] [Test] 補上衝突路徑測試：
       自動子資料夾已有同名輸出檔時，預覽標錯且 executor 不執行。
-- [ ] [DI] 在 `App.xaml.cs` 註冊 `IOutputFolderResolver`。
-- [ ] [Docs] 更新 `README.md` 批次縮放說明，補充同來源輸出會自動建立子資料夾。
+- [x] [DI] 在 `App.xaml.cs` 註冊 `IOutputFolderResolver`。
+- [x] [Docs] 更新 `README.md` 批次縮放說明，補充同來源輸出會自動建立子資料夾。
 
 完成判定：
 
