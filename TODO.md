@@ -37,7 +37,7 @@ ID：`spritesheet-packer`
 前置條件：無
 被依賴：無
 
-⚠ 影響範圍：全新工具 Tab → 新增 `SpriteSheetOptions` / `SpriteFrame` /
+⚠ 影響範圍：全新工具選擇項與工具面板 → 新增 `SpriteSheetOptions` / `SpriteFrame` /
 `SpriteSheetResult` → `ISpriteSheetPlanner` + `SpriteSheetPlanner` →
 `ISpriteSheetExecutor` + `SpriteSheetExecutor` →
 `SpriteSheetPreviewViewModel` → `MainViewModel` → `MainWindow.xaml`
@@ -92,7 +92,7 @@ ID：`spritesheet-packer`
 - [ ] [MainViewModel] 新增 `TriggerSpriteSheetPreview()`、
       `HasExecutableSpriteSheetPreview()`、`ExecuteSpriteSheetCommand`。
 - [ ] [Test] 補上 CanExecute 邏輯測試。
-- [ ] [View] `MainWindow.xaml` 新增「Spritesheet」Tab，
+- [ ] [View] `MainWindow.xaml` 新增「Spritesheet」工具選擇項與工具面板，
       含 sheet 尺寸、padding、trim、輸出格式設定，
       並在 `ContentControl.Resources` 加入對應 `DataTemplate`。
 - [ ] [DI] 在 `App.xaml.cs` 註冊 `ISpriteSheetPlanner` 與 `ISpriteSheetExecutor`。

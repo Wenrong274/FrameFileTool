@@ -207,10 +207,10 @@
     <Setter Property="Foreground"        Value="{StaticResource TextPrimary}" />
 </Style>
 
-<!-- ── 欄位標籤（TextBox 上方）───────────────────────── -->
+<!-- ── 欄位標籤（TextBox 上方或左側）─────────────────── -->
 <Style x:Key="FieldLabel" TargetType="TextBlock">
     <Setter Property="FontSize"   Value="11" />
-    <Setter Property="Margin"     Value="0,8,0,2" />
+    <Setter Property="Margin"     Value="0,6,0,2" />
     <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
 </Style>
 
@@ -218,7 +218,7 @@
 <Style x:Key="SectionTitle" TargetType="TextBlock">
     <Setter Property="FontSize"   Value="13" />
     <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Margin"     Value="0,0,0,10" />
+    <Setter Property="Margin"     Value="0,0,0,6" />
 </Style>
 
 <!-- ── 提示說明文字 ───────────────────────────────────── -->
@@ -226,7 +226,7 @@
     <Setter Property="FontSize"     Value="11" />
     <Setter Property="Foreground"   Value="{StaticResource TextSecondary}" />
     <Setter Property="TextWrapping" Value="Wrap" />
-    <Setter Property="Margin"       Value="0,0,0,12" />
+    <Setter Property="Margin"       Value="0,0,0,6" />
 </Style>
 
 <!-- ── Card 容器 ─────────────────────────────────────── -->
@@ -267,37 +267,40 @@
     </Setter>
 </Style>
 
-<!-- ── Tab：工具切換 ─────────────────────────────────── -->
-<Style TargetType="TabControl">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Padding" Value="10" />
-</Style>
-
-<Style TargetType="TabItem">
-    <Setter Property="Margin" Value="0,0,6,10" />
-    <Setter Property="Padding" Value="12,7" />
+<!-- ── 工具選擇按鈕（RadioButton，2×2 格佈局）────────── -->
+<Style x:Key="ToolTabButton" TargetType="RadioButton">
+    <Setter Property="Height"     Value="32" />
+    <Setter Property="Padding"    Value="8,7" />
+    <Setter Property="Cursor"     Value="Hand" />
     <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
-    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontSize"   Value="12" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment"   Value="Center" />
     <Setter Property="Template">
         <Setter.Value>
-            <ControlTemplate TargetType="TabItem">
-                <Border x:Name="TabBorder"
+            <ControlTemplate TargetType="RadioButton">
+                <Border x:Name="Btn"
                         Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="1"
                         CornerRadius="6"
+                        Margin="2"
                         Padding="{TemplateBinding Padding}">
-                    <ContentPresenter ContentSource="Header"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center" />
+                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                 </Border>
                 <ControlTemplate.Triggers>
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter TargetName="TabBorder" Property="Background" Value="#EAF2FF" />
+                    <MultiTrigger>
+                        <MultiTrigger.Conditions>
+                            <Condition Property="IsMouseOver" Value="True" />
+                            <Condition Property="IsChecked" Value="False" />
+                        </MultiTrigger.Conditions>
+                        <Setter TargetName="Btn" Property="Background" Value="{StaticResource SurfaceSubtleBrush}" />
+                    </MultiTrigger>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter TargetName="Btn" Property="Background" Value="#EAF2FF" />
+                        <Setter TargetName="Btn" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                         <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                        <Setter Property="FontWeight" Value="SemiBold" />
-                    </Trigger>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource SurfaceSubtleBrush}" />
                     </Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate>

@@ -23,6 +23,73 @@
 
 ---
 
+## UI/UX 排版優化
+
+ID：`ui-layout-optimize`
+完成日期：2026-06-14
+發布版本：未發布
+
+優先度：高
+分支：feat/ui-layout-optimize
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：`MainWindowStyles.xaml`（間距 Token 調整）→
+`MainWindow.xaml`（視窗尺寸、頁首精簡、來源 Card、左側面板寬度、
+各工具欄位水平化、批次縮放寬高並排）
+
+⚠ 邊界案例：縮小至 MinWidth 900px 時各列不斷行或截斷；
+`SharedSizeGroup` 對齊在不同系統字型縮放下不破版
+
+實作結果：
+
+- 視窗預設尺寸調整為 1100×720，最小尺寸調整為 900×600，
+  搭配精簡頁首與來源設定 Card，讓主要工作區取得更多可用高度。
+- 來源資料夾列將檔案摘要移到同列右側，保留掃描格式與子資料夾設定的第二列空間。
+- 左側工具面板加寬至 290px，四個工具的內容 Padding 收斂為 `12,10`，
+  表單欄位更密集但維持可讀。
+- 抽幀刪除的間隔欄位、批次改名的三個欄位改為水平對齊；
+  批次縮放的目標寬度與高度改為同列並排。
+- 追加修正：完全移除 `TabControl` / `TabItem` 工具切換，
+  改為固定高度的 2×2 `RadioButton` 選擇格與 `Visibility` 內容切換，
+  避免 TabPanel 選取位移與 StackPanel 取代後的高度分配問題。
+- `PreviewTool` 文件註解同步改為工具選擇格，不再描述 Tab 順序。
+
+- [x] [Style] `MainWindowStyles.xaml` 調整間距 Token：
+      `FieldLabel` Margin `0,8,0,2` → `0,6,0,2`；
+      `HintText` Margin `0,0,0,12` → `0,0,0,6`；
+      `SectionTitle` Margin `0,0,0,10` → `0,0,0,6`；
+      移除 `TabControl` / `TabItem` 樣式，改用固定高度的 2×2 `ToolTabButton`。
+- [x] [View] `MainWindow.xaml` 視窗尺寸：Width 960→1100、Height 660→720、
+      MinWidth 820→900、MinHeight 560→600。
+- [x] [View] 頁首 Card 精簡：移除副標題 TextBlock、logo 34→28px、
+      Card Padding `14,10`→`12,8`。
+- [x] [View] 來源設定 Card：Padding `14,12`→`12,10`；
+      FileSummary TextBlock 從頁首移至資料夾列右端同列。
+- [x] [View] 左側工具面板：ColumnDefinition Width `245`→`290`；
+      各工具 StackPanel Margin `14,12`→`12,10`。
+- [x] [View] 抽幀刪除面板：`間隔` 欄位改為水平 Grid（標籤左、TextBox 右）。
+- [x] [View] 批次改名面板：`前綴`、`起始編號`、`補零位數` 三欄位改為水平 Grid，
+      以 `Grid.IsSharedSizeScope="True"` + `SharedSizeGroup="FieldLabel"` 對齊標籤。
+- [x] [View] 批次縮放面板：`目標寬度` 與 `目標高度` 欄位並排為同列 Grid（2 欄）。
+- [x] [View] 批次降噪面板：確認現有欄位佈局，維持垂直排列（ComboBox + Hint 搭配仍清晰）。
+
+發版評估（2026-06-14）：使用者可見的 UI/UX 改善，建議納入下一個版本發布；
+發布後依規則回填版本號。
+
+完成判定：
+
+- [x] [正常路徑] 在 1100×720 視窗切換到批次改名工具，
+      三個欄位、輸出模式選項與執行按鈕均完整顯示，**不需捲動**。
+- [x] [正常路徑] 在 1100×720 視窗切換到批次縮放工具、切換絕對尺寸模式，
+      目標寬高並排顯示，所有設定與執行按鈕完整顯示，log 展開時**不需捲動**。
+- [x] [邊界] 縮小至 MinWidth 900px，來源資料夾的標籤、TextBox 與三顆按鈕仍可操作，
+      無截斷或換行。
+- [x] [邊界] Log 展開後，主內容 DataGrid **至少可見 6 筆**資料列。
+- [x] [錯誤狀態] 空狀態（無掃描結果）下，各工具的執行按鈕仍正確停用。
+
+---
+
 ## 重構：MainViewModel 瘦身與執行流程統一
 
 ID：`refactor-main-vm-slim`
