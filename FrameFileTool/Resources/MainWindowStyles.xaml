@@ -271,7 +271,27 @@
 <Style TargetType="TabControl">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Padding" Value="10" />
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="TabControl">
+                <Grid KeyboardNavigation.TabNavigation="Local">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!-- StackPanel 取代 TabPanel，避免選取時標籤位移 -->
+                    <StackPanel Grid.Row="0"
+                                IsItemsHost="True"
+                                Orientation="Horizontal"
+                                KeyboardNavigation.TabIndex="1" />
+                    <ContentPresenter x:Name="PART_SelectedContentHost"
+                                      Grid.Row="1"
+                                      ContentSource="SelectedContent"
+                                      KeyboardNavigation.TabIndex="2" />
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
 </Style>
 
 <Style TargetType="TabItem">
