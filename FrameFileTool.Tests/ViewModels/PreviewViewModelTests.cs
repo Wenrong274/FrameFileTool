@@ -97,6 +97,34 @@ public sealed class PreviewViewModelTests
     }
 
     [Fact]
+    public void DenoisePreview_取消勾選降噪項目_摘要與可執行狀態應同步更新()
+    {
+        var denoiseItem = PreviewItem(OperationActionKind.Denoise);
+        var sut = new DenoisePreviewViewModel([denoiseItem]);
+
+        sut.Summary.Should().Be("共 1 個項目，預計降噪 1 個（覆寫原檔）");
+        sut.HasExecutableItems.Should().BeTrue();
+
+        denoiseItem.IsIncluded = false;
+
+        sut.Summary.Should().Be("共 0 個項目，預計降噪 0 個（覆寫原檔）");
+        sut.HasExecutableItems.Should().BeFalse();
+        sut.HasErrors.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DenoisePreview_包含錯誤列_應標記有錯誤且摘要含錯誤計數()
+    {
+        var denoiseItem = PreviewItem(OperationActionKind.Denoise);
+        var errorItem = PreviewItem(OperationActionKind.Error, hasError: true);
+        var sut = new DenoisePreviewViewModel([denoiseItem, errorItem]);
+
+        sut.Summary.Should().Be("共 2 個項目，預計降噪 1 個（覆寫原檔），1 個錯誤（執行已停用）");
+        sut.HasExecutableItems.Should().BeTrue();
+        sut.HasErrors.Should().BeTrue();
+    }
+
+    [Fact]
     public void RenamePreview_包含錯誤列_即使錯誤列未勾選仍應標記有錯誤()
     {
         var renameItem = PreviewItem(OperationActionKind.Rename);

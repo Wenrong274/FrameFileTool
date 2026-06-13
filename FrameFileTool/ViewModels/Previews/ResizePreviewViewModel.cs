@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using FrameFileTool.Models;
 
 namespace FrameFileTool.ViewModels.Previews;
@@ -7,13 +6,10 @@ namespace FrameFileTool.ViewModels.Previews;
 /// 批次縮放操作的預覽結果，供 DataTemplate 顯示含尺寸欄位的 DataGrid。
 /// 持有 <see cref="ResizePreviewItem"/> 清單，欄位包含原始尺寸與縮放後尺寸。
 /// </summary>
-public sealed class ResizePreviewViewModel : IPreviewViewModel
+public sealed class ResizePreviewViewModel : PreviewViewModelBase<ResizePreviewItem>
 {
-    /// <summary>預覽項目清單，繫結到批次縮放專用的 DataGrid。</summary>
-    public IReadOnlyList<ResizePreviewItem> Items { get; }
-
     /// <inheritdoc/>
-    public string Summary
+    public override string Summary
     {
         get
         {
@@ -29,34 +25,14 @@ public sealed class ResizePreviewViewModel : IPreviewViewModel
     }
 
     /// <inheritdoc/>
-    public bool HasErrors => Items.Any(i => i.HasError);
+    public override bool HasErrors => Items.Any(i => i.HasError);
 
     /// <inheritdoc/>
-    public bool HasExecutableItems =>
+    public override bool HasExecutableItems =>
         Items.Any(i => i.IsIncluded && i.ActionKind == OperationActionKind.Resize && !i.HasError);
 
-    /// <inheritdoc/>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public ResizePreviewViewModel(IReadOnlyList<ResizePreviewItem> items)
+        : base(items)
     {
-        Items = items;
-
-        foreach (var item in Items)
-        {
-            item.PropertyChanged += OnItemPropertyChanged;
-        }
-    }
-
-    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(OperationPreviewItem.IsIncluded))
-        {
-            return;
-        }
-
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasErrors)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasExecutableItems)));
     }
 }

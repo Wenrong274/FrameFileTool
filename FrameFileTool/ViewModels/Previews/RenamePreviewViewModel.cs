@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.IO;
 using FrameFileTool.Models;
 
@@ -6,14 +5,13 @@ namespace FrameFileTool.ViewModels.Previews;
 
 /// <summary>
 /// 批次改名操作的預覽結果，供 DataTemplate 顯示對應欄位。
+/// 除基底的通知轉發外，另維護勾選狀態造成的 selection conflict
+/// （已勾選改名目標撞到未勾選來源檔）。
 /// </summary>
-public sealed class RenamePreviewViewModel : IPreviewViewModel
+public sealed class RenamePreviewViewModel : PreviewViewModelBase<OperationPreviewItem>
 {
-    /// <summary>預覽項目清單，繫結到批次改名專用的 DataGrid。</summary>
-    public IReadOnlyList<OperationPreviewItem> Items { get; }
-
     /// <inheritdoc/>
-    public string Summary
+    public override string Summary
     {
         get
         {
@@ -36,43 +34,24 @@ public sealed class RenamePreviewViewModel : IPreviewViewModel
     }
 
     /// <inheritdoc/>
-    public bool HasErrors => Items.Any(i => i.HasError) || GetInclusionConflictItems().Count > 0;
+    public override bool HasErrors => Items.Any(i => i.HasError) || GetInclusionConflictItems().Count > 0;
 
     /// <inheritdoc/>
-    public bool HasExecutableItems =>
+    public override bool HasExecutableItems =>
         Items.Any(i =>
             i.IsIncluded &&
             i.ActionKind is OperationActionKind.Rename or OperationActionKind.Copy &&
             !i.HasError &&
             !GetInclusionConflictItems().Contains(i));
 
-    /// <inheritdoc/>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public RenamePreviewViewModel(IReadOnlyList<OperationPreviewItem> items)
+        : base(items)
     {
-        Items = items;
-
-        foreach (var item in Items)
-        {
-            item.PropertyChanged += OnItemPropertyChanged;
-        }
-
         RefreshSelectionConflicts();
     }
 
-    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(OperationPreviewItem.IsIncluded))
-        {
-            return;
-        }
-
-        RefreshSelectionConflicts();
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasErrors)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasExecutableItems)));
-    }
+    /// <inheritdoc/>
+    protected override void OnIncludedItemsChanged() => RefreshSelectionConflicts();
 
     private void RefreshSelectionConflicts()
     {

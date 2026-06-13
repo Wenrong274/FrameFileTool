@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using FrameFileTool.Models;
 
 namespace FrameFileTool.ViewModels.Previews;
@@ -6,13 +5,10 @@ namespace FrameFileTool.ViewModels.Previews;
 /// <summary>
 /// 抽幀刪除操作的預覽結果，供 DataTemplate 顯示對應欄位。
 /// </summary>
-public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
+public sealed class FrameDeletePreviewViewModel : PreviewViewModelBase<OperationPreviewItem>
 {
-    /// <summary>預覽項目清單，繫結到抽幀刪除專用的 DataGrid。</summary>
-    public IReadOnlyList<OperationPreviewItem> Items { get; }
-
     /// <inheritdoc/>
-    public string Summary
+    public override string Summary
     {
         get
         {
@@ -31,37 +27,17 @@ public sealed class FrameDeletePreviewViewModel : IPreviewViewModel
     }
 
     /// <inheritdoc/>
-    public bool HasErrors => Items.Any(i => i.HasError);
+    public override bool HasErrors => Items.Any(i => i.HasError);
 
     /// <inheritdoc/>
-    public bool HasExecutableItems =>
+    public override bool HasExecutableItems =>
         Items.Any(i =>
             i.IsIncluded &&
             i.ActionKind is OperationActionKind.Delete or OperationActionKind.Copy &&
             !i.HasError);
 
-    /// <inheritdoc/>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public FrameDeletePreviewViewModel(IReadOnlyList<OperationPreviewItem> items)
+        : base(items)
     {
-        Items = items;
-
-        foreach (var item in Items)
-        {
-            item.PropertyChanged += OnItemPropertyChanged;
-        }
-    }
-
-    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(OperationPreviewItem.IsIncluded))
-        {
-            return;
-        }
-
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasErrors)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasExecutableItems)));
     }
 }
