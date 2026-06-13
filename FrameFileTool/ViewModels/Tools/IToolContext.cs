@@ -12,62 +12,62 @@ namespace FrameFileTool.ViewModels.Tools;
 internal interface IToolContext
 {
     /// <summary>目前選擇的來源資料夾，作為目標資料夾選擇器的起始路徑。</summary>
-    string SelectedFolder { get; }
+    public string SelectedFolder { get; }
 
     /// <summary>當前預覽結果。工具觸發預覽或執行前重新規劃時設定。</summary>
-    IPreviewViewModel? CurrentPreview { get; set; }
+    public IPreviewViewModel? CurrentPreview { get; set; }
 
     /// <summary>是否正在準備預覽資料（縮放工具的非同步預覽使用）。</summary>
-    bool IsPreparingPreview { get; set; }
+    public bool IsPreparingPreview { get; set; }
 
     /// <summary>預覽準備中顯示於摘要列的狀態文字。</summary>
-    string PreviewBusyText { get; set; }
+    public string PreviewBusyText { get; set; }
 
     /// <summary>檔案清單是否非空，供 CanExecute 判斷。</summary>
-    bool HasFiles { get; }
+    public bool HasFiles { get; }
 
     /// <summary>批次縮放或批次降噪是否執行中。為 true 時所有工具的執行命令都應停用。</summary>
-    bool IsBatchExecuting { get; }
+    public bool IsBatchExecuting { get; }
 
     /// <summary>取得目前檔案清單的快照。</summary>
-    IReadOnlyList<FileItem> SnapshotFiles();
+    public IReadOnlyList<FileItem> SnapshotFiles();
 
     /// <summary>設定當前預覽並記錄 log。</summary>
-    void SetCurrentPreview(IPreviewViewModel preview, string logMessage);
+    public void SetCurrentPreview(IPreviewViewModel preview, string logMessage);
 
     /// <summary>將訊息寫入操作 log。</summary>
-    void AddLog(string message);
+    public void AddLog(string message);
 
     /// <summary>將執行結果中的錯誤逐筆寫入 log。</summary>
-    void AddErrors(OperationResult result);
+    public void AddErrors(OperationResult result);
 
     /// <summary>通知所有命令重新評估 CanExecute。</summary>
-    void RefreshCommands();
+    public void RefreshCommands();
 
     /// <summary>執行完成後重新掃描，保留使用者剔除的檔案排除清單。</summary>
-    void RescanKeepingExclusions();
+    public void RescanKeepingExclusions();
 
     /// <summary>選擇目標資料夾；使用者取消時記錄 log 並回傳 null。</summary>
-    string? PickTargetFolderOrLogCancel(string operationName);
+    public string? PickTargetFolderOrLogCancel(string operationName);
 
     /// <summary>
     /// 將重新規劃後的預覽套用為當前預覽；
     /// 含衝突或路徑錯誤時記錄 log、刷新命令並回傳 false。
     /// </summary>
-    bool ApplyPlannedPreviewOrLogConflict(string operationName, IPreviewViewModel plannedPreview);
+    public bool ApplyPlannedPreviewOrLogConflict(string operationName, IPreviewViewModel plannedPreview);
 
     /// <summary>
     /// 同步版的完整複製前置流程：選資料夾 → 重新規劃 → 衝突檢查。
     /// 任一步驟中止時回傳 null。
     /// </summary>
-    TPreview? PrepareCopyToTargetPreview<TPreview>(
+    public TPreview? PrepareCopyToTargetPreview<TPreview>(
         string operationName,
         Func<string, TPreview> replanForTarget)
         where TPreview : class, IPreviewViewModel;
 
     /// <summary>工具設定變更時通知，讓協調者使對應工具的預覽失效並即時重建。</summary>
-    void NotifySettingChanged(PreviewTool tool);
+    public void NotifySettingChanged(PreviewTool tool);
 
     /// <summary>查詢指定目標路徑中實際已存在的檔案路徑集合。</summary>
-    IReadOnlySet<string> GetExistingPaths(IEnumerable<string> targetPaths);
+    public IReadOnlySet<string> GetExistingPaths(IEnumerable<string> targetPaths);
 }
