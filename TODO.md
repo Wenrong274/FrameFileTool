@@ -29,6 +29,68 @@
 
 ## 近期功能計劃
 
+### 同來源輸出自動子資料夾
+
+ID：`same-folder-output-suffix`
+優先度：高
+分支：feat/same-folder-output-suffix（開始時建立）
+前置條件：無
+被依賴：無
+
+來源：2026-06-14 使用者回饋。批次縮放指定資料夾輸出時，
+若使用者選到與來源相同的資料夾，目前會因目標檔衝突無法輸出，
+但缺少清楚提醒與順手的自動輸出策略。
+
+Spec：[`docs/superpowers/specs/2026-06-14-same-folder-output-suffix-design.md`](./docs/superpowers/specs/2026-06-14-same-folder-output-suffix-design.md)
+
+可執行度：可直接進計劃。現有 `ResizeToolViewModel` 已集中處理執行時目標資料夾選擇；
+`ResizePlanner`、`ResizePreviewService` 與 `ImageResizeExecutor` 已支援 target folder path，
+只需要在 ViewModel 與 planner/executor 之間加入 pure resolver。
+
+優先度分析：使用者感知價值高，修正目前「選到同來源卻不清楚為何無法輸出」的流程卡點；
+第一版只影響批次縮放，範圍可控，不依賴其他任務。
+
+⚠ 影響範圍：`OutputFolderResolver` 新 service →
+`ResizeToolViewModel.ExecuteAsync()` 目標資料夾解析 →
+`ResizeOptions.TargetFolderPath` → 既有 `ResizePlanner` 衝突偵測 →
+`ImageResizeExecutor` 實際輸出 → ViewModel log 與測試
+
+⚠ 邊界案例：來源與目標路徑大小寫不同但實際相同；
+來源資料夾名稱含不適合檔名的字元；自動子資料夾已存在同名輸出檔；
+倍率文字包含小數點或尾端 0；絕對尺寸單邊為 0 時的後綴命名
+
+決策（2026-06-14，開發者確認）：採方案 1。
+當批次縮放指定輸出資料夾與來源資料夾相同時，自動改用來源內子資料夾；
+倍率模式以 `{來源資料夾名}_x{倍率}` 命名，例如 `cloud_x0.5`。
+
+- [ ] [Model] 新增 `ResolvedOutputFolder` record，包含解析後路徑、是否自動改用子資料夾與 log 訊息。
+- [ ] [Service] 定義 `IOutputFolderResolver` 介面。
+- [ ] [Service] 實作 `OutputFolderResolver` pure function：
+      來源與目標不同時保留目標路徑；來源與目標相同時產生來源內子資料夾。
+- [ ] [Test] 補上 `OutputFolderResolverTests`：
+      不同資料夾、同資料夾、大小寫不同但同路徑、倍率後綴、絕對尺寸後綴、非法字元安全化。
+- [ ] [ViewModel] `ResizeToolViewModel.ExecuteAsync()` 在使用者選擇目標資料夾後呼叫 resolver，
+      將解析後路徑寫回 `ResizeOptions.TargetFolderPath`，並在自動改用時寫入 log。
+- [ ] [Test] 補上 ViewModel 執行測試：
+      選到來源資料夾時 executor 收到自動子資料夾路徑，且 log 顯示自動改用資訊。
+- [ ] [Test] 補上衝突路徑測試：
+      自動子資料夾已有同名輸出檔時，預覽標錯且 executor 不執行。
+- [ ] [DI] 在 `App.xaml.cs` 註冊 `IOutputFolderResolver`。
+- [ ] [Docs] 更新 `README.md` 批次縮放說明，補充同來源輸出會自動建立子資料夾。
+
+完成判定：
+
+- [ ] [正常路徑] 批次縮放倍率 0.5、來源資料夾名為 `cloud`、
+      執行時選擇來源資料夾作為輸出位置時，實際輸出到 `cloud\cloud_x0.5`。
+- [ ] [正常路徑] 來源與輸出資料夾不同時，仍輸出到使用者選擇的資料夾，
+      不額外建立自動子資料夾。
+- [ ] [邊界] 目標資料夾與來源資料夾大小寫不同但實際相同時，仍自動改用來源內子資料夾。
+- [ ] [錯誤狀態] 自動子資料夾中已有同名輸出檔時，預覽標示衝突、執行停用，
+      log 可定位衝突目標路徑。
+- [ ] [體驗] 自動改用子資料夾時，log 明確顯示原本選擇的資料夾與實際輸出資料夾。
+
+---
+
 ### Spritesheet 打包工具
 
 ID：`spritesheet-packer`
