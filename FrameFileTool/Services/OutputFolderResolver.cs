@@ -22,10 +22,8 @@ public sealed class OutputFolderResolver : IOutputFolderResolver
             return new(selectedTargetFolderPath, WasAutoRedirected: false, LogMessage: null);
         }
 
-        var sourceFolderName = Path.GetFileName(normalizedSource);
-        var suffix = options.Mode == ResizeMode.ScaleFactor
-            ? $"_x{options.ScaleFactor.ToString("0.####", CultureInfo.InvariantCulture)}"
-            : $"_{options.TargetWidth}x{options.TargetHeight}";
+        var sourceFolderName = BuildSafeFolderName(Path.GetFileName(normalizedSource));
+        var suffix = BuildResizeSuffix(options);
         var targetFolder = Path.Combine(normalizedSource, $"{sourceFolderName}{suffix}");
 
         return new(
@@ -34,7 +32,49 @@ public sealed class OutputFolderResolver : IOutputFolderResolver
             LogMessage: $"輸出資料夾與來源相同，已自動改用：{targetFolder}");
     }
 
-    private static string NormalizeFolderPath(string path) =>
-        Path.GetFullPath(path.Trim())
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    private static string BuildSafeFolderName(string folderName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var chars = folderName
+            .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
+            .ToArray();
+
+        var safeName = new string(chars).Trim().TrimEnd('.');
+        return string.IsNullOrWhiteSpace(safeName) ? "output" : safeName;
+    }
+
+    private static string BuildResizeSuffix(ResizeOptions options) =>
+        options.Mode == ResizeMode.ScaleFactor
+            ? $"_x{options.ScaleFactor.ToString("0.####", CultureInfo.InvariantCulture)}"
+            : $"_{options.TargetWidth}x{options.TargetHeight}";
+
+    private static string NormalizeFolderPath(string path)
+    {
+        var trimmedPath = Path.TrimEndingDirectorySeparator(path.Trim());
+        var normalizedPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(trimmedPath));
+
+        var trailingDots = CountTrailingDotsForActualFolderName(Path.GetFileName(trimmedPath));
+        if (trailingDots == 0 || normalizedPath.EndsWith(new string('.', trailingDots), StringComparison.Ordinal))
+        {
+            return normalizedPath;
+        }
+
+        return normalizedPath + new string('.', trailingDots);
+    }
+
+    private static int CountTrailingDotsForActualFolderName(string pathSegment) =>
+        pathSegment is "." or ".."
+            ? 0
+            : CountTrailingDots(pathSegment);
+
+    private static int CountTrailingDots(string pathSegment)
+    {
+        var count = 0;
+        for (var index = pathSegment.Length - 1; index >= 0 && pathSegment[index] == '.'; index--)
+        {
+            count++;
+        }
+
+        return count;
+    }
 }

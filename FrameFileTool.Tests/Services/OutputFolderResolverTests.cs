@@ -44,6 +44,61 @@ public sealed class OutputFolderResolverTests
         result.WasAutoRedirected.Should().BeTrue();
     }
 
+    [Fact]
+    public void Resolve_絕對尺寸模式_應使用尺寸後綴()
+    {
+        var sut = new OutputFolderResolver();
+        var options = AbsoluteOptions(width: 800, height: 600, keepAspectRatio: true);
+
+        var result = sut.ResolveForResize(@"C:\imgs\cloud", @"C:\imgs\cloud", options);
+
+        result.TargetFolderPath.Should().Be(@"C:\imgs\cloud\cloud_800x600");
+    }
+
+    [Fact]
+    public void Resolve_絕對尺寸單邊為零_應保留零值以反映使用者設定()
+    {
+        var sut = new OutputFolderResolver();
+        var options = AbsoluteOptions(width: 800, height: 0, keepAspectRatio: true);
+
+        var result = sut.ResolveForResize(@"C:\imgs\cloud", @"C:\imgs\cloud", options);
+
+        result.TargetFolderPath.Should().Be(@"C:\imgs\cloud\cloud_800x0");
+    }
+
+    [Fact]
+    public void Resolve_來源資料夾名稱含非法字元_應轉為安全資料夾名稱()
+    {
+        var sut = new OutputFolderResolver();
+        var options = ScaleOptions(0.5);
+
+        var result = sut.ResolveForResize(@"C:\imgs\cloud.", @"C:\imgs\cloud.", options);
+
+        result.TargetFolderPath.Should().Be(@"C:\imgs\cloud.\cloud_x0.5");
+    }
+
+    [Fact]
+    public void Resolve_來源路徑結尾為目前資料夾語意段_應以正規化後資料夾名稱建立子資料夾()
+    {
+        var sut = new OutputFolderResolver();
+        var options = ScaleOptions(0.5);
+
+        var result = sut.ResolveForResize(@"C:\imgs\.", @"C:\imgs", options);
+
+        result.TargetFolderPath.Should().Be(@"C:\imgs\imgs_x0.5");
+    }
+
+    [Fact]
+    public void Resolve_來源路徑結尾為上一層語意段_應以正規化後資料夾名稱建立子資料夾()
+    {
+        var sut = new OutputFolderResolver();
+        var options = ScaleOptions(0.5);
+
+        var result = sut.ResolveForResize(@"C:\imgs\..\root", @"C:\root", options);
+
+        result.TargetFolderPath.Should().Be(@"C:\root\root_x0.5");
+    }
+
     private static ResizeOptions ScaleOptions(double factor) =>
         new(
             Mode: ResizeMode.ScaleFactor,
@@ -51,6 +106,17 @@ public sealed class OutputFolderResolverTests
             TargetWidth: 0,
             TargetHeight: 0,
             KeepAspectRatio: true,
+            OutputMode: ResizeOutputMode.TargetFolder,
+            TargetFolderPath: string.Empty,
+            Resampler: ResamplerType.Bicubic);
+
+    private static ResizeOptions AbsoluteOptions(int width, int height, bool keepAspectRatio) =>
+        new(
+            Mode: ResizeMode.Absolute,
+            ScaleFactor: 1,
+            TargetWidth: width,
+            TargetHeight: height,
+            KeepAspectRatio: keepAspectRatio,
             OutputMode: ResizeOutputMode.TargetFolder,
             TargetFolderPath: string.Empty,
             Resampler: ResamplerType.Bicubic);
