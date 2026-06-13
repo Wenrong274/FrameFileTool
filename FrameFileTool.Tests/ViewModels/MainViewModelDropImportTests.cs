@@ -121,7 +121,7 @@ public sealed class MainViewModelDropImportTests
     {
         var sut = CreateSut(Substitute.For<IFileImportService>());
 
-        sut.IsResizing = true;
+        sut.ResizeTool.IsResizing = true;
 
         sut.ImportDroppedPathsCommand.CanExecute([@"C:\imgs\a.png"]).Should().BeFalse();
     }
@@ -151,6 +151,8 @@ public sealed class MainViewModelDropImportTests
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
+        Substitute.For<IDenoisePlanner>(),
+        Substitute.For<IDenoiseExecutor>(),
         Substitute.For<IDenoisePreviewService>(),
         Substitute.For<IFileExistenceService>(),
         importService,

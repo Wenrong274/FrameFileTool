@@ -84,6 +84,8 @@ public sealed class MainViewModelScanTests
             Substitute.For<IFolderPickerService>(),
             Substitute.For<IImageResizeExecutor>(),
             Substitute.For<IResizePreviewService>(),
+            Substitute.For<IDenoisePlanner>(),
+            Substitute.For<IDenoiseExecutor>(),
             Substitute.For<IDenoisePreviewService>(),
             Substitute.For<IFileExistenceService>(),
             Substitute.For<IFileImportService>(),
@@ -95,10 +97,10 @@ public sealed class MainViewModelScanTests
 
         // 剔除 itemA
         sut.RemoveFileCommand.Execute(itemA);
-        sut.SelectedToolIndex = 1; // 改名 Tab
+        sut.SelectedTool = PreviewTool.Rename; // 改名 Tab
 
         // 執行改名
-        sut.ExecuteRenameCommand.Execute(null);
+        sut.RenameTool.ExecuteCommand.Execute(null);
 
         // 執行改名後會自動調用 RefreshScanFilesCore(keepExclusions: true)
         // 此時雖然 Scanner 會再回傳 A 和 B，但 A 被剔除了且不是點擊重新掃描按鈕，所以 A 不應回來
@@ -113,6 +115,8 @@ public sealed class MainViewModelScanTests
         Substitute.For<IFolderPickerService>(),
         Substitute.For<IImageResizeExecutor>(),
         Substitute.For<IResizePreviewService>(),
+        Substitute.For<IDenoisePlanner>(),
+        Substitute.For<IDenoiseExecutor>(),
         Substitute.For<IDenoisePreviewService>(),
         Substitute.For<IFileExistenceService>(),
         Substitute.For<IFileImportService>(),

@@ -9,13 +9,14 @@ namespace FrameFileTool.Tests.ViewModels;
 public sealed class MainViewModelUpdateCheckTests
 {
     [Fact]
-    public async Task 建立ViewModel後_偵測到新版_應顯示更新橫幅()
+    public async Task 啟動更新檢查後_偵測到新版_應顯示更新橫幅()
     {
         var updateService = Substitute.For<IUpdateService>();
         updateService.CheckForUpdateAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new UpdateInfo(true, "v1.3.0", "https://github.com/example/releases/tag/v1.3.0")));
         var sut = CreateSut(updateService);
 
+        sut.StartUpdateCheck();
         await sut.UpdateCheckTask;
 
         sut.IsUpdateAvailable.Should().BeTrue();
@@ -25,13 +26,14 @@ public sealed class MainViewModelUpdateCheckTests
     }
 
     [Fact]
-    public async Task 建立ViewModel後_沒有新版_應保持橫幅隱藏()
+    public async Task 啟動更新檢查後_沒有新版_應保持橫幅隱藏()
     {
         var updateService = Substitute.For<IUpdateService>();
         updateService.CheckForUpdateAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(UpdateInfo.None));
         var sut = CreateSut(updateService);
 
+        sut.StartUpdateCheck();
         await sut.UpdateCheckTask;
 
         sut.IsUpdateAvailable.Should().BeFalse();
@@ -47,6 +49,7 @@ public sealed class MainViewModelUpdateCheckTests
         var externalLinkService = Substitute.For<IExternalLinkService>();
         var sut = CreateSut(updateService, externalLinkService);
 
+        sut.StartUpdateCheck();
         await sut.UpdateCheckTask;
         sut.GoToDownloadPageCommand.Execute(null);
 
@@ -61,6 +64,7 @@ public sealed class MainViewModelUpdateCheckTests
         updateService.CheckForUpdateAsync(Arg.Any<CancellationToken>())
             .Returns(releaseReady.Task);
         var sut = CreateSut(updateService);
+        sut.StartUpdateCheck();
 
         sut.DismissUpdateBannerCommand.Execute(null);
         releaseReady.SetResult(new UpdateInfo(true, "v1.3.0", "https://github.com/example/releases/tag/v1.3.0"));
@@ -86,6 +90,8 @@ public sealed class MainViewModelUpdateCheckTests
             Substitute.For<IFolderPickerService>(),
             Substitute.For<IImageResizeExecutor>(),
             Substitute.For<IResizePreviewService>(),
+            Substitute.For<IDenoisePlanner>(),
+            Substitute.For<IDenoiseExecutor>(),
             Substitute.For<IDenoisePreviewService>(),
             Substitute.For<IFileExistenceService>(),
             Substitute.For<IFileImportService>(),

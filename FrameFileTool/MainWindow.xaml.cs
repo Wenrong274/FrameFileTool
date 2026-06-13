@@ -14,7 +14,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
-        viewModel.DenoisePreviewGenerated += OpenDenoiseCompareWindow;
+        viewModel.DenoiseTool.DenoisePreviewGenerated += OpenDenoiseCompareWindow;
+
+        // 背景更新檢查屬於應用程式啟動副作用，於 View wiring 階段明確啟動，
+        // 讓 ViewModel 建構式保持無副作用。
+        viewModel.StartUpdateCheck();
     }
 
     private void PreviewDropTarget_DragEnter(object sender, System.Windows.DragEventArgs e) =>
