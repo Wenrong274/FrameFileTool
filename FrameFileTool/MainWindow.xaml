@@ -190,13 +190,19 @@
                     Style="{StaticResource Card}"
                     Padding="0"
                     ClipToBounds="True">
-                <TabControl SelectedIndex="{Binding SelectedToolIndex}"
-                            AutomationProperties.Name="操作工具"
+                <!-- Tab 選取以 PreviewTool enum 繫結各 TabItem 的 IsSelected，
+                     與 Tab 顯示順序無關，調整順序不影響行為。 -->
+                <TabControl AutomationProperties.Name="操作工具"
                             BorderThickness="0"
                             Background="Transparent">
 
-                    <TabItem Header="抽幀刪除" Margin="0,0,6,1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <TabItem Header="抽幀刪除" Margin="0,0,6,1"
+                             IsSelected="{Binding SelectedTool,
+                                 Converter={StaticResource EnumToBoolConverter},
+                                 ConverterParameter=FrameDelete}">
+                        <!-- 面板內容繫結到 FrameDeleteTool 子 ViewModel -->
+                        <ScrollViewer DataContext="{Binding FrameDeleteTool}"
+                                      VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="14,12">
 
@@ -205,7 +211,7 @@
 
                                 <TextBlock Text="間隔"
                                            Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding FrameDeleteInterval, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <TextBlock Text="刪除會移至回收桶"
                                            Style="{StaticResource HintText}"
@@ -217,12 +223,12 @@
                                     <RadioButton Content="移到回收桶"
                                                  GroupName="FrameDeleteOutputMode"
                                                  Margin="0,0,0,4"
-                                                 IsChecked="{Binding FrameDeleteOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=DeleteToRecycleBin}" />
                                     <RadioButton Content="複製保留幀到指定資料夾"
                                                  GroupName="FrameDeleteOutputMode"
-                                                 IsChecked="{Binding FrameDeleteOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=CopyKeptToTargetFolder}" />
                                 </StackPanel>
@@ -231,20 +237,25 @@
                                            Style="{StaticResource HintText}"
                                            Margin="0,0,0,4"
                                            TextWrapping="Wrap"
-                                           Visibility="{Binding FrameDeleteOutputMode,
+                                           Visibility="{Binding OutputMode,
                                                Converter={StaticResource EnumToVisibilityConverter},
                                                ConverterParameter=CopyKeptToTargetFolder}" />
 
-                                <Button Content="{Binding FrameDeleteExecuteButtonText}"
+                                <Button Content="{Binding ExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"
-                                        Command="{Binding ExecuteFrameDeleteCommand}"
+                                        Command="{Binding ExecuteCommand}"
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
 
-                    <TabItem Header="批次改名" Margin="0,0,6,1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <TabItem Header="批次改名" Margin="0,0,6,1"
+                             IsSelected="{Binding SelectedTool,
+                                 Converter={StaticResource EnumToBoolConverter},
+                                 ConverterParameter=Rename}">
+                        <!-- 面板內容繫結到 RenameTool 子 ViewModel -->
+                        <ScrollViewer DataContext="{Binding RenameTool}"
+                                      VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="14,12">
 
@@ -253,15 +264,15 @@
 
                                 <TextBlock Text="前綴"
                                            Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding RenamePrefix, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <TextBlock Text="起始編號"
                                            Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding RenameStartIndex, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <TextBlock Text="補零位數（0 = 不補零）"
                                            Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding RenamePadding, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding ZeroPadding, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <TextBlock Text="輸出模式"
                                            Style="{StaticResource FieldLabel}" />
@@ -269,12 +280,12 @@
                                     <RadioButton Content="原地改名"
                                                  GroupName="RenameOutputMode"
                                                  Margin="0,0,0,4"
-                                                 IsChecked="{Binding RenameOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=RenameInPlace}" />
                                     <RadioButton Content="複製改名到指定資料夾"
                                                  GroupName="RenameOutputMode"
-                                                 IsChecked="{Binding RenameOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=CopyToTargetFolder}" />
                                 </StackPanel>
@@ -283,21 +294,26 @@
                                            Style="{StaticResource HintText}"
                                            Margin="0,0,0,4"
                                            TextWrapping="Wrap"
-                                           Visibility="{Binding RenameOutputMode,
+                                           Visibility="{Binding OutputMode,
                                                Converter={StaticResource EnumToVisibilityConverter},
                                                ConverterParameter=CopyToTargetFolder}" />
 
-                                <Button Content="{Binding RenameExecuteButtonText}"
+                                <Button Content="{Binding ExecuteButtonText}"
                                         Style="{StaticResource ExecuteButton}"
-                                        Command="{Binding ExecuteRenameCommand}"
+                                        Command="{Binding ExecuteCommand}"
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
 
                     <!-- ── 批次縮放 Tab ────────────────────────── -->
-                    <TabItem Header="批次縮放" Margin="0,0,6,1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <TabItem Header="批次縮放" Margin="0,0,6,1"
+                             IsSelected="{Binding SelectedTool,
+                                 Converter={StaticResource EnumToBoolConverter},
+                                 ConverterParameter=Resize}">
+                        <!-- 面板內容繫結到 ResizeTool 子 ViewModel -->
+                        <ScrollViewer DataContext="{Binding ResizeTool}"
+                                      VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="14,12">
 
@@ -312,18 +328,18 @@
                                     <RadioButton Content="倍率"
                                                      GroupName="ResizeMode"
                                                      Margin="0,0,14,0"
-                                                     IsChecked="{Binding ResizeMode,
+                                                     IsChecked="{Binding Mode,
                                                          Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=ScaleFactor}" />
                                     <RadioButton Content="絕對尺寸"
                                                  GroupName="ResizeMode"
-                                                 IsChecked="{Binding ResizeMode,
+                                                 IsChecked="{Binding Mode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=Absolute}" />
                                 </StackPanel>
 
                                 <!-- 倍率模式區塊 -->
-                                <StackPanel Visibility="{Binding ResizeMode,
+                                <StackPanel Visibility="{Binding Mode,
                                                 Converter={StaticResource EnumToVisibilityConverter},
                                                 ConverterParameter=ScaleFactor}">
                                     <TextBlock Text="縮放倍率"
@@ -358,7 +374,7 @@
                                 </StackPanel>
 
                                 <!-- 絕對尺寸模式區塊 -->
-                                <StackPanel Visibility="{Binding ResizeMode,
+                                <StackPanel Visibility="{Binding Mode,
                                                 Converter={StaticResource EnumToVisibilityConverter},
                                                 ConverterParameter=Absolute}">
                                     <TextBlock Text="目標寬度"
@@ -386,12 +402,12 @@
                                     <RadioButton Content="覆寫原始"
                                                  GroupName="ResizeOutputMode"
                                                  Margin="0,0,14,0"
-                                                 IsChecked="{Binding ResizeOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=Overwrite}" />
                                     <RadioButton Content="指定資料夾"
                                                  GroupName="ResizeOutputMode"
-                                                 IsChecked="{Binding ResizeOutputMode,
+                                                 IsChecked="{Binding OutputMode,
                                                      Converter={StaticResource EnumToBoolConverter},
                                                      ConverterParameter=TargetFolder}" />
                                 </StackPanel>
@@ -403,7 +419,7 @@
                                         CornerRadius="4"
                                         Padding="8,6"
                                         Margin="0,4,0,4"
-                                        Visibility="{Binding ResizeOutputMode,
+                                        Visibility="{Binding OutputMode,
                                             Converter={StaticResource EnumToVisibilityConverter},
                                             ConverterParameter=Overwrite}">
                                     <TextBlock Text="⚠ 覆寫模式：執行後原始圖片將被取代，無法還原"
@@ -428,11 +444,70 @@
                                 <TextBlock Text="{Binding ResamplerHint}"
                                            Style="{StaticResource HintText}" />
 
+                                <!-- 執行按鈕 -->
+                                <Button Content="執行縮放"
+                                        Style="{StaticResource ExecuteButton}"
+                                        Command="{Binding ExecuteCommand}"
+                                        HorizontalAlignment="Stretch" />
+
+                                <!-- ── 執行進度區塊（執行中才顯示）──── -->
+                                <Border Visibility="{Binding IsResizing, Converter={StaticResource BoolToVis}}"
+                                        Background="#EFF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="0,10,0,0"
+                                        Margin="0,10,0,0">
+                                    <StackPanel>
+
+                                        <!-- 進度條 -->
+                                        <ProgressBar Style="{StaticResource ResizeProgressBar}"
+                                                     AutomationProperties.Name="縮放進度"
+                                                     Value="{Binding ProgressCurrent}"
+                                                     Maximum="{Binding ProgressTotal}" />
+
+                                        <!-- 目前處理的檔名 -->
+                                        <TextBlock Text="{Binding ProgressText}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,0,8" />
+
+                                        <!-- 取消按鈕 -->
+                                        <Button Content="取消縮放"
+                                                Command="{Binding CancelCommand}"
+                                                HorizontalAlignment="Stretch"
+                                                Height="30"
+                                                FontSize="12"
+                                                Foreground="{StaticResource TextSecondary}"
+                                                Background="White"
+                                                BorderBrush="{StaticResource GhostBorderBrush}"
+                                                BorderThickness="1" />
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- ── 批次降噪 Tab ────────────────────────── -->
+                    <TabItem Header="批次降噪" Margin="0,0,6,1"
+                             IsSelected="{Binding SelectedTool,
+                                 Converter={StaticResource EnumToBoolConverter},
+                                 ConverterParameter=Denoise}">
+                        <!-- 面板內容繫結到 DenoiseTool 子 ViewModel -->
+                        <ScrollViewer DataContext="{Binding DenoiseTool}"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Margin="14,12">
+
+                                <TextBlock Text="批次降噪"
+                                           Style="{StaticResource SectionTitle}" />
+
                                 <!-- 降噪模式 -->
                                 <TextBlock Text="降噪模式"
                                            Style="{StaticResource FieldLabel}" />
-                                <ComboBox ItemsSource="{Binding DenoiseModeOptions}"
-                                          SelectedItem="{Binding SelectedDenoiseMode}"
+                                <ComboBox ItemsSource="{Binding ModeOptions}"
+                                          SelectedItem="{Binding SelectedMode}"
                                           Margin="0,2,0,2"
                                           Height="32">
                                     <ComboBox.ItemTemplate>
@@ -441,7 +516,7 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-                                <TextBlock Text="{Binding SelectedDenoiseModeHint}"
+                                <TextBlock Text="{Binding SelectedModeHint}"
                                            Style="{StaticResource HintText}" />
 
                                 <!-- 放大比較 -->
@@ -464,14 +539,27 @@
                                                Converter={StaticResource BoolToVis}}"
                                            Margin="0,0,0,4" />
 
+                                <!-- 覆寫警示（批次降噪固定覆寫原檔） -->
+                                <Border Background="#FEF9C3"
+                                        BorderBrush="#FDE047"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8,6"
+                                        Margin="0,4,0,4">
+                                    <TextBlock Text="⚠ 執行後原始圖片將被降噪結果取代，無法還原"
+                                               FontSize="11"
+                                               Foreground="#92400E"
+                                               TextWrapping="Wrap" />
+                                </Border>
+
                                 <!-- 執行按鈕 -->
-                                <Button Content="執行縮放"
+                                <Button Content="執行降噪"
                                         Style="{StaticResource ExecuteButton}"
-                                        Command="{Binding ExecuteResizeCommand}"
+                                        Command="{Binding ExecuteCommand}"
                                         HorizontalAlignment="Stretch" />
 
                                 <!-- ── 執行進度區塊（執行中才顯示）──── -->
-                                <Border Visibility="{Binding IsResizing, Converter={StaticResource BoolToVis}}"
+                                <Border Visibility="{Binding IsDenoising, Converter={StaticResource BoolToVis}}"
                                         Background="#EFF6FF"
                                         BorderBrush="{StaticResource AccentBrush}"
                                         BorderThickness="0,1,0,0"
@@ -481,20 +569,20 @@
 
                                         <!-- 進度條 -->
                                         <ProgressBar Style="{StaticResource ResizeProgressBar}"
-                                                     AutomationProperties.Name="縮放進度"
-                                                     Value="{Binding ResizeProgressCurrent}"
-                                                     Maximum="{Binding ResizeProgressTotal}" />
+                                                     AutomationProperties.Name="降噪進度"
+                                                     Value="{Binding ProgressCurrent}"
+                                                     Maximum="{Binding ProgressTotal}" />
 
                                         <!-- 目前處理的檔名 -->
-                                        <TextBlock Text="{Binding ResizeProgressText}"
+                                        <TextBlock Text="{Binding ProgressText}"
                                                    FontSize="11"
                                                    Foreground="{StaticResource TextSecondary}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Margin="0,0,0,8" />
 
                                         <!-- 取消按鈕 -->
-                                        <Button Content="取消縮放"
-                                                Command="{Binding CancelResizeCommand}"
+                                        <Button Content="取消降噪"
+                                                Command="{Binding CancelCommand}"
                                                 HorizontalAlignment="Stretch"
                                                 Height="30"
                                                 FontSize="12"

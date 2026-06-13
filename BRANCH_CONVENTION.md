@@ -48,14 +48,15 @@
 
 2. 在分支上開發，遵循 COMMIT_CONVENTION.md 的 commit 規範
 
-3. 所有子任務與完成判定均為 `[x]` 後，合併回 master
+3. 所有子任務與完成判定均為 `[x]` 後，依 TODO_SPEC.md 的歸檔檢查清單
+   在功能分支上完成歸檔 commit（將功能移入 DONE.md）
+
+4. 歸檔完成後合併回 master
    git switch master
    git merge --no-ff feat/<short-scope>
 
-4. 合併後刪除功能分支
+5. 合併後刪除功能分支
    git branch -d feat/<short-scope>
-
-5. 依 [TODO_SPEC.md](./TODO_SPEC.md) 的歸檔規則將功能移入 `DONE.md`
 ```
 
 ---

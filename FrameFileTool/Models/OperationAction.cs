@@ -20,6 +20,9 @@ public enum OperationActionKind
     /// <summary>批次縮放尺寸。</summary>
     Resize,
 
+    /// <summary>批次降噪（覆寫原檔）。</summary>
+    Denoise,
+
     /// <summary>參數或計畫本身有誤，無法執行。</summary>
     Error,
 }
@@ -37,6 +40,7 @@ public static class OperationAction
         OperationActionKind.Rename => "改名",
         OperationActionKind.Copy => "複製",
         OperationActionKind.Resize => "縮放",
+        OperationActionKind.Denoise => "降噪",
         OperationActionKind.Error => "錯誤",
         _ => string.Empty,
     };

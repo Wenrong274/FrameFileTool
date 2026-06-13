@@ -31,6 +31,8 @@ public partial class App : WpfApplication
         services.AddSingleton<IResizePlanner, ResizePlanner>();
         services.AddSingleton<IResizePreviewService, ResizePreviewService>();
         services.AddSingleton<IImageResizeExecutor, ImageResizeExecutor>();
+        services.AddSingleton<IDenoisePlanner, DenoisePlanner>();
+        services.AddSingleton<IDenoiseExecutor, DenoiseExecutor>();
         services.AddSingleton<IDenoisePreviewService, DenoisePreviewService>();
         services.AddSingleton<IImageDimensionReader, ImageDimensionReader>();
         services.AddSingleton<IFileExistenceService, FileExistenceService>();

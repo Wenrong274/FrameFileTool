@@ -12,5 +12,4 @@ public sealed record ResizeOptions(
     bool KeepAspectRatio,
     ResizeOutputMode OutputMode,
     string TargetFolderPath,
-    ResamplerType Resampler,
-    DenoiseMode DenoiseMode = DenoiseMode.Off);
+    ResamplerType Resampler);

@@ -23,6 +23,273 @@
 
 ---
 
+## 重構：MainViewModel 瘦身與執行流程統一
+
+ID：`refactor-main-vm-slim`
+完成日期：2026-06-14
+發布版本：未發布
+
+優先度：中
+分支：refactor/main-vm-slim
+前置條件：`refactor-preview-vm-base` 已完成
+被依賴：無（完成後 `spritesheet-packer` 新增工具的改動面明顯縮小）
+
+來源：2026-06-11 全專案健檢。`MainViewModel` 已達 1,179 行、
+建構式注入 12 個相依，混合四種工具的設定、預覽失效、執行流程、降噪預覽與更新檢查。
+主要債務：三個 Execute 命令重複「選目標資料夾 → 重新規劃 → 衝突檢查 → 執行 → log → 重掃」流程；
+`SelectedToolIndex`（int）與 `PreviewTool` enum 依 Tab 順序魔法耦合；
+建構式內呼叫 `StartUpdateCheck()` 產生副作用；
+`RefreshCommands()` 手動列舉所有 command，新增 command 時容易漏補。
+
+⚠ 影響範圍：`MainViewModel` → 新增 `ViewModels/Tools/` 工具 ViewModel →
+`MainWindow.xaml` bindings 與 TabControl → `App.xaml.cs` DI →
+`MainViewModelCanExecuteTests` / `MainViewModelScanTests` /
+`MainViewModelDropImportTests` / `MainViewModelUpdateCheckTests`
+
+✅ 決策（2026-06-11，開發者確認）：每工具一個子 ViewModel，組合進 `MainViewModel`，
+XAML binding 改為 `Tool.Xxx` 路徑；Tab 選取改以 `PreviewTool` enum 繫結，
+TabControl 透過 converter 雙向轉換。
+
+實作結果：
+
+- 新增 `ViewModels/Tools/IToolContext` 介面（回呼共用狀態與流程，可 mock 隔離測試）。
+  新增 `FrameDeleteToolViewModel`、`RenameToolViewModel`、`ResizeToolViewModel`
+  （`DenoiseToolViewModel` 同期新增，屬 `denoise-tool` 範圍）。
+- `MainViewModel` 由 1,179 行縮減至 637 行，僅保留掃描狀態、當前預覽、log、更新檢查與工具協調。
+  `IsResizing` 與執行進度移入 `ResizeTool`；
+  `IToolContext.IsResizeExecuting` 更名為 `IsBatchExecuting`（= 縮放或降噪執行中），
+  四個工具與掃描命令的 gating 統一。
+- 抽出共用執行流程：`PickTargetFolderOrLogCancel` + `ApplyPlannedPreviewOrLogConflict`；
+  同步流程（抽幀、改名）以 `PrepareCopyToTargetPreview<TPreview>` 組合，log 文字完全保留。
+- 解除 Tab 順序魔法耦合：`PreviewTool` 移為 `Models` 公開 enum；
+  `SelectedToolIndex`（int）改為 `SelectedTool`（enum），TabItem 以 `EnumToBoolConverter` 繫結 `IsSelected`。
+- `StartUpdateCheck()` 改為 public，移出建構式，由 `MainWindow` wiring 階段呼叫。
+- `MainWindow.xaml` 三個工具面板以 `DataContext={Binding XxxTool}` 範圍化，
+  內部 binding 改用子 ViewModel 屬性名；code-behind 的降噪事件改掛 `DenoiseTool`。
+- 工具 ViewModel 以 `MainViewModel` 建構式為組合根（傳入 `this` 作為 `IToolContext`），
+  避免 DI 容器循環註冊；`App.xaml.cs` 建構式簽章不變，不需新增註冊。
+- 全部既有 MainViewModel 測試遷移（`sut.Xxx` → `sut.XxxTool.Yyy`），未修改任何行為斷言；
+  新增抽幀與改名「目標資料夾有衝突應停止並記錄 log」兩條測試補齊衝突路徑。
+- `MainViewModelUpdateCheckTests` 四條測試改為明確呼叫 `StartUpdateCheck()`。
+- `ResizeTool` 不再實作 `IDisposable`，需釋放資源改由 `DenoiseTool` 持有。
+
+- [x] [ViewModel] 抽出共用的「複製到目標資料夾」執行流程：
+      `PickTargetFolderOrLogCancel` + `ApplyPlannedPreviewOrLogConflict` 兩個步驟方法，
+      同步流程（抽幀、改名）另以 `PrepareCopyToTargetPreview<TPreview>` 組合；log 文字完全保留。
+- [x] [Test] 三個 Execute 命令行為不變：既有取消選擇與成功路徑測試未改斷言；
+      新增抽幀與改名「目標資料夾有衝突應停止並記錄 log」兩條測試補齊衝突路徑。
+- [x] [ViewModel] 解除魔法耦合：`PreviewTool` 移為 `Models` 公開 enum，
+      `SelectedToolIndex`（int）改為 `SelectedTool`（enum），
+      TabItem 以 `EnumToBoolConverter` 繫結 `IsSelected`，Tab 順序不再影響行為。
+- [x] [Test] 工具切換時預覽清除與縮放預覽取消行為不變（既有測試更名為 `SelectedTool_*` 並改用 enum）。
+- [x] [ViewModel] `StartUpdateCheck()` 改為 public，移出建構式，由 `MainWindow` 建構 wiring 階段呼叫。
+- [x] [Test] `MainViewModelUpdateCheckTests` 四條測試改為明確呼叫 `StartUpdateCheck()`。
+- [x] [ViewModel] 拆分完成：新增 `ViewModels/Tools/` 下的
+      `FrameDeleteToolViewModel`、`RenameToolViewModel`、`ResizeToolViewModel`，
+      以 internal `IToolContext` 介面回呼共用狀態與流程（可 mock 隔離測試）。
+      `MainViewModel` 由 1,179 行縮減至 637 行，僅保留掃描狀態、當前預覽、log、更新檢查與工具協調。
+      `IsResizing` 與執行進度移入 `ResizeTool`，跨工具 gating 透過 `IToolContext.IsBatchExecuting`。
+- [x] [Test] 既有 MainViewModel 測試全數遷移（`sut.Xxx` → `sut.XxxTool.Yyy`），未修改任何行為斷言。
+- [x] [View] `MainWindow.xaml` 三個工具面板以 `DataContext={Binding XxxTool}` 範圍化，
+      內部 binding 改用子 ViewModel 屬性名；code-behind 的降噪事件改掛 `ResizeTool`。
+      `PreviewTemplates.xaml` 僅引用留在 Main 的 `RemoveFileCommand`，不需變更。
+- [x] [DI] 範圍調整：工具 ViewModel 以 `MainViewModel` 建構式為組合根（傳入 `this` 作為 `IToolContext`），
+      避免與 DI 容器產生循環註冊；`App.xaml.cs` 不需新增註冊，建構式簽章不變。
+
+發版評估（2026-06-14）：純重構，無使用者可見行為改變，延後併入下一版本。
+
+完成判定：
+
+- [x] [正常路徑] 四個工具（抽幀、改名、縮放、降噪預覽）操作流程與重構前完全一致，log 文字不變。
+- [x] [邊界] 縮放執行中所有非取消操作維持停用；執行完成後排除清單仍生效。
+- [x] [錯誤狀態] 複製模式目標資料夾衝突時，預覽標紅、執行停止且 log 說明原因。
+
+---
+
+## 重構：PreviewViewModel 共用基底類別
+
+ID：`refactor-preview-vm-base`
+完成日期：2026-06-14
+發布版本：未發布
+
+優先度：高
+分支：refactor/preview-vm-base
+前置條件：無
+被依賴：無（建議於 `spritesheet-packer` 實作前完成，第 4 個 PreviewViewModel 可直接受益）
+
+來源：2026-06-11 全專案健檢。三個 PreviewViewModel
+（FrameDelete / Rename / Resize）重複實作相同的 Items 事件訂閱、
+`IsIncluded` 變更後對 `Summary` / `HasErrors` / `HasExecutableItems` 的 PropertyChanged 轉發，
+以及高度相似的計數邏輯。已有三個真實使用情境，且 `spritesheet-packer` 將是第四個，抽象化符合專案規則。
+
+⚠ 影響範圍：`ViewModels/Previews/` 三個類別 → `IPreviewViewModel` →
+`PreviewViewModelTests` → `MainViewModelCanExecuteTests`（型別判斷行為不變）
+
+✅ 決策（2026-06-11，開發者確認）：採泛型 `PreviewViewModelBase<TItem>`，
+Resize 子類直接持有 `ResizePreviewItem` 強型別清單。
+
+實作結果：
+
+- 新增 `PreviewViewModelBase<TItem>`：集中 Items 訂閱與 `IsIncluded` 變更的 PropertyChanged 轉發；
+  項目生命週期與 ViewModel 相同，評估後不需解除訂閱機制。
+- 新增 `PreviewViewModelBaseTests`：空清單、三屬性事件轉發、非 `IsIncluded` 屬性變更不轉發、
+  Resize 強型別清單、Rename 建構時計算 selection conflict。
+- `FrameDeletePreviewViewModel`、`ResizePreviewViewModel`、`RenamePreviewViewModel` 均改繼承基底；
+  `RenamePreviewViewModel` 透過覆寫 `OnIncludedItemsChanged()` 保留 selection conflict 邏輯。
+- 行為與重構前完全一致，既有測試未修改任何行為斷言（除建構方式外）。
+
+- [x] [Test] 先確認既有 `PreviewViewModelTests` 為安全網（已涵蓋三個類別的摘要、衝突與事件轉發），未修改任何既有斷言。
+- [x] [ViewModel] 新增 `PreviewViewModelBase<TItem>`：集中 Items 訂閱與 `IsIncluded` 變更的 PropertyChanged 轉發；
+      項目生命週期與 ViewModel 相同，經評估不需解除訂閱機制。
+- [x] [Test] 補 `PreviewViewModelBaseTests`：空清單、三屬性事件轉發、非 `IsIncluded` 屬性變更不轉發、
+      Resize 強型別清單、Rename 建構時計算 selection conflict。
+- [x] [ViewModel] `FrameDeletePreviewViewModel` 改繼承基底，行為不變。
+- [x] [ViewModel] `ResizePreviewViewModel` 改繼承基底，保留 `ResizePreviewItem` 專屬欄位。
+- [x] [ViewModel] `RenamePreviewViewModel` 改繼承基底，selection conflict 邏輯保留於子類
+      （透過覆寫 `OnIncludedItemsChanged()` 掛入）。
+- [x] [Test] 全部既有測試維持綠燈；除建構方式外不得修改測試斷言。（開發者本機 `dotnet test` 確認，2026-06-14）
+
+發版評估（2026-06-14）：純重構，無使用者可見行為改變，延後併入下一版本。
+
+完成判定：
+
+- [x] [正常路徑] 三個工具的預覽摘要文字、錯誤標示與執行按鈕狀態與重構前完全一致。
+- [x] [邊界] 預覽清單全部取消勾選時，Summary 即時更新且執行按鈕停用。
+- [x] [錯誤狀態] 含錯誤項目的預覽仍顯示紅色警示、執行停用，log 行為不變。
+
+---
+
+## 重構：補強 PathSafetyValidator 直接測試
+
+ID：`test-path-safety-validator`
+完成日期：2026-06-14
+發布版本：未發布
+
+優先度：高
+分支：test/path-safety-validator
+前置條件：無
+被依賴：無
+
+來源：2026-06-11 全專案健檢。`PathSafetyValidator` 被 5 個檔案使用
+（`FileOperationExecutor`、`FrameDeletePlanner`、`RenamePlanner`、`ResizePlanner`、`ImageResizeExecutor`），
+是檔名安全的最後防線，但目前只透過 planner / executor 測試間接覆蓋，沒有直接的單元測試。
+
+⚠ 影響範圍：僅新增 `FrameFileTool.Tests/Services/PathSafetyValidatorTests.cs`，不修改 production code
+⚠ 邊界案例：空字串、純空白、rooted path（`C:\x.png`）、含路徑分隔符（`a\b.png`、`a/b.png`）、
+含非法字元、`..` 相對路徑、超長檔名、結尾空白或點
+
+實作結果：
+
+- 新增 `FrameFileTool.Tests/Services/PathSafetyValidatorTests.cs`，不修改任何 production code。
+- 涵蓋 `IsSafeFileName`：正常檔名、空字串、純空白、rooted path（`C:\x.png`）、
+  含路徑分隔符（`a\b.png`、`a/b.png`）、含非法字元、`..` 相對路徑、超長檔名、尾端空白或點。
+- 涵蓋 `IsSafeTargetDirectoryPath`：合法絕對路徑、相對路徑、非法字元、UNC 路徑行為記錄。
+- 已知行為（文件記錄，不修改 production code）：`..`（單獨檔名）與尾端點號/空白目前放行；
+  若要封鎖需另開任務修改 production code。
+
+- [x] [Test] 新增 `PathSafetyValidatorTests`：`IsSafeFileName` 正常檔名、各類不安全輸入逐一覆蓋。
+- [x] [Test] 補 `IsSafeTargetDirectoryPath`：合法絕對路徑、相對路徑、非法字元、UNC 路徑行為記錄。
+
+發版評估（2026-06-14）：純測試補強，無使用者可見行為改變，延後併入下一版本。
+
+完成判定：
+
+- [x] [正常路徑] `dotnet test` 全綠，新測試涵蓋上述邊界案例且不依賴實際檔案系統。
+- [x] [邊界] 至少一條測試明確記錄 `..`（路徑跳脫）輸入的判定結果。
+- [x] [錯誤狀態] 不安全輸入全部回傳 false，無例外拋出。
+
+---
+
+## 獨立降噪工具（自批次縮放抽離）
+
+ID：`denoise-tool`
+完成日期：2026-06-13
+發布版本：未發布
+
+優先度：中
+分支：feat/denoise-tool
+前置條件：`refactor-main-vm-slim` 完成判定通過
+被依賴：`resize-denoise-advanced`（進階引擎掛載於本工具）
+
+來源：2026-06-12 spec。降噪原內嵌在批次縮放中（`ResizeOptions.DenoiseMode`、
+executor 套用點、縮放 Tab 的降噪 UI），使用者無法只降噪不縮放。
+本功能將降噪獨立為第四個工具 Tab，批次縮放完全移除降噪，各工具回歸單一職責。
+
+✅ 決策（2026-06-12，開發者確認）：
+
+- 獨立降噪工具僅支援「覆寫原檔」輸出模式，不提供輸出至指定資料夾。
+- 批次縮放完全移除降噪：`ResizeOptions.DenoiseMode`、executor 套用點、
+  planner 摘要文字與縮放 Tab 的降噪 UI 全部刪除，不保留隱藏欄位。
+- `DenoiseMode` 三段強度、`DenoisePreviewService` 局部預覽與 `DenoiseCompareWindow`
+  比較視窗搬移至新工具，演算法行為不變。
+- 新工具的模式選單僅含 Detail / Standard / Strong，預設 Standard；
+  `DenoiseMode.Off` 保留於 enum 供 planner / executor 作為最後防線，不出現在選單。
+
+實作結果（影響範圍）：
+
+- 新增：`DenoiseOptions`、`PreviewTool.Denoise`、`OperationActionKind.Denoise`、
+  `DenoiseImageProcessor`（共用降噪演算法單一實作點）、
+  `IDenoisePlanner` + `DenoisePlanner`（pure）、`IDenoiseExecutor` + `DenoiseExecutor`
+  （暫存檔中轉覆寫、進度回報、取消）、`DenoisePreviewViewModel`、`DenoiseToolViewModel`、
+  批次降噪 TabItem 與 Denoise DataTemplate、DI 註冊。
+- 移除：縮放端所有降噪欄位、套用點、摘要文字與 UI；放大比較功能整組搬至降噪工具。
+- 架構調整：`IToolContext.IsResizeExecuting` 更名 `IsBatchExecuting`
+  （= 縮放或降噪執行中），四個工具與掃描命令的 gating 統一；
+  `ResizeTool` 不再實作 `IDisposable`，需釋放資源改由 `DenoiseTool` 持有。
+
+- [x] [Model] 新增 `DenoiseOptions` record（`DenoiseMode Mode`）；
+      `PreviewTool` enum 加入 `Denoise` 成員；更新 `DenoiseMode` XML 註解中對 `ResizeOptions` 的引用；
+      `OperationActionKind` 加入 `Denoise` 成員（顯示文字「降噪」）。
+- [x] [Service] 將 `DenoisePreviewService.ApplyDenoise` 抽至共用的 internal static
+      `DenoiseImageProcessor`，由預覽 service 與新 executor 共用，避免演算法分岔。
+- [x] [Service] 定義 `IDenoisePlanner` 介面；實作 `DenoisePlanner`（pure function）：
+      輸入 `FileItem` 清單 + `DenoiseOptions`，輸出 `OperationPreviewItem` 清單（覆寫原檔，目標名 = 原名）。
+- [x] [Test] 補上 `DenoisePlannerTests`：正常路徑、空清單、各模式摘要描述、Off 模式標記錯誤。
+- [x] [Service] 定義 `IDenoiseExecutor` 介面；實作 `DenoiseExecutor`：
+      逐檔套用降噪並以暫存檔中轉覆寫原檔，回傳含成功數與錯誤明細的 `OperationResult`，
+      支援進度回報與取消（比照 `ImageResizeExecutor` 模式，進度共用 `ResizeProgressReport`）。
+- [x] [Test] 補上 `DenoiseExecutorTests`：成功覆寫、來源不存在列入錯誤明細且不中斷其餘檔案、
+      取消中止、Off 拒絕執行、降噪後顆粒指標下降、不留暫存檔。
+- [x] [PreviewViewModel] 新增 `DenoisePreviewViewModel`，繼承 `PreviewViewModelBase<OperationPreviewItem>`，
+      Summary 顯示模式名稱與處理張數。
+- [x] [Test] 補上 PreviewViewModel 測試：摘要文字、HasErrors、勾選變更轉發（於 `PreviewViewModelTests`）。
+- [x] [ViewModel] 新增 `DenoiseToolViewModel`：模式選擇與 hint、預覽與執行命令、CanExecute；
+      自 `ResizeToolViewModel` 搬移 `GenerateDenoisePreview` 相關狀態、命令與 `DenoisePreviewGenerated` 事件。
+- [x] [ViewModel] `MainViewModel`：組合 `DenoiseTool`、`GetPreviewTool` 與即時預覽加入 Denoise 分支；
+      `IToolContext.IsResizeExecuting` 更名為 `IsBatchExecuting`（= 縮放或降噪執行中），
+      四個工具與掃描命令的 gating 統一改用此屬性。
+- [x] [Test] `MainViewModelCanExecuteTests` 補 ExecuteDenoise CanExecute 全組測試與跨工具 gating
+      （縮放中不可降噪、降噪中不可縮放/抽幀）；降噪局部預覽測試自 ResizeTool 遷移至 DenoiseTool。
+- [x] [縮放端移除] `ResizeOptions` 刪除 `DenoiseMode` 參數、`ImageResizeExecutor` 移除套用點、
+      `ResizePlanner` 移除降噪摘要文字、`ResizeToolViewModel` 移除降噪欄位與命令
+      （`IDisposable` 一併移除，改由 `DenoiseTool` 持有需釋放的資源）。
+- [x] [Test] 更新 `ResizePlannerTests` / `ImageResizeExecutorTests` 與 MainViewModel 相關測試，
+      移除降噪斷言；保留「縮放 Status 不含降噪字樣」回歸測試。
+- [x] [View] `MainWindow.xaml` 新增「批次降噪」TabItem（含覆寫警示與進度區塊）；
+      `PreviewTemplates.xaml` 新增 Denoise DataTemplate（目標欄顯示「覆寫原檔」）；
+      縮放 Tab 移除降噪區塊；`MainWindow.xaml.cs` 的比較視窗事件改掛 `DenoiseTool`。
+- [x] [DI] `App.xaml.cs` 註冊 `IDenoisePlanner` 與 `IDenoiseExecutor`。
+- [x] [文件] 更新 `README.md`：批次縮放功能描述移除降噪，新增批次降噪工具說明。
+- [x] [Test] 全部測試綠燈與格式檢查（開發者本機 `dotnet test` 與 `dotnet format` 確認，2026-06-13）。
+
+實作備註（2026-06-12）：
+
+- 進度回報沿用 `ResizeProgressReport`（已有兩個使用情境，僅更新 XML 註解），未另建抽象。
+- `DenoiseMode.Off` 保留於 enum（planner / executor 以其作為最後防線並標記錯誤），
+  工具選單僅含三種強度，預設 Standard。
+
+發版評估（2026-06-13）：新增使用者可見工具，建議納入下一個版本發布；
+發布後依規則回填版本號。
+
+完成判定：
+
+- [x] [正常路徑] 在批次降噪 Tab 選擇模式、產生局部預覽比較與清單預覽後執行，
+      原檔被降噪結果覆寫且 log 顯示成功數；批次縮放 Tab 不再有任何降噪選項，縮放結果不套用降噪。
+- [x] [邊界] 檔案清單為空時，預覽與執行按鈕停用；全部取消勾選時 Summary 即時更新且執行停用。
+- [x] [錯誤狀態] 來源檔案唯讀或被占用時，該檔案列入錯誤明細、其餘檔案繼續處理，log 可定位失敗檔案。
+
+---
+
 ## 批次縮放多模式降噪與比較視窗
 
 ID：`resize-denoise-modes-preview`

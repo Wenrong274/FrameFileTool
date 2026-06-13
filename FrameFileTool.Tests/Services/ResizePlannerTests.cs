@@ -85,28 +85,13 @@ public sealed class ResizePlannerTests
         result[0].Status.Should().NotContain("%");
     }
 
-    [Theory]
-    [InlineData(DenoiseMode.Detail, "保留細節降噪")]
-    [InlineData(DenoiseMode.Standard, "標準降噪")]
-    [InlineData(DenoiseMode.Strong, "強力降噪")]
-    public void Plan_啟用降噪模式_Status應含對應模式名稱(DenoiseMode mode, string expectedText)
-    {
-        var files = new[] { MakeFile("a.png") };
-        var options = Scale(0.5) with { DenoiseMode = mode };
-
-        var result = _sut.Plan(files, options);
-
-        result[0].HasError.Should().BeFalse();
-        result[0].Status.Should().Contain(expectedText);
-    }
-
     [Fact]
-    public void Plan_降噪關閉_Status不應含降噪字樣()
+    public void Plan_縮放計畫_Status不應含降噪字樣()
     {
+        // 降噪已獨立為批次降噪工具，縮放 Status 不再有降噪描述
         var files = new[] { MakeFile("a.png") };
-        var options = Scale(0.5) with { DenoiseMode = DenoiseMode.Off };
 
-        var result = _sut.Plan(files, options);
+        var result = _sut.Plan(files, Scale(0.5));
 
         result[0].HasError.Should().BeFalse();
         result[0].Status.Should().NotContain("降噪");

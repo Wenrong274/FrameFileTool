@@ -36,7 +36,7 @@ public sealed class DenoisePreviewService : IDenoisePreviewService
             {
                 using var preview = new MagickImage(source);
                 preview.Crop(crop);
-                ApplyDenoise(preview, mode);
+                DenoiseImageProcessor.ApplyDenoise(preview, mode);
                 var bytes = preview.ToByteArray(MagickFormat.Png);
                 if (bytes is not null)
                     previews[mode] = bytes;
@@ -58,22 +58,5 @@ public sealed class DenoisePreviewService : IDenoisePreviewService
         var x = (int)((source.Width - size) / 2);
         var y = (int)((source.Height - size) / 2);
         return new MagickGeometry(x, y, (uint)size, (uint)size);
-    }
-
-    internal static void ApplyDenoise(MagickImage image, DenoiseMode mode)
-    {
-        switch (mode)
-        {
-            case DenoiseMode.Detail:
-                image.WaveletDenoise(new Percentage(10));
-                break;
-            case DenoiseMode.Standard:
-                image.ReduceNoise(3);
-                break;
-            case DenoiseMode.Strong:
-                image.ReduceNoise(3);
-                image.WaveletDenoise(new Percentage(25));
-                break;
-        }
     }
 }

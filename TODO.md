@@ -3,7 +3,8 @@
 本文件追蹤目前已確認但尚未完成的功能計劃。
 執行功能開發前，請先確認本文件是否有相關項目，並在完成後更新狀態。
 
-**新增任務規範：** 每個新加入本文件的功能，必須先通過 [TODO_SPEC.md](./TODO_SPEC.md) 的五步驟流程：
+**新增任務規範：** 每個新加入本文件的功能，必須先完成 [TODO_SPEC.md](./TODO_SPEC.md) 的
+規劃前置階段（spec 需求釐清 → plan 計劃產出，工具不限），再通過五步驟流程：
 分析可執行度 → 分析優先度 → 拆解任務 → 定義驗證方法 → 標記注意事項。
 未通過規範的任務不可直接進入近期功能計劃。
 
@@ -114,11 +115,11 @@ ID：`spritesheet-packer`
 ID：`resize-denoise-advanced`
 優先度：低
 分支：feat/resize-denoise-advanced（開始時建立）
-前置條件：`resize-denoise-modes-preview` 完成 GUI 驗收並歸檔
+前置條件：`denoise-tool` 已完成（降噪已自批次縮放獨立為專屬工具，進階引擎掛載於該工具）
 被依賴：無
 
-⚠ 影響範圍：`ResizeOptions` / 降噪模式模型 → 進階降噪 service 介面 →
-`ImageResizeExecutor` 或獨立圖片處理 pipeline → `MainViewModel` → 批次縮放 UI 面板 →
+⚠ 影響範圍：`DenoiseOptions` / 降噪模式模型 → 進階降噪 service 介面 →
+`DenoiseExecutor` 或獨立圖片處理 pipeline → `DenoiseToolViewModel` → 批次降噪 UI 面板 →
 發佈包體積與執行環境需求
 
 ⚠ 邊界案例：大型圖片記憶體用量過高、無 GPU 或 GPU driver 不相容、模型檔遺失、
@@ -148,9 +149,9 @@ ID：`resize-denoise-advanced`
 - [ ] [Service] 定義進階降噪 service 介面，使執行器不直接依賴 OpenCV、ONNX 或外部工具細節。
 - [ ] [Service] 實作第一個決策通過的進階降噪引擎，並將模型或外部工具檢查集中隔離。
 - [ ] [Test] 補上進階降噪 service 測試：模式選擇、fallback、模型缺失、外部工具不可用。
-- [ ] [MainViewModel] 加入進階降噪模式狀態、錯誤訊息與執行前可用性檢查。
-- [ ] [Test] 補上 MainViewModel 測試：進階引擎不可用時不阻塞既有 Magick.NET 降噪。
-- [ ] [View] 批次縮放 UI 加入進階降噪模式選擇，避免把商業工具誤導成內建功能。
+- [ ] [ViewModel] `DenoiseToolViewModel` 加入進階降噪模式狀態、錯誤訊息與執行前可用性檢查。
+- [ ] [Test] 補上 ViewModel 測試：進階引擎不可用時不阻塞既有 Magick.NET 降噪。
+- [ ] [View] 批次降噪 UI 加入進階降噪模式選擇，避免把商業工具誤導成內建功能。
 - [ ] [Docs] 更新 README 與發佈說明，明確列出進階引擎的安裝需求、授權限制與離線可用性。
 
 完成判定：
@@ -160,7 +161,7 @@ ID：`resize-denoise-advanced`
 - [ ] [正常路徑] 進階降噪不可用時，既有 Magick.NET 降噪模式仍可正常執行。
 - [ ] [邊界] 在無 GPU 或模型檔不存在的環境啟動程式時，不崩潰且 UI 明確顯示該進階引擎不可用。
 - [ ] [錯誤狀態] 外部工具未安裝、未授權或執行失敗時，log 記錄原因並略過該項目，
-      不影響其他圖片與既有縮放流程。
+      不影響其他圖片與既有降噪流程。
 - [ ] [效能] 對 20 張 1920×1080 圖片啟用進階降噪的總耗時與記憶體用量，
       在研究階段定義的可接受範圍內。
 
@@ -171,7 +172,7 @@ ID：`resize-denoise-advanced`
 ```powershell
 dotnet test -p:UseAppHost=false
 dotnet format --verify-no-changes --severity warn
-npx markdownlint-cli2 "**/*.md"
+npx markdownlint-cli2 "*.md"
 ```
 
 若有修改 UI，也需要手動確認：
