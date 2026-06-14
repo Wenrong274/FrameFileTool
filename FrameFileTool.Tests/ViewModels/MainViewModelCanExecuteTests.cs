@@ -23,6 +23,7 @@ public sealed class MainViewModelCanExecuteTests
         IImageResizeExecutor? resizeExecutor = null,
         IFileExistenceService? fileExistenceService = null,
         IResizePreviewService? resizePreviewService = null,
+        IOutputFolderResolver? outputFolderResolver = null,
         IDenoisePlanner? denoisePlanner = null,
         IDenoiseExecutor? denoiseExecutor = null,
         IDenoisePreviewService? denoisePreviewService = null,
@@ -31,6 +32,16 @@ public sealed class MainViewModelCanExecuteTests
         var scanner = Substitute.For<IFileScanner>();
         scanner.Scan(Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<bool>())
             .Returns(new FileScanResult([], []));
+        var effectiveOutputFolderResolver = outputFolderResolver ?? Substitute.For<IOutputFolderResolver>();
+        if (outputFolderResolver is null)
+        {
+            effectiveOutputFolderResolver
+                .ResolveForResize(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<ResizeOptions>())
+                .Returns(call => new ResolvedOutputFolder(call.ArgAt<string>(1), WasAutoRedirected: false, LogMessage: null));
+        }
 
         return new MainViewModel(
         scanner,
@@ -40,6 +51,7 @@ public sealed class MainViewModelCanExecuteTests
         folderPicker ?? Substitute.For<IFolderPickerService>(),
         resizeExecutor ?? Substitute.For<IImageResizeExecutor>(),
         resizePreviewService ?? Substitute.For<IResizePreviewService>(),
+        effectiveOutputFolderResolver,
         denoisePlanner ?? Substitute.For<IDenoisePlanner>(),
         denoiseExecutor ?? Substitute.For<IDenoiseExecutor>(),
         denoisePreviewService ?? Substitute.For<IDenoisePreviewService>(),
@@ -541,6 +553,101 @@ public sealed class MainViewModelCanExecuteTests
             Arg.Is<ResizeOptions>(options => options.TargetFolderPath == @"D:\out"),
             Arg.Any<IProgress<ResizeProgressReport>>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteResize_指定資料夾選到來源_應使用自動解析後路徑並寫入log()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([new ResizePreviewItem { ActionKind = OperationActionKind.Resize, TargetPath = @"C:\imgs\cloud\cloud_x0.5\a.png" }]);
+        var resizeExecutor = Substitute.For<IImageResizeExecutor>();
+        resizeExecutor
+            .ExecuteAsync(
+                Arg.Any<IEnumerable<OperationPreviewItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<IProgress<ResizeProgressReport>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new OperationResult { SuccessCount = 1 });
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"C:\imgs\cloud");
+        var resolver = Substitute.For<IOutputFolderResolver>();
+        resolver
+            .ResolveForResize(@"C:\imgs\cloud", @"C:\imgs\cloud", Arg.Any<ResizeOptions>())
+            .Returns(new ResolvedOutputFolder(
+                @"C:\imgs\cloud\cloud_x0.5",
+                WasAutoRedirected: true,
+                LogMessage: @"輸出資料夾與來源相同，已自動改用：C:\imgs\cloud\cloud_x0.5"));
+        var sut = CreateSut(
+            folderPicker: folderPicker,
+            resizeExecutor: resizeExecutor,
+            resizePreviewService: resizePreviewService,
+            outputFolderResolver: resolver);
+        sut.SelectedFolder = @"C:\imgs\cloud";
+        sut.ResizeTool.OutputMode = ResizeOutputMode.TargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\cloud\a.png", @"C:\imgs\cloud", "a.png", ".png", 10));
+        sut.CurrentPreview = ResizePreview();
+
+        await sut.ResizeTool.ExecuteCommand.ExecuteAsync(null);
+
+        sut.Logs.Should().Contain(log => log.Contains(@"C:\imgs\cloud\cloud_x0.5"));
+        await resizeExecutor.Received(1).ExecuteAsync(
+            Arg.Any<IEnumerable<OperationPreviewItem>>(),
+            Arg.Is<ResizeOptions>(options => options.TargetFolderPath == @"C:\imgs\cloud\cloud_x0.5"),
+            Arg.Any<IProgress<ResizeProgressReport>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteResize_自動子資料夾已有衝突_應停止執行並保留錯誤預覽()
+    {
+        var resizePreviewService = Substitute.For<IResizePreviewService>();
+        resizePreviewService
+            .BuildPreviewAsync(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Any<ResizeOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns([
+                new ResizePreviewItem
+                {
+                    ActionKind = OperationActionKind.Error,
+                    HasError = true,
+                    Status = "目標檔案已存在",
+                },
+            ]);
+        var resizeExecutor = Substitute.For<IImageResizeExecutor>();
+        var folderPicker = Substitute.For<IFolderPickerService>();
+        folderPicker.PickFolder(Arg.Any<string>()).Returns(@"C:\imgs\cloud");
+        var resolver = Substitute.For<IOutputFolderResolver>();
+        resolver
+            .ResolveForResize(@"C:\imgs\cloud", @"C:\imgs\cloud", Arg.Any<ResizeOptions>())
+            .Returns(new ResolvedOutputFolder(
+                @"C:\imgs\cloud\cloud_x0.5",
+                WasAutoRedirected: true,
+                LogMessage: @"輸出資料夾與來源相同，已自動改用：C:\imgs\cloud\cloud_x0.5"));
+        var sut = CreateSut(
+            folderPicker: folderPicker,
+            resizeExecutor: resizeExecutor,
+            resizePreviewService: resizePreviewService,
+            outputFolderResolver: resolver);
+        sut.SelectedFolder = @"C:\imgs\cloud";
+        sut.ResizeTool.OutputMode = ResizeOutputMode.TargetFolder;
+        sut.Files.Add(new FileItem(@"C:\imgs\cloud\a.png", @"C:\imgs\cloud", "a.png", ".png", 10));
+        sut.CurrentPreview = ResizePreview();
+
+        await sut.ResizeTool.ExecuteCommand.ExecuteAsync(null);
+
+        await resizeExecutor.DidNotReceive().ExecuteAsync(
+            Arg.Any<IEnumerable<OperationPreviewItem>>(),
+            Arg.Any<ResizeOptions>(),
+            Arg.Any<IProgress<ResizeProgressReport>>(),
+            Arg.Any<CancellationToken>());
+        sut.HasPreviewErrors.Should().BeTrue();
+        sut.Logs.Should().Contain(log => log.Contains("縮放已停止"));
     }
 
     [Fact]

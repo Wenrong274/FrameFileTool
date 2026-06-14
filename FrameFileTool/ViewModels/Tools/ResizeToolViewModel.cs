@@ -15,6 +15,7 @@ public sealed partial class ResizeToolViewModel : ObservableObject
 {
     private readonly IImageResizeExecutor _resizeExecutor;
     private readonly IResizePreviewService _resizePreviewService;
+    private readonly IOutputFolderResolver _outputFolderResolver;
     private readonly IToolContext _context;
     private readonly TimeSpan _debounceDelay;
 
@@ -95,11 +96,13 @@ public sealed partial class ResizeToolViewModel : ObservableObject
     internal ResizeToolViewModel(
         IImageResizeExecutor resizeExecutor,
         IResizePreviewService resizePreviewService,
+        IOutputFolderResolver outputFolderResolver,
         IToolContext context,
         TimeSpan debounceDelay)
     {
         _resizeExecutor = resizeExecutor;
         _resizePreviewService = resizePreviewService;
+        _outputFolderResolver = outputFolderResolver;
         _context = context;
         _debounceDelay = debounceDelay;
     }
@@ -240,7 +243,13 @@ public sealed partial class ResizeToolViewModel : ObservableObject
                 return;
             }
 
-            options = options with { TargetFolderPath = targetFolder };
+            var resolvedFolder = _outputFolderResolver.ResolveForResize(_context.SelectedFolder, targetFolder, options);
+            if (resolvedFolder.WasAutoRedirected && !string.IsNullOrWhiteSpace(resolvedFolder.LogMessage))
+            {
+                _context.AddLog(resolvedFolder.LogMessage);
+            }
+
+            options = options with { TargetFolderPath = resolvedFolder.TargetFolderPath };
             var plannedItems = await _resizePreviewService.BuildPreviewAsync(_context.SnapshotFiles(), options);
             if (!_context.ApplyPlannedPreviewOrLogConflict("縮放", new ResizePreviewViewModel(plannedItems)))
             {
