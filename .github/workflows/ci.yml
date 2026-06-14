@@ -39,4 +39,4 @@ jobs:
         run: dotnet format FrameFileTool.sln --verify-no-changes --severity warn --no-restore
 
       - name: Verify Markdown format
-        run: npx markdownlint-cli2@0.22.1 "*.md"
+        run: npx markdownlint-cli2@0.22.1 "*.md" "docs/**/*.md" ".github/release-notes/*.md"
