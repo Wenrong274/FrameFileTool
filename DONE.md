@@ -27,7 +27,7 @@
 
 ID：`same-folder-output-suffix`
 完成日期：2026-06-14
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：高
 分支：feat/same-folder-output-suffix
@@ -108,7 +108,7 @@ Spec：[`docs/superpowers/specs/2026-06-14-same-folder-output-suffix-design.md`]
 
 ID：`ui-layout-optimize`
 完成日期：2026-06-14
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：高
 分支：feat/ui-layout-optimize
@@ -175,7 +175,7 @@ ID：`ui-layout-optimize`
 
 ID：`refactor-main-vm-slim`
 完成日期：2026-06-14
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：中
 分支：refactor/main-vm-slim
@@ -258,7 +258,7 @@ TabControl 透過 converter 雙向轉換。
 
 ID：`refactor-preview-vm-base`
 完成日期：2026-06-14
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：高
 分支：refactor/preview-vm-base
@@ -311,7 +311,7 @@ Resize 子類直接持有 `ResizePreviewItem` 強型別清單。
 
 ID：`test-path-safety-validator`
 完成日期：2026-06-14
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：高
 分支：test/path-safety-validator
@@ -352,7 +352,7 @@ ID：`test-path-safety-validator`
 
 ID：`denoise-tool`
 完成日期：2026-06-13
-發布版本：未發布
+發布版本：v1.6.0
 
 優先度：中
 分支：feat/denoise-tool
