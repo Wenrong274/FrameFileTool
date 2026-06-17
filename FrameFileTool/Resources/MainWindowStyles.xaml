@@ -267,41 +267,73 @@
     </Setter>
 </Style>
 
-<!-- ── 工具選擇按鈕（RadioButton，2×2 格佈局）────────── -->
-<Style x:Key="ToolTabButton" TargetType="RadioButton">
-    <Setter Property="Height"     Value="32" />
-    <Setter Property="Padding"    Value="8,7" />
-    <Setter Property="Cursor"     Value="Hand" />
-    <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
-    <Setter Property="FontSize"   Value="12" />
-    <Setter Property="HorizontalContentAlignment" Value="Center" />
-    <Setter Property="VerticalContentAlignment"   Value="Center" />
+<!-- ── 工具 TabControl（分頁列 + 內容容器）──────────── -->
+<Style x:Key="ToolTabControl" TargetType="TabControl">
+    <Setter Property="Padding"          Value="0" />
+    <Setter Property="BorderThickness"  Value="0" />
+    <Setter Property="Background"       Value="Transparent" />
     <Setter Property="Template">
         <Setter.Value>
-            <ControlTemplate TargetType="RadioButton">
-                <Border x:Name="Btn"
+            <ControlTemplate TargetType="TabControl">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!-- 分頁標籤列：白底，底部分隔線 -->
+                    <Border Grid.Row="0"
+                            Background="{StaticResource SurfaceBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="0,0,0,1">
+                        <TabPanel IsItemsHost="True"
+                                  Background="Transparent" />
+                    </Border>
+                    <!-- 分頁內容區 -->
+                    <ContentPresenter Grid.Row="1"
+                                      ContentSource="SelectedContent" />
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+
+<!-- ── 工具 TabItem（底線強調樣式）────────────────────── -->
+<Style x:Key="ToolTabItem" TargetType="TabItem">
+    <Setter Property="Padding"         Value="16,10" />
+    <Setter Property="FontSize"        Value="12" />
+    <Setter Property="Foreground"      Value="{StaticResource TextSecondary}" />
+    <Setter Property="Background"      Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Cursor"          Value="Hand" />
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="TabItem">
+                <Border x:Name="Root"
                         Background="Transparent"
                         BorderBrush="Transparent"
-                        BorderThickness="1"
-                        CornerRadius="6"
-                        Margin="2"
+                        BorderThickness="0,0,0,2"
                         Padding="{TemplateBinding Padding}">
-                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    <ContentPresenter ContentSource="Header"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
                 </Border>
                 <ControlTemplate.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter TargetName="Root"
+                                Property="BorderBrush"
+                                Value="{StaticResource AccentBrush}" />
+                        <Setter Property="Foreground"
+                                Value="{StaticResource TextPrimary}" />
+                        <Setter Property="FontWeight" Value="SemiBold" />
+                    </Trigger>
                     <MultiTrigger>
                         <MultiTrigger.Conditions>
                             <Condition Property="IsMouseOver" Value="True" />
-                            <Condition Property="IsChecked" Value="False" />
+                            <Condition Property="IsSelected"  Value="False" />
                         </MultiTrigger.Conditions>
-                        <Setter TargetName="Btn" Property="Background" Value="{StaticResource SurfaceSubtleBrush}" />
+                        <Setter Property="Foreground"
+                                Value="{StaticResource TextPrimary}" />
                     </MultiTrigger>
-                    <Trigger Property="IsChecked" Value="True">
-                        <Setter TargetName="Btn" Property="Background" Value="#EAF2FF" />
-                        <Setter TargetName="Btn" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                    </Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate>
         </Setter.Value>
