@@ -29,86 +29,38 @@
 
 ## 近期功能計劃
 
-### Spritesheet 打包工具
+### 工具分頁導航
 
-ID：`spritesheet-packer`
-優先度：中
-分支：feat/spritesheet-packer（開始時建立）
+ID：`tool-tabs-layout`
+優先度：高
+分支：feat/tool-tabs-layout（開始時建立）
 前置條件：無
 被依賴：無
 
-⚠ 影響範圍：全新工具選擇項與工具面板 → 新增 `SpriteSheetOptions` / `SpriteFrame` /
-`SpriteSheetResult` → `ISpriteSheetPlanner` + `SpriteSheetPlanner` →
-`ISpriteSheetExecutor` + `SpriteSheetExecutor` →
-`SpriteSheetPreviewViewModel` → `MainViewModel` → `MainWindow.xaml`
+⚠ 影響範圍：`MainWindow.xaml`（主內容 Grid → TabControl）→
+`MainWindowStyles.xaml`（新增 ToolTabControl/ToolTabItem，移除 ToolTabButton）→
+`MainViewModel.cs`（新增 SelectedToolIndex）→ `UI_UX_DESIGN_RULES.md`
 
-⚠ 邊界案例：單張圖片、圖片尺寸超過 sheet 上限、全透明圖片的 trim 結果、
-輸出路徑已存在同名 .png 或 .json、所有圖片加總面積超過最大 sheet 尺寸
+⚠ 邊界案例：縮放或降噪執行中切換分頁（允許，IsBatchExecuting 不鎖定）；
+拖放檔案時預覽 Border 在四個 TabItem 中各複製一份，確認 DragDrop handler 正常路由
 
-⚠ 待確認（研究後才可開始實作）：
-
-- **JSON 格式**：輸出哪種 atlas 格式？
-  候選：PixiJS（最廣泛）、Phaser 3、LibGDX、自訂簡易格式。
-  需確認目標使用者的遊戲引擎或工具鏈。
-- **Packing 算法**：MaxRects（效率最佳）、Shelf（實作最簡）、Grid（固定格）？
-  是否引入現成 NuGet 套件或自行實作？
-- **Transparent trim**：是否裁切每張圖的透明邊框？
-  若支援，JSON 須額外記錄 `sourceSize` 與 `spriteSourceSize`。
-- **Sheet 尺寸限制**：固定上限（2048 × 2048）還是使用者自訂？是否強制 2 的冪次？
-- **Padding**：sprite 之間的間距預設值？是否讓使用者調整？
-
-#### Spritesheet Packer 研究
-
-- [ ] [研究] 評估 MaxRects 算法的實作複雜度與可用 NuGet 套件（例如 `RectanglePacker`）；
-      決定自行實作還是引入套件。
-- [ ] [研究] 確認輸出 JSON 格式：以 PixiJS 格式為基準，驗證能否同時覆蓋 Phaser 3 需求；
-      若差異過大，考慮支援多格式選擇。
-- [ ] [研究] 驗證 Magick.NET 合成多圖的效能：對 100 張 256×256 圖片計時，
-      確認完整流程（packing + 合成 + 輸出 PNG）在合理時間內完成。
-- [ ] [研究] 確認 trim（透明邊框裁切）對 JSON 欄位的影響，決定是否列為 MVP 功能。
-- [ ] [決策] 根據以上研究，定義：算法、JSON 格式、sheet 上限、padding 預設、
-      trim 是否納入第一版。**決策記錄於本文件後才可開始實作階段。**
-
-#### Spritesheet Packer 實作（研究完成後展開）
-
-- [ ] [Model] 新增 `SpriteFrame` record（name, x, y, w, h, sourceSize, trimmed 等）
-      與 `SpriteSheetOptions`（sheet 上限、padding、trim 開關、輸出格式）。
-- [ ] [Service] 定義 `ISpriteSheetPlanner` 介面。
-- [ ] [Service] 實作 `SpriteSheetPlanner`（pure function）：
-      輸入 `FileItem` 清單與選項，輸出含座標的 `SpriteFrame` 清單與 sheet 尺寸；
-      超過 sheet 上限的圖片標記為錯誤列。
-- [ ] [Test] 補上 `SpriteSheetPlannerTests`：
-      正常打包、單張圖片、超出上限標記錯誤、padding 計算、空清單。
-- [ ] [Service] 定義 `ISpriteSheetExecutor` 介面。
-- [ ] [Service] 實作 `SpriteSheetExecutor`：
-      使用 Magick.NET 合成 sprite sheet PNG，
-      使用 `System.Text.Json` 輸出 atlas JSON。
-- [ ] [Test] 補上 `SpriteSheetExecutorTests`：
-      輸出檔案存在、JSON 欄位正確、錯誤列不寫入 sheet。
-- [ ] [PreviewViewModel] 新增 `SpriteSheetPreviewViewModel`，
-      顯示每個 sprite 的座標、尺寸與錯誤訊息；計算 `Summary` / `HasErrors`。
-- [ ] [Test] 補上 `SpriteSheetPreviewViewModelTests`：
-      Summary 計數、有錯誤時 HasErrors 為 true。
-- [ ] [MainViewModel] 新增 `TriggerSpriteSheetPreview()`、
-      `HasExecutableSpriteSheetPreview()`、`ExecuteSpriteSheetCommand`。
-- [ ] [Test] 補上 CanExecute 邏輯測試。
-- [ ] [View] `MainWindow.xaml` 新增「Spritesheet」工具選擇項與工具面板，
-      含 sheet 尺寸、padding、trim、輸出格式設定，
-      並在 `ContentControl.Resources` 加入對應 `DataTemplate`。
-- [ ] [DI] 在 `App.xaml.cs` 註冊 `ISpriteSheetPlanner` 與 `ISpriteSheetExecutor`。
+- [ ] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 資訊架構，納入全寬 TabControl 分頁導航規則。
+- [ ] [ViewModel] `MainViewModel.cs` 新增 `SelectedToolIndex` int 屬性（`SelectedTool` 的 int 包裝），
+      並在 `OnSelectedToolChanged` 補 `OnPropertyChanged(nameof(SelectedToolIndex))`。
+- [ ] [Style] `MainWindowStyles.xaml` 新增 `ToolTabControl` 與 `ToolTabItem`（底線強調），
+      移除不再使用的 `ToolTabButton` RadioButton 樣式。
+- [ ] [View] `MainWindow.xaml` 以全寬 `TabControl`（4 個 `TabItem`）取代主內容 3 欄 Grid；
+      每個 TabItem 內維持左右分欄（工具參數 290px / 預覽 \*）；
+      移除 4 個疊層 ScrollViewer 上的 `EnumToVisibilityConverter` binding。
+- [ ] [Test] 執行 `dotnet test` 確認現有測試全數通過（本次無新 unit test，XAML 行為由手動驗收確認）。
 
 完成判定：
 
-- [ ] [正常路徑] 載入 10 張不同尺寸圖片後執行打包，輸出 .png 與 .json；
-      JSON 中每個 sprite 的座標與尺寸正確對應 sheet 中的實際位置。
-- [ ] [正常路徑] 輸出的 atlas JSON 格式符合目標引擎（PixiJS 或研究決定的格式）
-      可直接讀取，不需人工修改。
-- [ ] [邊界] 單張圖片打包時，sheet 尺寸等於圖片尺寸，JSON 只有一筆 sprite。
-- [ ] [邊界] 某張圖片尺寸超過 sheet 上限時，預覽標示該圖錯誤，
-      其餘圖片仍可正常打包，執行按鈕視錯誤規則決定是否停用。
-- [ ] [錯誤狀態] 輸出路徑已存在同名檔案時，log 記錄警告且不覆蓋（或明確告知覆蓋行為）。
-- [ ] [效能] 100 張 256×256 圖片的完整打包流程在合理時間內完成
-      （研究階段定義具體閾值）。
+- [ ] [正常路徑] 點擊任一分頁標籤，對應工具參數顯示，分頁底線強調可見，其他工具不可見。
+- [ ] [正常路徑] 切換至不同工具分頁，既有預覽清除，不顯示舊工具的預覽資料。
+- [ ] [邊界] 縮放或降噪執行中，可自由切換分頁；切換回執行中分頁，進度仍在，不中斷。
+- [ ] [邊界] 拖放圖片或資料夾到預覽區，DragDrop 行為與切換前相同，Log 正常記錄。
+- [ ] [視覺] 未選中分頁文字灰色、無底線；選中分頁文字深色 SemiBold、藍色 2px 底線；hover 文字略深。
 
 ### 進階降噪引擎研究
 
