@@ -68,6 +68,15 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [ObservableProperty]
     private PreviewTool _selectedTool = PreviewTool.FrameDelete;
 
+    /// <summary>
+    /// TabControl.SelectedIndex 的 int 包裝，對應 SelectedTool enum 值。
+    /// </summary>
+    public int SelectedToolIndex
+    {
+        get => (int)SelectedTool;
+        set => SelectedTool = (PreviewTool)value;
+    }
+
     [ObservableProperty]
     private string _fileSummary = "尚未掃描";
 
@@ -352,6 +361,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
 
     partial void OnSelectedToolChanged(PreviewTool value)
     {
+        OnPropertyChanged(nameof(SelectedToolIndex));
         if (value != PreviewTool.Resize)
         {
             ResizeTool.CancelPendingPreview();
