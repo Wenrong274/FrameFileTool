@@ -65,31 +65,13 @@ ID：`tool-tabs-layout`
 - [ ] [視覺] 未選中分頁文字灰色、無底線；選中分頁文字深色 SemiBold、藍色 2px 底線；hover 文字略深。
 - [ ] [視覺] 來源設定位於工具分頁下方、Log 上方，與主工作區和 Log 之間距一致。
 
-### 分頁內底部來源列實作
+### 分頁內底部來源列實作（已作廢）
 
 ID：`shared-source-bar`
-優先度：高
-分支：feat/shared-source-bar（開始時建立）
-前置條件：`tool-tabs-layout` 已完成
-被依賴：無
 
-⚠ 影響範圍：`MainWindow.xaml` (外層 Grid 結構、刪除舊來源 Border、TabItem 內部結構) → `MainWindowStyles.xaml` (新增 SharedSourceBar 色票) → `UI_UX_DESIGN_RULES.md` (更新資訊架構章節)
-⚠ 邊界案例：切換分頁時來源列狀態保持、視窗縮小至 MinWidth 900px 時格式 pills 自動換行、批次執行中按鈕正確 disabled
-
-- [ ] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 的資訊架構章節，將來源設定位置改為「位於每個 TabItem 內容底部（跨工具共用）」。
-- [ ] [Style] 在 `MainWindowStyles.xaml` 中新增 `SourceBarBackgroundBrush` (#EFF6FF) 與 `SourceBarBorderBrush` (#BFDBFE) 兩個 brush resource。
-- [ ] [View] 在 `MainWindow.xaml` 中調整外層 Grid 的 `RowDefinitions` (Row 2 改為 `*`，移除 Row 3，Log 移至 Row 3)。
-- [ ] [View] 在 `MainWindow.xaml` 中刪除原 `Grid.Row="3"` 的 `<!-- 來源設定 -->` Border 區塊。
-- [ ] [View] 在 `MainWindow.xaml` 中為每個 TabItem 內部 Grid 新增 `RowDefinitions` (`*` 和 `Auto`)，原工具參數和預覽 Grid 加 `Grid.Row="0"`，並在 `Grid.Row="1" Grid.ColumnSpan="3"` 新增共用來源列 Border。
-- [ ] [Test] 執行自動驗證 (dotnet test, dotnet format, markdownlint) 確認無編譯或格式錯誤。
-
-完成判定：
-
-- [ ] [正常路徑] 點擊任一分頁，來源列在每個分頁都顯示，且淺藍背景與藍色頂線視覺區隔可見。
-- [ ] [正常路徑] 切換分頁時，來源列路徑與格式設定不重置，且在各分頁保持一致。
-- [ ] [邊界] 拖放資料夾到預覽區，DragDrop 行為正常，且 Log 記錄正確。
-- [ ] [邊界] 視窗縮小至 MinWidth 900px，來源列格式 pills 可自動換行且不溢出。
-- [ ] [錯誤狀態] 縮放或降噪執行中，來源列的掃描與選擇按鈕正確停用。
+> ⛔ 已被 `docs/superpowers/specs/2026-06-23-main-layout-redesign-design.md` 取代。
+> 改為頂部漸進式收合來源（單一區、空/chip/展開三態），不再放入各 TabItem 底部，
+> 避免來源列在 4 個分頁各複製一份。原任務作廢，不再執行；原規劃細節已移除。
 
 ### 進階降噪引擎研究
 
