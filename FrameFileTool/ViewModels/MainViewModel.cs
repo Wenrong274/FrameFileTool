@@ -133,6 +133,13 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [ObservableProperty]
     private bool _isLogExpanded = false;
 
+    /// <summary>來源區是否展開。未設來源時維持展開作為空狀態引導；成功掃描後自動收合。</summary>
+    [ObservableProperty]
+    private bool _isSourceExpanded = true;
+
+    /// <summary>是否已有來源檔案，驅動來源區顯示 chip（true）或空狀態引導（false）。</summary>
+    public bool HasSource => Files.Count > 0;
+
     /// <summary>正在執行的更新檢查 Task，供測試層 await 結果。</summary>
     internal Task UpdateCheckTask { get; private set; } = Task.CompletedTask;
 
@@ -172,6 +179,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
             this,
             debounceDelay == default ? TimeSpan.FromMilliseconds(350) : debounceDelay);
         DenoiseTool = new DenoiseToolViewModel(denoisePlanner, denoiseExecutor, denoisePreviewService, this);
+        Files.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSource));
     }
 
     /// <summary>掃描結果檔案清單，繫結到掃描結果區塊。</summary>
@@ -228,6 +236,12 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
         foreach (var error in scanResult.Errors)
         {
             AddLog($"掃描錯誤：{error}");
+        }
+
+        // 掃描到檔案後自動收合來源區，把空間還給預覽；空結果維持展開引導使用者。
+        if (Files.Count > 0)
+        {
+            IsSourceExpanded = false;
         }
 
         RefreshCommands();
@@ -326,6 +340,9 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
 
     [RelayCommand]
     private void ToggleLog() => IsLogExpanded = !IsLogExpanded;
+
+    [RelayCommand]
+    private void ToggleSource() => IsSourceExpanded = !IsSourceExpanded;
 
     [RelayCommand(CanExecute = nameof(CanGoToDownloadPage))]
     private void GoToDownloadPage() =>
