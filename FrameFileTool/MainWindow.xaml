@@ -24,33 +24,14 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />  <!-- Row 0：更新通知 -->
+            <RowDefinition Height="Auto" />  <!-- Row 1：來源區 -->
+            <RowDefinition Height="*" />     <!-- Row 2：TabControl 主內容 -->
+            <RowDefinition Height="Auto" />  <!-- Row 3：Log -->
         </Grid.RowDefinitions>
 
-        <!-- ── 頁首：產品識別 ─────────────────────────────────── -->
-        <Border Grid.Row="0"
-                Style="{StaticResource Card}"
-                Padding="12,8"
-                Margin="0,0,0,10">
-            <DockPanel LastChildFill="True">
-                <Image DockPanel.Dock="Left"
-                       Source="pack://application:,,,/Assets/AppIcon.png"
-                       Width="28"
-                       Height="28"
-                       Margin="0,0,10,0" />
-
-                <TextBlock Text="影格整理工具"
-                           FontSize="17"
-                           FontWeight="SemiBold" />
-            </DockPanel>
-        </Border>
-
         <!-- ── 更新通知：啟動後背景檢查 GitHub Release ─────── -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="0"
                 Background="#EFF6FF"
                 BorderBrush="{StaticResource AccentBrush}"
                 BorderThickness="1"
@@ -88,88 +69,84 @@
         </Border>
 
         <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="1"
                 Style="{StaticResource Card}"
                 Padding="12,10"
-                Margin="0,10,0,0">
+                Margin="0,0,0,10">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <!-- 收合 chip：有來源且未展開 -->
+                <Border Padding="7,6" CornerRadius="6"
+                        Background="{StaticResource SurfaceSubtleBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasSource}" Value="True" />
+                                        <Condition Binding="{Binding IsSourceExpanded}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#x1F4C1;" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding FileSummary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding SelectedFolder}"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="520" />
+                        <Button Content="&#x270E; 變更"
+                                Command="{Binding ToggleSourceCommand}"
+                                Margin="14,0,0,0" />
+                    </StackPanel>
+                </Border>
 
-                <TextBlock Grid.Row="0"
-                           Text="來源資料夾"
-                           FontWeight="SemiBold"
-                           Margin="0,0,10,0" />
+                <!-- 展開橫列：IsSourceExpanded（含空狀態，因空狀態強制展開） -->
+                <Grid Visibility="{Binding IsSourceExpanded, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Row="0"
-                         Grid.Column="1"
-                         Margin="0,0,8,0"
-                         Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Grid.Row="0" Text="來源資料夾" FontWeight="SemiBold" Margin="0,0,10,0"
+                               VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center"
+                             Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Row="0" Grid.Column="2" Content="選擇資料夾" Margin="0,0,6,0"
+                            Command="{Binding BrowseFolderCommand}" />
+                    <Button Grid.Row="0" Grid.Column="3" Content="重新掃描"
+                            Command="{Binding ScanFilesCommand}" />
+                    <Button Grid.Row="0" Grid.Column="4" Content="清空全部" Margin="6,0,0,0"
+                            Command="{Binding ClearFolderAndFilesCommand}" />
+                    <Button Grid.Row="0" Grid.Column="5" Content="&#x25B2; 收合" Margin="6,0,0,0"
+                            Command="{Binding ToggleSourceCommand}"
+                            Visibility="{Binding HasSource, Converter={StaticResource BoolToVis}}" />
 
-                <Button Grid.Row="0"
-                        Grid.Column="2"
-                        Content="選擇資料夾"
-                        Margin="0,0,6,0"
-                        Command="{Binding BrowseFolderCommand}" />
-
-                <Button Grid.Row="0"
-                        Grid.Column="3"
-                        Content="重新掃描"
-                        Command="{Binding ScanFilesCommand}" />
-
-                <Button Grid.Row="0"
-                        Grid.Column="4"
-                        Content="清空全部"
-                        Margin="6,0,0,0"
-                        Command="{Binding ClearFolderAndFilesCommand}" />
-
-                <TextBlock Grid.Row="0"
-                           Grid.Column="5"
-                           Text="{Binding FileSummary}"
-                           Foreground="{StaticResource TextSecondary}"
-                           FontSize="12"
-                           Margin="14,0,0,0" />
-
-                <TextBlock Grid.Row="1"
-                           Text="掃描格式"
-                           FontWeight="SemiBold"
-                           Margin="0,8,10,0" />
-
-                <WrapPanel Grid.Row="1"
-                           Grid.Column="1"
-                           Grid.ColumnSpan="5"
-                           Margin="0,8,0,0"
-                           VerticalAlignment="Center">
-                    <CheckBox Content=".png"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludePng}" />
-                    <CheckBox Content=".jpg"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeJpg}" />
-                    <CheckBox Content=".jpeg"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeJpeg}" />
-                    <CheckBox Content=".webp"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeWebp}" />
-                    <CheckBox Content=".bmp"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeBmp}" />
-                    <CheckBox Content="包含子資料夾"
-                              Style="{StaticResource PillCheckBox}"
-                              MinWidth="110"
-                              IsChecked="{Binding IncludeSubfolders}" />
-                </WrapPanel>
+                    <TextBlock Grid.Row="1" Text="掃描格式" FontWeight="SemiBold" Margin="0,8,10,0" />
+                    <WrapPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Margin="0,8,0,0"
+                               VerticalAlignment="Center">
+                        <CheckBox Content=".png"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludePng}" />
+                        <CheckBox Content=".jpg"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeJpg}" />
+                        <CheckBox Content=".jpeg" Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeJpeg}" />
+                        <CheckBox Content=".webp" Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeWebp}" />
+                        <CheckBox Content=".bmp"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeBmp}" />
+                        <CheckBox Content="包含子資料夾" Style="{StaticResource PillCheckBox}" MinWidth="110"
+                                  IsChecked="{Binding IncludeSubfolders}" />
+                    </WrapPanel>
+                </Grid>
             </Grid>
         </Border>
 
@@ -1145,7 +1122,7 @@
         </TabControl>
 
         <!-- ── Log（Card 風格，可摺疊）──────────────────────── -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="3"
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="1"
