@@ -73,7 +73,27 @@ public sealed class MainViewModelSourceCollapseTests
         sut.IsSourceExpanded.Should().BeTrue();
     }
 
-    private static MainViewModel CreateSut(IFileScanner scanner) => new(
+    [Fact]
+    public async Task ImportDroppedPaths_拖放匯入出檔案後_IsSourceExpanded應自動收合為false()
+    {
+        var importService = Substitute.For<IFileImportService>();
+        importService.Import(
+                Arg.Any<IReadOnlyList<string>>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<bool>(),
+                Arg.Any<IReadOnlySet<string>>())
+            .Returns(new FileImportResult(
+                [new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10)], []));
+        var sut = CreateSut(Substitute.For<IFileScanner>(), importService);
+
+        await sut.ImportDroppedPathsCommand.ExecuteAsync([@"C:\imgs"]);
+
+        sut.IsSourceExpanded.Should().BeFalse();
+    }
+
+    private static MainViewModel CreateSut(
+        IFileScanner scanner,
+        IFileImportService? importService = null) => new(
         scanner,
         Substitute.For<IFrameDeletePlanner>(),
         Substitute.For<IRenamePlanner>(),
@@ -86,7 +106,7 @@ public sealed class MainViewModelSourceCollapseTests
         Substitute.For<IDenoiseExecutor>(),
         Substitute.For<IDenoisePreviewService>(),
         Substitute.For<IFileExistenceService>(),
-        Substitute.For<IFileImportService>(),
+        importService ?? Substitute.For<IFileImportService>(),
         Substitute.For<IUpdateService>(),
         Substitute.For<IExternalLinkService>());
 }

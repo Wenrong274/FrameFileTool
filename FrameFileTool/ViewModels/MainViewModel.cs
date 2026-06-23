@@ -276,6 +276,9 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
             }
 
             FileSummary = $"已載入 {Files.Count} 個圖片檔";
+
+            // 拖放匯入也視為已設來源，收合來源區（與掃描一致）。
+            IsSourceExpanded = false;
         }
 
         AddLog($"拖放匯入完成：新增 {result.Files.Count} 個圖片檔，略過或錯誤 {result.Errors.Count} 個。");
