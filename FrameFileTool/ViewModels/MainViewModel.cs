@@ -133,12 +133,15 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [ObservableProperty]
     private bool _isLogExpanded = false;
 
-    /// <summary>來源區是否展開。未設來源時維持展開作為空狀態引導；成功掃描後自動收合。</summary>
+    /// <summary>格式列（掃描格式 pills）是否展開；預設收合，由使用者按「▼/▲ 格式」切換。</summary>
     [ObservableProperty]
-    private bool _isSourceExpanded = true;
+    private bool _isSourceExpanded = false;
 
-    /// <summary>是否已有來源檔案，驅動來源區顯示 chip（true）或空狀態引導（false）。</summary>
+    /// <summary>是否已有來源檔案。</summary>
     public bool HasSource => Files.Count > 0;
+
+    /// <summary>是否已填入資料夾路徑，驅動「重新掃描」按鈕顯示。</summary>
+    public bool HasFolderPath => !string.IsNullOrEmpty(SelectedFolder);
 
     /// <summary>正在執行的更新檢查 Task，供測試層 await 結果。</summary>
     internal Task UpdateCheckTask { get; private set; } = Task.CompletedTask;
@@ -238,12 +241,6 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
             AddLog($"掃描錯誤：{error}");
         }
 
-        // 掃描到檔案後自動收合來源區，把空間還給預覽；空結果維持展開引導使用者。
-        if (Files.Count > 0)
-        {
-            IsSourceExpanded = false;
-        }
-
         RefreshCommands();
         TriggerLivePreviewForCurrentTool();
     }
@@ -276,9 +273,6 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
             }
 
             FileSummary = $"已載入 {Files.Count} 個圖片檔";
-
-            // 拖放匯入也視為已設來源，收合來源區（與掃描一致）。
-            IsSourceExpanded = false;
         }
 
         AddLog($"拖放匯入完成：新增 {result.Files.Count} 個圖片檔，略過或錯誤 {result.Errors.Count} 個。");
@@ -364,6 +358,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     partial void OnSelectedFolderChanged(string value)
     {
         _excludedFilePaths.Clear();
+        OnPropertyChanged(nameof(HasFolderPath));
         InvalidateAnyPreview();
     }
 

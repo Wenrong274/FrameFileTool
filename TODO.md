@@ -76,25 +76,26 @@ ID：`main-layout-redesign`
 spec：`docs/superpowers/specs/2026-06-23-main-layout-redesign-design.md`
 plan：`docs/superpowers/plans/2026-06-23-main-layout-redesign.md`
 
-⚠ 影響範圍：`MainWindow.xaml`（刪頁首、RowDefinitions 改 4 列、來源區改三態並移至頂部）→
-`MainViewModel.cs`（新增 `IsSourceExpanded`/`HasSource`/`ToggleSourceCommand` 與掃描後自動收合）→
+⚠ 影響範圍：`MainWindow.xaml`（刪頁首、RowDefinitions 改 4 列、來源區重構為路徑列常駐＋格式列收合）→
+`MainViewModel.cs`（新增 `IsSourceExpanded`/`HasSource`/`HasFolderPath`/`ToggleSourceCommand`）→
 `UI_UX_DESIGN_RULES.md`（資訊架構）。取代 `shared-source-bar`。
-⚠ 邊界案例：切分頁時收合狀態保持；視窗縮至 MinWidth 900px 時格式 pills 換行；
-批次執行中來源按鈕停用。
+⚠ 邊界案例：切分頁時格式列收合狀態保持；視窗縮至 MinWidth 900px 時格式 pills 換行；
+路徑清空時「重新掃描」消失。
 
-- [x] [ViewModel] 新增 `IsSourceExpanded`/`HasSource`/`ToggleSourceCommand`，掃描出檔案後自動收合（+5 測試）。
+- [x] [ViewModel] 新增 `IsSourceExpanded`（預設 false）/`HasSource`/`HasFolderPath`/`ToggleSourceCommand`（+3 測試）。
 - [x] [View] 刪除自製頁首 Border，外層 `RowDefinitions` 改為 4 列，來源區移至 `TabControl` 上方。
-- [x] [View] 來源區改為三態：空狀態展開引導 / 收合 chip / 展開橫列。
+- [x] [View] 來源區重構：路徑列常駐；格式列由 `IsSourceExpanded` 控制；
+      `重新掃描` 僅在 `HasFolderPath` 時顯示；切換按鈕動態顯示「▼ 格式」/「▲ 格式」。
 - [x] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 資訊架構，作廢 `shared-source-bar`。
-- [x] [Test] `dotnet test` 314 全過、`dotnet format` 與 markdownlint 乾淨。
+- [x] [Test] `dotnet test` 313 全過、`dotnet format` 與 markdownlint 乾淨。
 
 完成判定（須親自跑 app 驗收）：
 
-- [ ] [正常路徑] 啟動無來源 → 來源區展開、無「▲ 收合」、`FileSummary` 顯示「尚未掃描」。
-- [ ] [正常路徑] 選資料夾並掃描出檔案 → 自動收合成 chip（資料夾摘要＋路徑＋「✎ 變更」）。
-- [ ] [正常路徑] 點「✎ 變更」展開、「▲ 收合」收回；切換 4 個分頁收合狀態保持不變。
-- [ ] [邊界] 視窗縮至 MinWidth 900px，格式 pills 自動換行不溢出。
-- [ ] [視覺] 無自製頁首，產品識別只由 Windows 原生標題列呈現。
+- [x] [正常路徑] 啟動無來源 → 路徑列常駐、無「重新掃描」、格式列隱藏、按鈕顯示「▼ 格式」。
+- [x] [正常路徑] 填入資料夾路徑 → 「重新掃描」出現；清空路徑 → 「重新掃描」消失。
+- [x] [正常路徑] 點「▼ 格式」→ pills 展開、按鈕變「▲ 格式」；再點收合；切換 4 個分頁格式列狀態保持不變。
+- [x] [邊界] 視窗縮至 MinWidth 900px，格式 pills 自動換行不溢出。
+- [x] [視覺] 無自製頁首，產品識別只由 Windows 原生標題列呈現。
 
 ### 分頁內底部來源列實作（已作廢）
 
