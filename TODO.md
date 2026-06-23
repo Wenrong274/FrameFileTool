@@ -29,38 +29,13 @@
 
 ## 近期功能計劃
 
-### 工具分頁導航
+### 分頁內底部來源列實作（已作廢）
 
-ID：`tool-tabs-layout`
-優先度：高
-分支：feat/tool-tabs-layout（開始時建立）
-前置條件：無
-被依賴：無
+ID：`shared-source-bar`
 
-⚠ 影響範圍：`MainWindow.xaml`（主內容 Grid → TabControl）→
-`MainWindowStyles.xaml`（新增 ToolTabControl/ToolTabItem，移除 ToolTabButton）→
-`MainViewModel.cs`（新增 SelectedToolIndex）→ `UI_UX_DESIGN_RULES.md`
-
-⚠ 邊界案例：縮放或降噪執行中切換分頁（允許，IsBatchExecuting 不鎖定）；
-拖放檔案時預覽 Border 在四個 TabItem 中各複製一份，確認 DragDrop handler 正常路由
-
-- [ ] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 資訊架構，納入全寬 TabControl 分頁導航規則。
-- [ ] [ViewModel] `MainViewModel.cs` 新增 `SelectedToolIndex` int 屬性（`SelectedTool` 的 int 包裝），
-      並在 `OnSelectedToolChanged` 補 `OnPropertyChanged(nameof(SelectedToolIndex))`。
-- [ ] [Style] `MainWindowStyles.xaml` 新增 `ToolTabControl` 與 `ToolTabItem`（底線強調），
-      移除不再使用的 `ToolTabButton` RadioButton 樣式。
-- [ ] [View] `MainWindow.xaml` 以全寬 `TabControl`（4 個 `TabItem`）取代主內容 3 欄 Grid；
-      每個 TabItem 內維持左右分欄（工具參數 290px / 預覽 \*）；
-      移除 4 個疊層 ScrollViewer 上的 `EnumToVisibilityConverter` binding。
-- [ ] [Test] 執行 `dotnet test` 確認現有測試全數通過（本次無新 unit test，XAML 行為由手動驗收確認）。
-
-完成判定：
-
-- [ ] [正常路徑] 點擊任一分頁標籤，對應工具參數顯示，分頁底線強調可見，其他工具不可見。
-- [ ] [正常路徑] 切換至不同工具分頁，既有預覽清除，不顯示舊工具的預覽資料。
-- [ ] [邊界] 縮放或降噪執行中，可自由切換分頁；切換回執行中分頁，進度仍在，不中斷。
-- [ ] [邊界] 拖放圖片或資料夾到預覽區，DragDrop 行為與切換前相同，Log 正常記錄。
-- [ ] [視覺] 未選中分頁文字灰色、無底線；選中分頁文字深色 SemiBold、藍色 2px 底線；hover 文字略深。
+> ⛔ 已被 `docs/superpowers/specs/2026-06-23-main-layout-redesign-design.md` 取代。
+> 改為頂部漸進式收合來源（單一區、空/chip/展開三態），不再放入各 TabItem 底部，
+> 避免來源列在 4 個分頁各複製一份。原任務作廢，不再執行；原規劃細節已移除。
 
 ### 進階降噪引擎研究
 
@@ -129,7 +104,7 @@ npx markdownlint-cli2 "*.md"
 
 若有修改 UI，也需要手動確認：
 
-- 空狀態、錯誤狀態、忙碌狀態都能正確顯示。
+- 空狀態、錯誤狀態、忙碌狀態都能接收顯示。
 - 預覽必須先產生，執行按鈕才可使用。
 - 長檔名與大量檔案不造成表格排版破裂。
 - Log 訊息能定位發生問題的檔案或資料夾。

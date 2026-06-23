@@ -24,33 +24,14 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />  <!-- Row 0：更新通知 -->
+            <RowDefinition Height="Auto" />  <!-- Row 1：來源區 -->
+            <RowDefinition Height="*" />     <!-- Row 2：TabControl 主內容 -->
+            <RowDefinition Height="Auto" />  <!-- Row 3：Log -->
         </Grid.RowDefinitions>
 
-        <!-- ── 頁首：產品識別 ─────────────────────────────────── -->
-        <Border Grid.Row="0"
-                Style="{StaticResource Card}"
-                Padding="12,8"
-                Margin="0,0,0,10">
-            <DockPanel LastChildFill="True">
-                <Image DockPanel.Dock="Left"
-                       Source="pack://application:,,,/Assets/AppIcon.png"
-                       Width="28"
-                       Height="28"
-                       Margin="0,0,10,0" />
-
-                <TextBlock Text="影格整理工具"
-                           FontSize="17"
-                           FontWeight="SemiBold" />
-            </DockPanel>
-        </Border>
-
         <!-- ── 更新通知：啟動後背景檢查 GitHub Release ─────── -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="0"
                 Background="#EFF6FF"
                 BorderBrush="{StaticResource AccentBrush}"
                 BorderThickness="1"
@@ -88,154 +69,80 @@
         </Border>
 
         <!-- ── 來源設定：資料夾與掃描選項集中在同一區 ───────── -->
-        <Border Grid.Row="2"
+        <Border Grid.Row="1"
                 Style="{StaticResource Card}"
                 Padding="12,10"
-                Margin="0,0,0,12">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Row="0"
-                           Text="來源資料夾"
-                           FontWeight="SemiBold"
-                           Margin="0,0,10,0" />
-
-                <TextBox Grid.Row="0"
-                         Grid.Column="1"
-                         Margin="0,0,8,0"
-                         Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" />
-
-                <Button Grid.Row="0"
-                        Grid.Column="2"
-                        Content="選擇資料夾"
-                        Margin="0,0,6,0"
-                        Command="{Binding BrowseFolderCommand}" />
-
-                <Button Grid.Row="0"
-                        Grid.Column="3"
-                        Content="重新掃描"
-                        Command="{Binding ScanFilesCommand}" />
-
-                <Button Grid.Row="0"
-                        Grid.Column="4"
-                        Content="清空全部"
-                        Margin="6,0,0,0"
-                        Command="{Binding ClearFolderAndFilesCommand}" />
-
-                <TextBlock Grid.Row="0"
-                           Grid.Column="5"
-                           Text="{Binding FileSummary}"
-                           Foreground="{StaticResource TextSecondary}"
-                           FontSize="12"
-                           Margin="14,0,0,0" />
-
-                <TextBlock Grid.Row="1"
-                           Text="掃描格式"
-                           FontWeight="SemiBold"
-                           Margin="0,8,10,0" />
-
-                <WrapPanel Grid.Row="1"
-                           Grid.Column="1"
-                           Grid.ColumnSpan="5"
-                           Margin="0,8,0,0"
-                           VerticalAlignment="Center">
-                    <CheckBox Content=".png"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludePng}" />
-                    <CheckBox Content=".jpg"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeJpg}" />
-                    <CheckBox Content=".jpeg"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeJpeg}" />
-                    <CheckBox Content=".webp"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeWebp}" />
-                    <CheckBox Content=".bmp"
-                              Style="{StaticResource PillCheckBox}"
-                              IsChecked="{Binding IncludeBmp}" />
-                    <CheckBox Content="包含子資料夾"
-                              Style="{StaticResource PillCheckBox}"
-                              MinWidth="110"
+                Margin="0,0,0,10">
+            <StackPanel>
+                <!-- 路徑列：常駐 -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="來源資料夾" FontWeight="SemiBold" Margin="0,0,10,0"
+                               VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center"
+                             Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="2" Content="選擇資料夾" Margin="0,0,6,0"
+                            Command="{Binding BrowseFolderCommand}" />
+                    <Button Grid.Column="3" Content="重新掃描" Margin="0,0,6,0"
+                            Command="{Binding ScanFilesCommand}"
+                            Visibility="{Binding HasFolderPath, Converter={StaticResource BoolToVis}}" />
+                    <Button Grid.Column="4" Content="清空全部" Margin="0,0,6,0"
+                            Command="{Binding ClearFolderAndFilesCommand}" />
+                    <Button Grid.Column="5" Command="{Binding ToggleSourceCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Content" Value="▼ 格式" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSourceExpanded}" Value="True">
+                                        <Setter Property="Content" Value="▲ 格式" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+                <!-- 格式列：IsSourceExpanded=True 時顯示 -->
+                <WrapPanel Margin="0,8,0,0"
+                           Visibility="{Binding IsSourceExpanded, Converter={StaticResource BoolToVis}}">
+                    <CheckBox Content=".png"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludePng}" />
+                    <CheckBox Content=".jpg"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeJpg}" />
+                    <CheckBox Content=".jpeg" Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeJpeg}" />
+                    <CheckBox Content=".webp" Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeWebp}" />
+                    <CheckBox Content=".bmp"  Style="{StaticResource PillCheckBox}" IsChecked="{Binding IncludeBmp}" />
+                    <CheckBox Content="包含子資料夾" Style="{StaticResource PillCheckBox}" MinWidth="110"
                               IsChecked="{Binding IncludeSubfolders}" />
                 </WrapPanel>
-            </Grid>
+            </StackPanel>
         </Border>
 
-        <!-- ── 主內容：左側工具 + 右側預覽 ─────────────────── -->
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="290" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- ── 主內容：全寬 TabControl，每個 TabItem 維持左右分欄 ── -->
+        <TabControl Grid.Row="2"
+                    SelectedIndex="{Binding SelectedToolIndex, Mode=TwoWay}"
+                    Style="{StaticResource ToolTabControl}">
 
-            <!-- 左側：操作面板 -->
-            <Border Grid.Column="0"
-                    Style="{StaticResource Card}"
-                    Padding="0"
-                    ClipToBounds="True">
+            <!-- ── 抽幀刪除 ─────────────────────────────────── -->
+            <TabItem Header="抽幀刪除"
+                     Style="{StaticResource ToolTabItem}">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                    <!-- 工具選擇列：2×2 RadioButton 格，選取時位置絕對不移動 -->
-                    <Border Grid.Row="0"
-                            Background="{StaticResource SurfaceSubtleBrush}"
-                            BorderBrush="{StaticResource CardBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            Padding="6">
-                        <UniformGrid Rows="2" Columns="2"
-                            AutomationProperties.Name="操作工具">
-                            <RadioButton Content="抽幀刪除"
-                                         GroupName="ToolSelector"
-                                         Style="{StaticResource ToolTabButton}"
-                                         IsChecked="{Binding SelectedTool,
-                                             Converter={StaticResource EnumToBoolConverter},
-                                             ConverterParameter=FrameDelete}" />
-                            <RadioButton Content="批次改名"
-                                         GroupName="ToolSelector"
-                                         Style="{StaticResource ToolTabButton}"
-                                         IsChecked="{Binding SelectedTool,
-                                             Converter={StaticResource EnumToBoolConverter},
-                                             ConverterParameter=Rename}" />
-                            <RadioButton Content="批次縮放"
-                                         GroupName="ToolSelector"
-                                         Style="{StaticResource ToolTabButton}"
-                                         IsChecked="{Binding SelectedTool,
-                                             Converter={StaticResource EnumToBoolConverter},
-                                             ConverterParameter=Resize}" />
-                            <RadioButton Content="批次降噪"
-                                         GroupName="ToolSelector"
-                                         Style="{StaticResource ToolTabButton}"
-                                         IsChecked="{Binding SelectedTool,
-                                             Converter={StaticResource EnumToBoolConverter},
-                                             ConverterParameter=Denoise}" />
-                        </UniformGrid>
-                    </Border>
-
-                    <!-- 工具內容區：四個面板重疊，依 SelectedTool 顯示對應面板 -->
-                    <Grid Grid.Row="1">
-
-                        <!-- 抽幀刪除面板 -->
+                    <Border Grid.Column="0"
+                            Style="{StaticResource Card}"
+                            Padding="0"
+                            ClipToBounds="True">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding SelectedTool,
-                                          Converter={StaticResource EnumToVisibilityConverter},
-                                          ConverterParameter=FrameDelete}">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
                                         DataContext="{Binding FrameDeleteTool}"
                                         Grid.IsSharedSizeScope="True">
@@ -289,13 +196,148 @@
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
+                    </Border>
 
-                        <!-- 批次改名面板 -->
+                    <!-- 右側：預覽區 -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- 預覽摘要列：idle=灰 / ok=綠 / error=紅 -->
+                        <Border Grid.Row="0"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="12,7"
+                                Margin="0,0,0,6">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background"  Value="#F8FAFC" />
+                                    <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                    <Style.Triggers>
+                                        <!-- 有預覽且無錯誤：綠色 -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Background"  Value="#F0FDF4" />
+                                            <Setter Property="BorderBrush" Value="#86EFAC" />
+                                        </MultiDataTrigger>
+                                        <!-- 有錯誤：紅色 -->
+                                        <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                            <Setter Property="Background"  Value="#FEF2F2" />
+                                            <Setter Property="BorderBrush" Value="#FECACA" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <TextBlock Text="{Binding PreviewSummary}" FontSize="12">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                    <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="#166534" />
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                                <Setter Property="Foreground" Value="#991B1B" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <!-- 預覽表格：ContentControl 依 CurrentPreview 型別自動選擇 DataTemplate -->
+                        <Border Grid.Row="1"
+                                Style="{StaticResource Card}"
+                                AllowDrop="True"
+                                DragEnter="PreviewDropTarget_DragEnter"
+                                DragOver="PreviewDropTarget_DragOver"
+                                DragLeave="PreviewDropTarget_DragLeave"
+                                Drop="PreviewDropTarget_Drop"
+                                ClipToBounds="True"
+                                Padding="0">
+                            <Grid>
+                                <ContentControl Content="{Binding CurrentPreview}"
+                                                AutomationProperties.Name="操作預覽"
+                                                Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                                </ContentControl>
+
+                                <Border Padding="18">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPreview}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="尚未產生預覽"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimary}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="載入圖片後將自動顯示預覽"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border IsHitTestVisible="False"
+                                        Background="#EEF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="2"
+                                        Visibility="{Binding IsPreviewDropTargetActive, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="放開以新增資料"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="支援拖曳檔案或資料夾"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ── 批次改名 ─────────────────────────────────── -->
+            <TabItem Header="批次改名"
+                     Style="{StaticResource ToolTabItem}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource Card}"
+                            Padding="0"
+                            ClipToBounds="True">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding SelectedTool,
-                                          Converter={StaticResource EnumToVisibilityConverter},
-                                          ConverterParameter=Rename}">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
                                         DataContext="{Binding RenameTool}"
                                         Grid.IsSharedSizeScope="True">
@@ -377,13 +419,148 @@
                                         HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </ScrollViewer>
+                    </Border>
 
-                        <!-- 批次縮放面板 -->
+                    <!-- 右側：預覽區 -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- 預覽摘要列：idle=灰 / ok=綠 / error=紅 -->
+                        <Border Grid.Row="0"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="12,7"
+                                Margin="0,0,0,6">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background"  Value="#F8FAFC" />
+                                    <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                    <Style.Triggers>
+                                        <!-- 有預覽且無錯誤：綠色 -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Background"  Value="#F0FDF4" />
+                                            <Setter Property="BorderBrush" Value="#86EFAC" />
+                                        </MultiDataTrigger>
+                                        <!-- 有錯誤：紅色 -->
+                                        <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                            <Setter Property="Background"  Value="#FEF2F2" />
+                                            <Setter Property="BorderBrush" Value="#FECACA" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <TextBlock Text="{Binding PreviewSummary}" FontSize="12">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                    <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="#166534" />
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                                <Setter Property="Foreground" Value="#991B1B" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <!-- 預覽表格：ContentControl 依 CurrentPreview 型別自動選擇 DataTemplate -->
+                        <Border Grid.Row="1"
+                                Style="{StaticResource Card}"
+                                AllowDrop="True"
+                                DragEnter="PreviewDropTarget_DragEnter"
+                                DragOver="PreviewDropTarget_DragOver"
+                                DragLeave="PreviewDropTarget_DragLeave"
+                                Drop="PreviewDropTarget_Drop"
+                                ClipToBounds="True"
+                                Padding="0">
+                            <Grid>
+                                <ContentControl Content="{Binding CurrentPreview}"
+                                                AutomationProperties.Name="操作預覽"
+                                                Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                                </ContentControl>
+
+                                <Border Padding="18">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPreview}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="尚未產生預覽"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimary}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="載入圖片後將自動顯示預覽"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border IsHitTestVisible="False"
+                                        Background="#EEF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="2"
+                                        Visibility="{Binding IsPreviewDropTargetActive, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="放開以新增資料"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="支援拖曳檔案或資料夾"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ── 批次縮放 ─────────────────────────────────── -->
+            <TabItem Header="批次縮放"
+                     Style="{StaticResource ToolTabItem}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource Card}"
+                            Padding="0"
+                            ClipToBounds="True">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding SelectedTool,
-                                          Converter={StaticResource EnumToVisibilityConverter},
-                                          ConverterParameter=Resize}">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
                                         DataContext="{Binding ResizeTool}">
 
@@ -558,13 +735,148 @@
 
                             </StackPanel>
                         </ScrollViewer>
+                    </Border>
 
-                        <!-- 批次降噪面板 -->
+                    <!-- 右側：預覽區 -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- 預覽摘要列：idle=灰 / ok=綠 / error=紅 -->
+                        <Border Grid.Row="0"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="12,7"
+                                Margin="0,0,0,6">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background"  Value="#F8FAFC" />
+                                    <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                    <Style.Triggers>
+                                        <!-- 有預覽且無錯誤：綠色 -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Background"  Value="#F0FDF4" />
+                                            <Setter Property="BorderBrush" Value="#86EFAC" />
+                                        </MultiDataTrigger>
+                                        <!-- 有錯誤：紅色 -->
+                                        <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                            <Setter Property="Background"  Value="#FEF2F2" />
+                                            <Setter Property="BorderBrush" Value="#FECACA" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <TextBlock Text="{Binding PreviewSummary}" FontSize="12">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasPreview}"       Value="True" />
+                                                    <Condition Binding="{Binding HasPreviewErrors}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="#166534" />
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding HasPreviewErrors}" Value="True">
+                                                <Setter Property="Foreground" Value="#991B1B" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <!-- 預覽表格：ContentControl 依 CurrentPreview 型別自動選擇 DataTemplate -->
+                        <Border Grid.Row="1"
+                                Style="{StaticResource Card}"
+                                AllowDrop="True"
+                                DragEnter="PreviewDropTarget_DragEnter"
+                                DragOver="PreviewDropTarget_DragOver"
+                                DragLeave="PreviewDropTarget_DragLeave"
+                                Drop="PreviewDropTarget_Drop"
+                                ClipToBounds="True"
+                                Padding="0">
+                            <Grid>
+                                <ContentControl Content="{Binding CurrentPreview}"
+                                                AutomationProperties.Name="操作預覽"
+                                                Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                                </ContentControl>
+
+                                <Border Padding="18">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPreview}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="尚未產生預覽"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimary}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="載入圖片後將自動顯示預覽"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border IsHitTestVisible="False"
+                                        Background="#EEF6FF"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderThickness="2"
+                                        Visibility="{Binding IsPreviewDropTargetActive, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="放開以新增資料"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="支援拖曳檔案或資料夾"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   Margin="0,6,0,0"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ── 批次降噪 ─────────────────────────────────── -->
+            <TabItem Header="批次降噪"
+                     Style="{StaticResource ToolTabItem}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource Card}"
+                            Padding="0"
+                            ClipToBounds="True">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding SelectedTool,
-                                          Converter={StaticResource EnumToVisibilityConverter},
-                                          ConverterParameter=Denoise}">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
                                         DataContext="{Binding DenoiseTool}">
 
@@ -654,13 +966,10 @@
 
                             </StackPanel>
                         </ScrollViewer>
+                    </Border>
 
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <!-- 右側：預覽區 -->
-            <Grid Grid.Column="2">
+                    <!-- 右側：預覽區 -->
+                    <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -779,11 +1088,13 @@
                         </Border>
                     </Grid>
                 </Border>
-            </Grid>
-        </Grid>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
 
         <!-- ── Log（Card 風格，可摺疊）──────────────────────── -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="3"
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="1"

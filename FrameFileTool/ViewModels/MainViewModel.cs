@@ -68,6 +68,15 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [ObservableProperty]
     private PreviewTool _selectedTool = PreviewTool.FrameDelete;
 
+    /// <summary>
+    /// TabControl.SelectedIndex 的 int 包裝，對應 SelectedTool enum 值。
+    /// </summary>
+    public int SelectedToolIndex
+    {
+        get => (int)SelectedTool;
+        set => SelectedTool = (PreviewTool)value;
+    }
+
     [ObservableProperty]
     private string _fileSummary = "尚未掃描";
 
@@ -124,6 +133,16 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [ObservableProperty]
     private bool _isLogExpanded = false;
 
+    /// <summary>格式列（掃描格式 pills）是否展開；預設收合，由使用者按「▼/▲ 格式」切換。</summary>
+    [ObservableProperty]
+    private bool _isSourceExpanded = false;
+
+    /// <summary>是否已有來源檔案。</summary>
+    public bool HasSource => Files.Count > 0;
+
+    /// <summary>是否已填入資料夾路徑，驅動「重新掃描」按鈕顯示。</summary>
+    public bool HasFolderPath => !string.IsNullOrEmpty(SelectedFolder);
+
     /// <summary>正在執行的更新檢查 Task，供測試層 await 結果。</summary>
     internal Task UpdateCheckTask { get; private set; } = Task.CompletedTask;
 
@@ -163,6 +182,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
             this,
             debounceDelay == default ? TimeSpan.FromMilliseconds(350) : debounceDelay);
         DenoiseTool = new DenoiseToolViewModel(denoisePlanner, denoiseExecutor, denoisePreviewService, this);
+        Files.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSource));
     }
 
     /// <summary>掃描結果檔案清單，繫結到掃描結果區塊。</summary>
@@ -318,6 +338,9 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     [RelayCommand]
     private void ToggleLog() => IsLogExpanded = !IsLogExpanded;
 
+    [RelayCommand]
+    private void ToggleSource() => IsSourceExpanded = !IsSourceExpanded;
+
     [RelayCommand(CanExecute = nameof(CanGoToDownloadPage))]
     private void GoToDownloadPage() =>
         _externalLinkService.Open(LatestReleaseUrl);
@@ -335,6 +358,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     partial void OnSelectedFolderChanged(string value)
     {
         _excludedFilePaths.Clear();
+        OnPropertyChanged(nameof(HasFolderPath));
         InvalidateAnyPreview();
     }
 
@@ -352,6 +376,7 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
 
     partial void OnSelectedToolChanged(PreviewTool value)
     {
+        OnPropertyChanged(nameof(SelectedToolIndex));
         if (value != PreviewTool.Resize)
         {
             ResizeTool.CancelPendingPreview();
