@@ -1008,3 +1008,86 @@ ID：`clear-remove`
 - [x] [邊界] 剔除最後一個檔案後，三個工具的執行按鈕全部停用，預覽顯示空狀態。
 - [x] [正常路徑] 點擊「重新掃描」按鈕，原本被剔除的檔案應被重新加載並顯示於預覽清單中。
 - [x] [正常路徑] 執行抽幀、改名或縮放操作完成後，背景自動掃描應維持檔案的剔除狀態（不被加回清單）。
+
+## 工具分頁導航
+
+ID：`tool-tabs-layout`
+完成日期：2026-06-24
+發布版本：v1.7.0
+
+優先度：高
+分支：feat/tool-tabs-layout
+前置條件：無
+被依賴：`main-layout-redesign`
+
+影響範圍：`MainWindow.xaml`（主內容 Grid → TabControl）→
+`MainWindowStyles.xaml`（新增 ToolTabControl/ToolTabItem，移除 ToolTabButton）→
+`MainViewModel.cs`（新增 SelectedToolIndex）→ `UI_UX_DESIGN_RULES.md`
+
+實作結果：
+
+- 主內容區以全寬 `TabControl`（4 個 `TabItem`）取代原本 2×2 RadioButton 切換 Grid。
+- 每個 TabItem 內維持左右分欄（工具參數 290px / 預覽 `*`），原有 DragDrop 行為不變。
+- 新增 `ToolTabControl` 與 `ToolTabItem` 樣式：選中分頁文字深色 SemiBold、藍色 2px 底線；
+  未選中灰色、無底線；hover 文字略深。
+- 移除不再使用的 `ToolTabButton` RadioButton 樣式。
+- `MainViewModel` 新增 `SelectedToolIndex` int 屬性，供 `TabControl.SelectedIndex` 雙向 binding。
+- 來源設定區位置由 `main-layout-redesign` 接續調整（移至 TabControl 上方）。
+
+- [x] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 資訊架構，納入全寬 TabControl 分頁導航規則。
+- [x] [ViewModel] `MainViewModel.cs` 新增 `SelectedToolIndex` int 屬性並通知變更。
+- [x] [Style] 新增 `ToolTabControl`/`ToolTabItem`，移除 `ToolTabButton`。
+- [x] [View] 以全寬 TabControl 取代主內容 Grid。
+- [x] [Test] 現有測試全數通過。
+
+完成判定：
+
+- [x] [正常路徑] 點擊任一分頁標籤，對應工具參數顯示，分頁底線強調可見，其他工具不可見。
+- [x] [正常路徑] 切換至不同工具分頁，既有預覽清除，不顯示舊工具的預覽資料。
+- [x] [邊界] 縮放或降噪執行中，可自由切換分頁；切換回執行中分頁，進度仍在，不中斷。
+- [x] [邊界] 拖放圖片或資料夾到預覽區，DragDrop 行為與切換前相同，Log 正常記錄。
+- [x] [視覺] 未選中分頁文字灰色、無底線；選中分頁文字深色 SemiBold、藍色 2px 底線；hover 文字略深。
+- [x] [視覺] 來源設定位置已由 `main-layout-redesign` 改為 `TabControl` 上方。
+
+## 主視窗版面優化：砍頁首 ＋ 來源頂部格式收合
+
+ID：`main-layout-redesign`
+完成日期：2026-06-24
+發布版本：v1.7.0
+
+優先度：高
+分支：feat/tool-tabs-layout（接續 tool-tabs-layout）
+前置條件：`tool-tabs-layout` 已完成
+被依賴：無
+
+影響範圍：`MainWindow.xaml`（刪頁首、RowDefinitions 改 4 列、來源區重構）→
+`MainViewModel.cs`（新增 `IsSourceExpanded`/`HasSource`/`HasFolderPath`/`ToggleSourceCommand`）→
+`UI_UX_DESIGN_RULES.md`。取代 `shared-source-bar`。
+
+實作結果：
+
+- 刪除自製頁首 Border（含應用程式圖示與標題文字），產品識別改由 Windows 原生標題列呈現。
+- 外層 `RowDefinitions` 改為 4 列（更新通知 / 來源設定 / TabControl / Log）。
+- 來源設定區重構為兩層：
+  - **路徑列**（常駐）：來源資料夾 TextBox + 選擇資料夾 + 重新掃描（HasFolderPath 時顯示）+
+    清空全部 + ▼/▲格式 切換按鈕。
+  - **格式列**（`IsSourceExpanded` 控制）：掃描格式 pills + 含子資料夾。
+- `ToggleSourceCommand` 切換 `IsSourceExpanded`；按鈕內容由 DataTrigger 動態顯示「▼ 格式」/「▲ 格式」。
+- 新增 `HasFolderPath` computed property，`OnSelectedFolderChanged` 時通知，驅動「重新掃描」顯示。
+- `IsSourceExpanded` 預設 `false`（格式列收合），移除掃描後自動收合邏輯。
+- 測試移除 4 個舊自動收合測試，新增 `HasFolderPath` 測試，共 313 通過。
+- `shared-source-bar` 任務作廢（分頁內底部來源列不再實作）。
+
+- [x] [ViewModel] 新增 `IsSourceExpanded`/`HasSource`/`HasFolderPath`/`ToggleSourceCommand`（+3 測試）。
+- [x] [View] 刪除自製頁首，RowDefinitions 改 4 列，來源區移至 TabControl 上方。
+- [x] [View] 來源區重構為路徑列常駐 + 格式列收合兩層。
+- [x] [Docs] 更新 `UI_UX_DESIGN_RULES.md`，作廢 `shared-source-bar`。
+- [x] [Test] `dotnet test` 313 全過。
+
+完成判定：
+
+- [x] [正常路徑] 啟動無來源 → 路徑列常駐、無「重新掃描」、格式列隱藏、按鈕顯示「▼ 格式」。
+- [x] [正常路徑] 填入資料夾路徑 → 「重新掃描」出現；清空路徑 → 「重新掃描」消失。
+- [x] [正常路徑] 點「▼ 格式」→ pills 展開、按鈕變「▲ 格式」；再點收合；切換 4 個分頁格式列狀態保持不變。
+- [x] [邊界] 視窗縮至 MinWidth 900px，格式 pills 自動換行不溢出。
+- [x] [視覺] 無自製頁首，產品識別只由 Windows 原生標題列呈現。
