@@ -63,7 +63,38 @@ ID：`tool-tabs-layout`
 - [ ] [邊界] 縮放或降噪執行中，可自由切換分頁；切換回執行中分頁，進度仍在，不中斷。
 - [ ] [邊界] 拖放圖片或資料夾到預覽區，DragDrop 行為與切換前相同，Log 正常記錄。
 - [ ] [視覺] 未選中分頁文字灰色、無底線；選中分頁文字深色 SemiBold、藍色 2px 底線；hover 文字略深。
-- [ ] [視覺] 來源設定位於工具分頁下方、Log 上方，與主工作區和 Log 之間距一致。
+- [~] [視覺] 來源設定位置已由 `main-layout-redesign` 改為 `TabControl` 上方（本項驗收併入該任務）。
+
+### 主視窗版面優化：砍頁首 ＋ 來源頂部漸進收合
+
+ID：`main-layout-redesign`
+優先度：高
+分支：feat/tool-tabs-layout（接續 tool-tabs-layout）
+前置條件：`tool-tabs-layout` 已完成
+被依賴：無
+
+spec：`docs/superpowers/specs/2026-06-23-main-layout-redesign-design.md`
+plan：`docs/superpowers/plans/2026-06-23-main-layout-redesign.md`
+
+⚠ 影響範圍：`MainWindow.xaml`（刪頁首、RowDefinitions 改 4 列、來源區改三態並移至頂部）→
+`MainViewModel.cs`（新增 `IsSourceExpanded`/`HasSource`/`ToggleSourceCommand` 與掃描後自動收合）→
+`UI_UX_DESIGN_RULES.md`（資訊架構）。取代 `shared-source-bar`。
+⚠ 邊界案例：切分頁時收合狀態保持；視窗縮至 MinWidth 900px 時格式 pills 換行；
+批次執行中來源按鈕停用。
+
+- [x] [ViewModel] 新增 `IsSourceExpanded`/`HasSource`/`ToggleSourceCommand`，掃描出檔案後自動收合（+5 測試）。
+- [x] [View] 刪除自製頁首 Border，外層 `RowDefinitions` 改為 4 列，來源區移至 `TabControl` 上方。
+- [x] [View] 來源區改為三態：空狀態展開引導 / 收合 chip / 展開橫列。
+- [x] [Docs] 更新 `UI_UX_DESIGN_RULES.md` 資訊架構，作廢 `shared-source-bar`。
+- [x] [Test] `dotnet test` 314 全過、`dotnet format` 與 markdownlint 乾淨。
+
+完成判定（須親自跑 app 驗收）：
+
+- [ ] [正常路徑] 啟動無來源 → 來源區展開、無「▲ 收合」、`FileSummary` 顯示「尚未掃描」。
+- [ ] [正常路徑] 選資料夾並掃描出檔案 → 自動收合成 chip（資料夾摘要＋路徑＋「✎ 變更」）。
+- [ ] [正常路徑] 點「✎ 變更」展開、「▲ 收合」收回；切換 4 個分頁收合狀態保持不變。
+- [ ] [邊界] 視窗縮至 MinWidth 900px，格式 pills 自動換行不溢出。
+- [ ] [視覺] 無自製頁首，產品識別只由 Windows 原生標題列呈現。
 
 ### 分頁內底部來源列實作（已作廢）
 
