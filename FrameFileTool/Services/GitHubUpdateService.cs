@@ -8,7 +8,7 @@ namespace FrameFileTool.Services;
 
 public sealed class GitHubUpdateService : IUpdateService
 {
-    private static readonly Uri _latestReleaseUri = new("https://api.github.com/repos/Wenrong274/FrameFileTool/releases/latest");
+    private static readonly Uri _latestReleaseUri = new("https://api.github.com/repos/WenrongNexus/FrameFileTool/releases/latest");
 
     private readonly HttpClient _httpClient;
     private readonly Version _currentVersion;
