@@ -318,7 +318,7 @@ Commit message 格式、type 清單、七大黃金規則與範例，請以 [COMM
 | ------------------------------------------ | ------- | ----------------------------------------------------------------------------- |
 | `CommunityToolkit.Mvvm`                    | 8.4.2   | `ObservableObject`、`[ObservableProperty]`、`[RelayCommand]` source generator |
 | `Microsoft.Extensions.DependencyInjection` | 10.0.8  | DI 容器，於 `App.xaml.cs` 注冊所有 service 與 ViewModel                       |
-| `Magick.NET-Q8-AnyCPU`                     | 14.13.1 | 批次縮放圖片，支援 PNG/JPG/JPEG/WebP/BMP，提供 Lanczos/Mitchell 等演算法      |
+| `Magick.NET-Q8-AnyCPU`                     | 14.15.0 | 批次縮放圖片，支援 PNG/JPG/JPEG/WebP/BMP，提供 Lanczos/Mitchell 等演算法      |
 
 ### 測試專案 NuGet 套件
 
