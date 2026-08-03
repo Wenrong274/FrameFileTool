@@ -1,10 +1,14 @@
 # 工具分頁導航實作計劃
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended)
+> or superpowers:executing-plans to implement this plan task-by-task.
+> Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 以 WPF `TabControl` 取代左側 RadioButton 2×2 格，實現全寬資料夾風格分頁導航。
 
-**Architecture:** 主視窗 Row 3 的 3 欄 `Grid` 替換為 `TabControl`（4 個 `TabItem`），每個 `TabItem` 內部維持左右兩欄（工具參數 290px / 預覽 \*）。`SelectedTool` enum 透過新增的 `SelectedToolIndex` int 屬性與 `TabControl.SelectedIndex` 雙向綁定。
+**Architecture:** 主視窗 Row 3 的 3 欄 `Grid` 替換為 `TabControl`（4 個 `TabItem`），
+每個 `TabItem` 內部維持左右兩欄（工具參數 290px / 預覽 \*）。
+`SelectedTool` enum 透過新增的 `SelectedToolIndex` int 屬性與 `TabControl.SelectedIndex` 雙向綁定。
 
 **Tech Stack:** .NET 10、WPF、CommunityToolkit.Mvvm、xUnit
 
@@ -244,7 +248,9 @@ git commit -m "style: 新增 ToolTabControl/ToolTabItem 底線分頁樣式，移
 
 - [ ] **Step 2：在原位插入新的 TabControl 結構**
 
-說明：以下 `[抽幀刪除參數內容]`、`[批次改名參數內容]`、`[批次縮放參數內容]`、`[批次降噪參數內容]` 各自填入舊 ScrollViewer 內的 StackPanel，`[預覽區內容]` 填入舊右側 Grid 內的兩個子區塊（摘要列與預覽 Border）。
+說明：以下 `[抽幀刪除參數內容]`、`[批次改名參數內容]`、`[批次縮放參數內容]`、`[批次降噪參數內容]`
+各自填入舊 ScrollViewer 內的 StackPanel，
+`[預覽區內容]` 填入舊右側 Grid 內的兩個子區塊（摘要列與預覽 Border）。
 
 完整新結構：
 
@@ -385,11 +391,14 @@ git commit -m "style: 新增 ToolTabControl/ToolTabItem 底線分頁樣式，移
 | `[批次降噪參數內容]` | 舊 562–657 行 ScrollViewer 內的 StackPanel 全部子元素 | 降噪模式、放大比較、警示、執行按鈕、進度區塊 |
 | `[預覽區內容]` | 舊 663–782 行 `Grid Grid.Column="2"` 的全部子元素 | RowDefinitions、預覽摘要 Border、預覽表格 Border（含 DragDrop 事件），四個 TabItem 各複製一份 |
 
-注意：`[預覽區內容]` 中的 `<Grid.RowDefinitions>` 需放在四個 TabItem 的右側 `Grid` 內；DragDrop 事件（`DragEnter`、`DragOver`、`DragLeave`、`Drop`）四份相同，code-behind handler 照常工作。
+注意：`[預覽區內容]` 中的 `<Grid.RowDefinitions>` 需放在四個 TabItem 的右側 `Grid` 內；
+DragDrop 事件（`DragEnter`、`DragOver`、`DragLeave`、`Drop`）四份相同，code-behind handler 照常工作。
 
 - [ ] **Step 3：移除不再使用的 `EnumToVisibilityConverter` binding（工具面板 Visibility 用）**
 
-確認沒有殘留的 `ConverterParameter=FrameDelete`、`ConverterParameter=Rename`、`ConverterParameter=Resize`、`ConverterParameter=Denoise` 作為 `ScrollViewer.Visibility` 的 binding（工具面板內的 output mode visibility binding 仍保留）。
+確認沒有殘留的 `ConverterParameter=FrameDelete`、`ConverterParameter=Rename`、
+`ConverterParameter=Resize`、`ConverterParameter=Denoise` 作為 `ScrollViewer.Visibility` 的 binding
+（工具面板內的 output mode visibility binding 仍保留）。
 
 - [ ] **Step 4：build 確認無 XAML 錯誤**
 
