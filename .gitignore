@@ -41,3 +41,7 @@ scripts/
 
 # ===== 測試資料（本機） =====
 TestData/
+
+# ===== Agent 工具產物與本機截圖 =====
+.serena/
+fft_scan.png
