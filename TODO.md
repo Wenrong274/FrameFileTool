@@ -51,11 +51,12 @@ ID：`rename-numbering`
 - 沿用原編號時，數字前文字由樣板取代，數字後尾綴原封不動保留，且 `[###]` 位數不生效。
 - 組合順序為「樣板完整展開 + 原尾綴 + 副檔名」。
 - `[` + 一個以上 `#` + `]` 才是 token，不提供跳脫語法，其餘字元一律字面。
-- 起始編號固定從 0 起算的需求已由現況滿足（`_startIndex` 無初始值即為 0，專案無設定持久化），不需改動。
+- 編號固定從 0 起算。起始編號欄位與其整條管線（ViewModel 屬性、`RenameOptions.StartIndex`、
+  planner 的加法與相關測試）全部移除，不保留無呼叫端的設定。
 
 #### Model 與規劃層
 
-- [x] [Model] 新增 `RenameOptions` immutable record（`Template`、`StartIndex`、`UseOriginalNumber`、
+- [x] [Model] 新增 `RenameOptions` immutable record（`Template`、`UseOriginalNumber`、
       `OutputMode`、`TargetFolderPath`），比照 `ResizeOptions`。
 - [x] [Test] 先補上 `RenamePlanner` 新行為的失敗測試：token 位數解析、多 token、缺 token 報錯、
       最後一組數字擷取、副檔名含數字不誤抓、無數字判 `Keep`、尾綴保留與組合順序、
@@ -69,11 +70,11 @@ ID：`rename-numbering`
 #### ViewModel 與 UI
 
 - [x] [ViewModel] `RenameToolViewModel` 以 `Template`（預設 `Symbol_[#]`）取代 `Prefix` 與 `ZeroPadding`，
-      新增 `UseOriginalNumber`，並建立 `RenameOptions` 傳入 planner。
+      新增 `UseOriginalNumber`，移除 `StartIndex`，並建立 `RenameOptions` 傳入 planner。
 - [x] [Test] 補上 ViewModel 測試：`UseOriginalNumber` 變更會觸發預覽重算。
-- [x] [View] 改名面板以單一「命名樣板」欄位取代前綴與補零位數兩欄，
-      新增「沿用原檔名編號」CheckBox，勾選時停用（不隱藏）起始編號欄位，
-      並在樣板欄下方顯示「編號沿用原檔名，`[###]` 位數不生效」。
+- [x] [View] 改名面板以單一「命名樣板」欄位取代前綴與補零位數兩欄，移除起始編號欄位，
+      新增「沿用原檔名編號」CheckBox，
+      並在樣板欄下方顯示編號規則與「編號沿用原檔名，`[###]` 位數不生效」提示。
 - [x] [Docs] 更新 README 的批次改名功能說明與範例。
 
 完成判定：
@@ -84,7 +85,7 @@ ID：`rename-numbering`
 - [ ] [正常路徑] 樣板 token 後方有文字時，`frame_0037_final.png` 預覽為 `Symbol_0037_v2_final.png`。
 - [ ] [邊界] 資料夾內混入 `title.png` 時顯示「無編號，不處理」，且不阻擋其他檔案執行。
 - [ ] [錯誤狀態] 樣板未包含 `[###]` 時，預覽全部標記錯誤且執行按鈕停用。
-- [ ] [UI] 勾選沿用原編號時，起始編號欄位呈現明顯低對比的停用狀態且仍可看出用途。
+- [ ] [UI] 改名面板不再出現起始編號欄位，且勾選沿用原編號時樣板欄下方出現對應提示文字。
 
 ### 分頁內底部來源列實作（已作廢）
 

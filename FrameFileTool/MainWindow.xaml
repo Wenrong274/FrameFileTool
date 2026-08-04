@@ -360,27 +360,11 @@
                                 </Grid>
 
                                 <TextBlock Style="{StaticResource HintText}"
-                                           Text="[###] 為編號欄位，# 的數量即補零位數。例：Symbol_[###] → Symbol_007.png" />
+                                           Text="[###] 為編號欄位，# 的數量即補零位數。編號從 0 起算，每個資料夾各自計數。例：Symbol_[###] → Symbol_000.png" />
 
                                 <TextBlock Style="{StaticResource HintText}"
                                            Visibility="{Binding UseOriginalNumber, Converter={StaticResource BoolToVis}}"
                                            Text="編號沿用原檔名，[###] 的位數不生效。找不到編號的檔案不處理。" />
-
-                                <!-- 起始編號 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="起始編號"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             IsEnabled="{Binding IsStartIndexEnabled}"
-                                             Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
-                                </Grid>
 
                                 <CheckBox Content="沿用原檔名編號"
                                           Margin="0,2,0,4"

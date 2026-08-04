@@ -7,7 +7,7 @@ namespace FrameFileTool.Services;
 
 /// <summary>
 /// 依據命名樣板與編號來源，規劃批次改名計畫。
-/// 重新編號時每個子資料夾各自獨立計數；沿用原編號時改用原檔名最後一組連續數字。
+/// 重新編號時每個子資料夾各自從 0 起算獨立計數；沿用原編號時改用原檔名最後一組連續數字。
 /// 並偵測下列兩種衝突：
 /// <list type="bullet">
 ///   <item>計畫內重複目標檔名（兩個檔案改名到同一個名稱）</item>
@@ -59,7 +59,7 @@ public sealed partial class RenamePlanner : IRenamePlanner
 
         var knownExistingPaths = existingPaths ?? sourcePaths;
 
-        // 每個資料夾獨立計數，從 StartIndex 開始
+        // 每個資料夾獨立計數，一律從 0 開始
         var folderCounters = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < files.Count; i++)
@@ -168,8 +168,7 @@ public sealed partial class RenamePlanner : IRenamePlanner
     {
         if (!options.UseOriginalNumber)
         {
-            var number = options.StartIndex + folderIndex;
-            return ApplyTemplate(options.Template, padding => number.ToString().PadLeft(padding, '0')) +
+            return ApplyTemplate(options.Template, padding => folderIndex.ToString().PadLeft(padding, '0')) +
                 file.Extension;
         }
 

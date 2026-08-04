@@ -13,16 +13,15 @@ public sealed class RenamePlannerTests
 
     private static RenameOptions Renumber(
         string template,
-        int startIndex = 0,
         RenameOutputMode outputMode = RenameOutputMode.RenameInPlace,
         string targetFolderPath = "") =>
-        new(template, startIndex, UseOriginalNumber: false, outputMode, targetFolderPath);
+        new(template, UseOriginalNumber: false, outputMode, targetFolderPath);
 
     private static RenameOptions KeepNumber(
         string template,
         RenameOutputMode outputMode = RenameOutputMode.RenameInPlace,
         string targetFolderPath = "") =>
-        new(template, StartIndex: 0, UseOriginalNumber: true, outputMode, targetFolderPath);
+        new(template, UseOriginalNumber: true, outputMode, targetFolderPath);
 
     // ---- 邊界案例 ----
 
@@ -46,11 +45,11 @@ public sealed class RenamePlannerTests
             MakeFile("c.png"),
         };
 
-        var result = _sut.Plan(files, Renumber("F_[#]", startIndex: 1));
+        var result = _sut.Plan(files, Renumber("F_[#]"));
 
-        result[0].TargetName.Should().Be("F_1.png");
-        result[1].TargetName.Should().Be("F_2.png");
-        result[2].TargetName.Should().Be("F_3.png");
+        result[0].TargetName.Should().Be("F_0.png");
+        result[1].TargetName.Should().Be("F_1.png");
+        result[2].TargetName.Should().Be("F_2.png");
     }
 
     [Fact]
@@ -62,24 +61,14 @@ public sealed class RenamePlannerTests
             MakeFile("b.png"),
         };
 
-        var result = _sut.Plan(files, Renumber("F_[####]", startIndex: 1));
+        var result = _sut.Plan(files, Renumber("F_[####]"));
 
-        result[0].TargetName.Should().Be("F_0001.png");
-        result[1].TargetName.Should().Be("F_0002.png");
+        result[0].TargetName.Should().Be("F_0000.png");
+        result[1].TargetName.Should().Be("F_0001.png");
     }
 
     [Fact]
-    public void Plan_起始編號非零_應從指定編號開始()
-    {
-        var files = new[] { MakeFile("a.png") };
-
-        var result = _sut.Plan(files, Renumber("IMG_[#]", startIndex: 10));
-
-        result[0].TargetName.Should().Be("IMG_10.png");
-    }
-
-    [Fact]
-    public void Plan_起始編號預設為零_應從零開始編號()
+    public void Plan_重新編號_一律從零開始()
     {
         var files = new[] { MakeFile("a.png") };
 
@@ -95,19 +84,24 @@ public sealed class RenamePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Renumber("Symbol_[###]_diffuse", startIndex: 7));
+        var result = _sut.Plan(files, Renumber("Symbol_[###]_diffuse"));
 
-        result[0].TargetName.Should().Be("Symbol_007_diffuse.png");
+        result[0].TargetName.Should().Be("Symbol_000_diffuse.png");
     }
 
     [Fact]
     public void Plan_樣板含多個token_應各自套用自己的位數且填入同一個數字()
     {
-        var files = new[] { MakeFile("a.png") };
+        var files = new[]
+        {
+            MakeFile("a.png"),
+            MakeFile("b.png"),
+        };
 
-        var result = _sut.Plan(files, Renumber("[##]_x_[####]", startIndex: 5));
+        var result = _sut.Plan(files, Renumber("[##]_x_[####]"));
 
-        result[0].TargetName.Should().Be("05_x_0005.png");
+        result[0].TargetName.Should().Be("00_x_0000.png");
+        result[1].TargetName.Should().Be("01_x_0001.png");
     }
 
     [Theory]
@@ -138,9 +132,9 @@ public sealed class RenamePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Renumber("Cut#2_[###]", startIndex: 3));
+        var result = _sut.Plan(files, Renumber("Cut#2_[###]"));
 
-        result[0].TargetName.Should().Be("Cut#2_003.png");
+        result[0].TargetName.Should().Be("Cut#2_000.png");
     }
 
     // ---- 沿用原檔名編號 ----
@@ -290,7 +284,7 @@ public sealed class RenamePlannerTests
             MakeFile("b.png"),
         };
 
-        var result = _sut.Plan(files, Renumber("F_[#]", startIndex: 1));
+        var result = _sut.Plan(files, Renumber("F_[#]"));
 
         var targets = result.Select(r => r.TargetName).ToList();
         targets.Should().OnlyHaveUniqueItems();
@@ -303,10 +297,10 @@ public sealed class RenamePlannerTests
         var files = new[] { MakeFile("a.png") };
         var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            @"C:\imgs\F_1.png",
+            @"C:\imgs\F_0.png",
         };
 
-        var result = _sut.Plan(files, Renumber("F_[#]", startIndex: 1), existingPaths);
+        var result = _sut.Plan(files, Renumber("F_[#]"), existingPaths);
 
         result[0].ActionKind.Should().Be(OperationActionKind.Rename);
         result[0].HasError.Should().BeTrue();
@@ -316,10 +310,10 @@ public sealed class RenamePlannerTests
     [Fact]
     public void Plan_原始檔名與目標相同_應標記保留不改名()
     {
-        // 檔案本身就叫 F_1.png，改名計畫也是 F_1.png → 同名不處理
-        var files = new[] { MakeFile("F_1.png") };
+        // 檔案本身就叫 F_0.png，改名計畫也是 F_0.png → 同名不處理
+        var files = new[] { MakeFile("F_0.png") };
 
-        var result = _sut.Plan(files, Renumber("F_[#]", startIndex: 1));
+        var result = _sut.Plan(files, Renumber("F_[#]"));
 
         result[0].Action.Should().Be("保留");
         result[0].Status.Should().Be("檔名相同，不處理");
@@ -333,11 +327,11 @@ public sealed class RenamePlannerTests
 
         var result = _sut.Plan(
             files,
-            Renumber("F_[#]", startIndex: 1, RenameOutputMode.CopyToTargetFolder, @"D:\out"));
+            Renumber("F_[#]", RenameOutputMode.CopyToTargetFolder, @"D:\out"));
 
         result[0].ActionKind.Should().Be(OperationActionKind.Copy);
-        result[0].TargetName.Should().Be(@"D:\out\F_1.png");
-        result[0].TargetPath.Should().Be(@"D:\out\F_1.png");
+        result[0].TargetName.Should().Be(@"D:\out\F_0.png");
+        result[0].TargetPath.Should().Be(@"D:\out\F_0.png");
         result[0].Status.Should().Be("可複製並改名");
     }
 
@@ -348,7 +342,7 @@ public sealed class RenamePlannerTests
 
         var result = _sut.Plan(
             files,
-            Renumber("F_[#]", startIndex: 1, RenameOutputMode.CopyToTargetFolder, targetFolderPath: ""));
+            Renumber("F_[#]", RenameOutputMode.CopyToTargetFolder, targetFolderPath: ""));
 
         result[0].ActionKind.Should().Be(OperationActionKind.Copy);
         result[0].HasError.Should().BeFalse();
@@ -362,12 +356,12 @@ public sealed class RenamePlannerTests
         var files = new[] { MakeFile("a.png") };
         var existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            @"D:\out\F_1.png",
+            @"D:\out\F_0.png",
         };
 
         var result = _sut.Plan(
             files,
-            Renumber("F_[#]", startIndex: 1, RenameOutputMode.CopyToTargetFolder, @"D:\out"),
+            Renumber("F_[#]", RenameOutputMode.CopyToTargetFolder, @"D:\out"),
             existingPaths);
 
         result[0].ActionKind.Should().Be(OperationActionKind.Copy);
@@ -384,7 +378,7 @@ public sealed class RenamePlannerTests
     {
         var files = new[] { MakeFile("a.png") };
 
-        var result = _sut.Plan(files, Renumber(template, startIndex: 1));
+        var result = _sut.Plan(files, Renumber(template));
 
         result[0].ActionKind.Should().Be(OperationActionKind.Error);
         result[0].HasError.Should().BeTrue();
@@ -394,7 +388,7 @@ public sealed class RenamePlannerTests
     // ---- 子資料夾各自計數 ----
 
     [Fact]
-    public void Plan_包含子資料夾_每個資料夾編號應各自從startIndex開始()
+    public void Plan_包含子資料夾_每個資料夾編號應各自從零開始()
     {
         var folderA = @"C:\imgs\A";
         var folderB = @"C:\imgs\B";
@@ -407,15 +401,15 @@ public sealed class RenamePlannerTests
             MakeFile("b2.png", folderB),
         };
 
-        var result = _sut.Plan(files, Renumber("F_[#]", startIndex: 1));
+        var result = _sut.Plan(files, Renumber("F_[#]"));
 
-        // folderA：F_1.png, F_2.png
-        result[0].TargetName.Should().Be("F_1.png");
-        result[1].TargetName.Should().Be("F_2.png");
+        // folderA：F_0.png, F_1.png
+        result[0].TargetName.Should().Be("F_0.png");
+        result[1].TargetName.Should().Be("F_1.png");
 
-        // folderB：也從 F_1.png 重新開始
-        result[2].TargetName.Should().Be("F_1.png");
-        result[3].TargetName.Should().Be("F_2.png");
+        // folderB：也從 F_0.png 重新開始
+        result[2].TargetName.Should().Be("F_0.png");
+        result[3].TargetName.Should().Be("F_1.png");
     }
 
     [Fact]
@@ -445,7 +439,7 @@ public sealed class RenamePlannerTests
     public void ProjectTargetPaths_單檔無補零_路徑應與Plan一致()
     {
         var files = new[] { MakeFile("a.png") };
-        var options = Renumber("F_[#]", 0, RenameOutputMode.CopyToTargetFolder, @"C:\out");
+        var options = Renumber("F_[#]", RenameOutputMode.CopyToTargetFolder, @"C:\out");
 
         var projected = _sut.ProjectTargetPaths(files, options).ToList();
         var planned = _sut.Plan(files, options);
@@ -462,7 +456,7 @@ public sealed class RenamePlannerTests
             MakeFile("b.png"),
             MakeFile("c.png"),
         };
-        var options = Renumber("Sym_[###]", 1, RenameOutputMode.CopyToTargetFolder, @"C:\out");
+        var options = Renumber("Sym_[###]", RenameOutputMode.CopyToTargetFolder, @"C:\out");
 
         var projected = _sut.ProjectTargetPaths(files, options).ToList();
         var planned = _sut.Plan(files, options);
@@ -487,7 +481,7 @@ public sealed class RenamePlannerTests
     }
 
     [Fact]
-    public void ProjectTargetPaths_多個子資料夾_每個資料夾各自從startIndex計數()
+    public void ProjectTargetPaths_多個子資料夾_每個資料夾各自從零計數()
     {
         var files = new[]
         {
@@ -498,7 +492,7 @@ public sealed class RenamePlannerTests
 
         var result = _sut.ProjectTargetPaths(
             files,
-            Renumber("F_[#]", 0, RenameOutputMode.CopyToTargetFolder, @"C:\out")).ToList();
+            Renumber("F_[#]", RenameOutputMode.CopyToTargetFolder, @"C:\out")).ToList();
 
         // folderA: index 0 → F_0.png, index 1 → F_1.png；folderB: index 0 → F_0.png
         result.Should().Equal(

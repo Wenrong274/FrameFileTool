@@ -98,18 +98,6 @@ public sealed partial class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public void Rename沿用原編號_勾選時應停用起始編號欄位()
-    {
-        var sut = CreateSut();
-
-        sut.RenameTool.IsStartIndexEnabled.Should().BeTrue();
-
-        sut.RenameTool.UseOriginalNumber = true;
-
-        sut.RenameTool.IsStartIndexEnabled.Should().BeFalse();
-    }
-
-    [Fact]
     public void RenameOutputMode_指定資料夾模式變更且有檔案_應即時更新預覽但不選資料夾()
     {
         var planner = Substitute.For<IRenamePlanner>();
