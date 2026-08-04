@@ -339,37 +339,33 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
-                                        DataContext="{Binding RenameTool}"
-                                        Grid.IsSharedSizeScope="True">
+                                        DataContext="{Binding RenameTool}">
 
-                                <!-- 命名樣板 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="命名樣板"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0"
-                                               ToolTip="[###] 為編號欄位，# 的數量即補零位數；[#] 表示不補零" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             Text="{Binding Template, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="[###] 為編號欄位，# 的數量即補零位數；[#] 表示不補零" />
-                                </Grid>
-
-                                <TextBlock Style="{StaticResource HintText}"
-                                           Text="[###] 為編號欄位，# 的數量即補零位數。編號從 0 起算，每個資料夾各自計數。例：Symbol_[###] → Symbol_000.png" />
-
-                                <TextBlock Style="{StaticResource HintText}"
-                                           Visibility="{Binding UseOriginalNumber, Converter={StaticResource BoolToVis}}"
-                                           Text="編號沿用原檔名，[###] 的位數不生效。找不到編號的檔案不處理。" />
-
-                                <CheckBox Content="沿用原檔名編號"
-                                          Margin="0,2,0,4"
-                                          ToolTip="取用原檔名（不含副檔名）最後一組連續數字，編號前的文字由樣板取代，編號後的文字原樣保留"
+                                <CheckBox Content="沿用編號"
+                                          Margin="0,0,0,4"
                                           IsChecked="{Binding UseOriginalNumber}" />
+
+                                <!-- 標籤置於上方，讓命名樣板欄取得整欄寬度。 -->
+                                <TextBlock Text="命名樣板"
+                                           Style="{StaticResource FieldLabel}" />
+                                <TextBox Margin="0,0,0,4"
+                                         Text="{Binding Template, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <!-- 提示永遠保留一行，只依編號來源切換文字，避免控制項跳動。 -->
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Setter Property="Text"
+                                                    Value="[###]：三位數；[#]：不補零，編號從 0 開始。" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding UseOriginalNumber}" Value="True">
+                                                    <Setter Property="Text"
+                                                            Value="取用原檔名最後一組數字，忽略樣板位數。" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
                                 <TextBlock Text="輸出模式"
                                            Style="{StaticResource FieldLabel}" />

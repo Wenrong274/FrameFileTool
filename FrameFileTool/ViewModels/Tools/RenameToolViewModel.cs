@@ -7,7 +7,7 @@ using FrameFileTool.ViewModels.Previews;
 namespace FrameFileTool.ViewModels.Tools;
 
 /// <summary>
-/// 批次改名工具：持有命名樣板、起始編號、編號來源與輸出模式設定，產生預覽與執行命令。
+/// 批次改名工具：持有命名樣板、編號來源與輸出模式設定，產生預覽與執行命令。
 /// 共用狀態與執行流程透過 <see cref="IToolContext"/> 協調。
 /// </summary>
 public sealed partial class RenameToolViewModel : ObservableObject
