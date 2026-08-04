@@ -23,6 +23,81 @@
 
 ---
 
+## 批次改名命名樣板與沿用原編號
+
+ID：`rename-numbering`
+完成日期：2026-08-05
+發布版本：v2.0.0
+
+優先度：高
+分支：feat/rename-numbering
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：新增 `Models/RenameOptions.cs` → `IRenamePlanner` / `RenamePlanner` 兩個方法簽章 →
+`RenameToolViewModel` 狀態與 `TriggerPreview` / `Execute` → `MainWindow.xaml` 改名面板欄位 →
+`RenamePlannerTests` 既有 17 個測試需改呼叫方式
+
+⚠ 邊界案例：副檔名本身含數字（`.mp3`、`.x264`）不得被誤判為編號、檔名完全無數字、
+檔名純數字（`0037.png`）、樣板無 `[###]` token、樣板含多個 token、
+樣板 token 後方文字與原檔名尾綴同時存在、跨資料夾合併複製時同編號撞名
+
+實作結果：
+
+- 批次改名改用單一命名樣板；`[` 加一個以上 `#` 再加 `]` 為編號 token，
+  `#` 數量決定補零位數，且同一樣板可包含多個 token 與編號後固定文字。
+- 新增「沿用編號」模式，取用原檔名主體最後一組連續數字，保留數字後尾綴；
+  找不到編號的檔案標記為「無編號，不處理」，不阻擋其他項目。
+- `RenameOptions` 集中承載樣板、編號來源與輸出模式，讓預覽與目標路徑投影共用命名規則。
+- 重新編號固定從 0 起算且每個資料夾各自計數；移除起始編號、前綴與補零位數欄位及其舊管線。
+- 改名面板將「沿用編號」置於命名樣板前，樣板輸入框使用完整欄寬，
+  並以固定單行短提示取代重複 tooltip 與教學長文，切換模式時控制項不位移。
+- README 已補充命名樣板與沿用編號範例；相關 planner 與 ViewModel 測試已同步更新。
+
+已知限制：
+
+- 命名樣板不提供 token 跳脫語法；不符合 `[` + 一個以上 `#` + `]` 的內容一律視為字面文字。
+- 重新編號不再支援自訂起始值，一律從 0 開始。
+- 沿用編號只辨識檔名主體最後一組連續數字，且原編號不依樣板位數重新補零。
+
+發版評估（2026-08-05）：新增使用者可見的命名樣板與沿用編號功能，
+同時移除起始編號設定，屬不向下相容變更；依 Semantic Versioning 發布為 `v2.0.0`。
+
+### Model 與規劃層
+
+- [x] [Model] 新增 `RenameOptions` immutable record（`Template`、`UseOriginalNumber`、
+      `OutputMode`、`TargetFolderPath`），比照 `ResizeOptions`。
+- [x] [Test] 先補上 `RenamePlanner` 新行為的失敗測試：token 位數解析、多 token、缺 token 報錯、
+      最後一組數字擷取、副檔名含數字不誤抓、無數字判 `Keep`、尾綴保留與組合順序、
+      沿用原編號時忽略位數、兩種輸出模式 × 兩種編號模式。
+- [x] [Service] `IRenamePlanner.Plan` 與 `ProjectTargetPaths` 改為接受 `RenameOptions`，
+      確保兩者共用同一組命名公式。
+- [x] [Service] `RenamePlanner` 實作樣板展開與原編號擷取，缺 token 時每個項目回傳
+      `HasError` 與狀態「命名樣板缺少 [###] 編號欄位」，無數字時回傳 `Keep` 與狀態「無編號，不處理」。
+- [x] [Test] 改寫既有 17 個測試的呼叫方式，維持原有衝突偵測與逐資料夾計數的驗證。
+
+### ViewModel 與 UI
+
+- [x] [ViewModel] `RenameToolViewModel` 以 `Template`（預設 `Symbol_[#]`）取代 `Prefix` 與 `ZeroPadding`，
+      新增 `UseOriginalNumber`，移除 `StartIndex`，並建立 `RenameOptions` 傳入 planner。
+- [x] [Test] 補上 ViewModel 測試：`UseOriginalNumber` 變更會觸發預覽重算。
+- [x] [View] 改名面板以單一「命名樣板」欄位取代前綴與補零位數兩欄，移除起始編號欄位，
+      在樣板欄前加入「沿用編號」CheckBox，並於樣板欄下固定保留單行短提示，
+      依編號來源切換內容且不移動主要控制項。
+- [x] [Docs] 更新 README 的批次改名功能說明與範例。
+
+完成判定：
+
+- [x] [正常路徑] 樣板 `Symbol_[###]` 搭配重新編號，預覽產出 `Symbol_000.png` 起的連續檔名並可成功執行。
+- [x] [正常路徑] 勾選「沿用編號」後，`frame_0037.png` 預覽為 `Symbol_0037.png`，
+      跳號檔案的編號完全保持不變。
+- [x] [正常路徑] 樣板 token 後方有文字時，`frame_0037_final.png` 預覽為 `Symbol_0037_v2_final.png`。
+- [x] [邊界] 資料夾內混入 `title.png` 時顯示「無編號，不處理」，且不阻擋其他檔案執行。
+- [x] [錯誤狀態] 樣板未包含 `[###]` 時，預覽全部標記錯誤且執行按鈕停用。
+- [x] [UI] 改名面板不再出現起始編號欄位；切換沿用原編號時，樣板欄下方提示更新且控制項不位移。
+
+---
+
 ### 同來源輸出自動子資料夾
 
 ID：`same-folder-output-suffix`
