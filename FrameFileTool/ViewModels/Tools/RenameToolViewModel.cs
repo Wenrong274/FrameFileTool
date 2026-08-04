@@ -7,7 +7,7 @@ using FrameFileTool.ViewModels.Previews;
 namespace FrameFileTool.ViewModels.Tools;
 
 /// <summary>
-/// 批次改名工具：持有前綴、起始編號、補零與輸出模式設定，產生預覽與執行命令。
+/// 批次改名工具：持有命名樣板、起始編號、編號來源與輸出模式設定，產生預覽與執行命令。
 /// 共用狀態與執行流程透過 <see cref="IToolContext"/> 協調。
 /// </summary>
 public sealed partial class RenameToolViewModel : ObservableObject
@@ -17,17 +17,22 @@ public sealed partial class RenameToolViewModel : ObservableObject
     private readonly IToolContext _context;
 
     [ObservableProperty]
-    private string _prefix = "Symbol_";
+    private string _template = "Symbol_[#]";
 
     [ObservableProperty]
     private int _startIndex;
 
+    /// <summary>是否沿用原檔名編號；為 true 時起始編號與樣板補零位數皆不生效。</summary>
     [ObservableProperty]
-    private int _zeroPadding;
+    [NotifyPropertyChangedFor(nameof(IsStartIndexEnabled))]
+    private bool _useOriginalNumber;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ExecuteButtonText))]
     private RenameOutputMode _outputMode = RenameOutputMode.RenameInPlace;
+
+    /// <summary>起始編號欄位是否可用；沿用原編號時停用（仍顯示，供使用者看出用途）。</summary>
+    public bool IsStartIndexEnabled => !UseOriginalNumber;
 
     public string ExecuteButtonText => OutputMode == RenameOutputMode.CopyToTargetFolder
         ? "執行複製改名"
@@ -43,17 +48,21 @@ public sealed partial class RenameToolViewModel : ObservableObject
         _context = context;
     }
 
-    partial void OnPrefixChanged(string value) =>
+    partial void OnTemplateChanged(string value) =>
         _context.NotifySettingChanged(PreviewTool.Rename);
 
     partial void OnStartIndexChanged(int value) =>
         _context.NotifySettingChanged(PreviewTool.Rename);
 
-    partial void OnZeroPaddingChanged(int value) =>
+    partial void OnUseOriginalNumberChanged(bool value) =>
         _context.NotifySettingChanged(PreviewTool.Rename);
 
     partial void OnOutputModeChanged(RenameOutputMode value) =>
         _context.NotifySettingChanged(PreviewTool.Rename);
+
+    /// <summary>建立目前設定對應的改名選項。</summary>
+    private RenameOptions BuildOptions(string targetFolderPath) =>
+        new(Template, StartIndex, UseOriginalNumber, OutputMode, targetFolderPath);
 
     /// <summary>依目前設定產生改名預覽並設為當前預覽。</summary>
     internal void TriggerPreview()
@@ -62,17 +71,11 @@ public sealed partial class RenameToolViewModel : ObservableObject
         var items = OutputMode == RenameOutputMode.CopyToTargetFolder
             ? _planner.Plan(
                 files,
-                Prefix,
-                StartIndex,
-                ZeroPadding,
-                new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                OutputMode,
-                targetFolderPath: string.Empty)
+                BuildOptions(targetFolderPath: string.Empty),
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase))
             : _planner.Plan(
                 files,
-                Prefix,
-                StartIndex,
-                ZeroPadding,
+                BuildOptions(targetFolderPath: string.Empty),
                 files.Select(f => f.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase));
         if (items is null)
             return;
@@ -106,12 +109,8 @@ public sealed partial class RenameToolViewModel : ObservableObject
                 targetFolder => new RenamePreviewViewModel(
                     _planner.Plan(
                         _context.SnapshotFiles(),
-                        Prefix,
-                        StartIndex,
-                        ZeroPadding,
-                        GetExistingRenameTargetPaths(targetFolder),
-                        RenameOutputMode.CopyToTargetFolder,
-                        targetFolder)));
+                        BuildOptions(targetFolder) with { OutputMode = RenameOutputMode.CopyToTargetFolder },
+                        GetExistingRenameTargetPaths(targetFolder))));
             if (plannedPreview is null)
             {
                 return;
@@ -146,7 +145,8 @@ public sealed partial class RenameToolViewModel : ObservableObject
         }
 
         var targetPaths = _planner.ProjectTargetPaths(
-            _context.SnapshotFiles(), Prefix, StartIndex, ZeroPadding, targetFolderPath);
+            _context.SnapshotFiles(),
+            BuildOptions(targetFolderPath) with { OutputMode = RenameOutputMode.CopyToTargetFolder });
 
         return _context.GetExistingPaths(targetPaths);
     }

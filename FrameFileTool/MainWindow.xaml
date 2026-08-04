@@ -342,20 +342,29 @@
                                         DataContext="{Binding RenameTool}"
                                         Grid.IsSharedSizeScope="True">
 
-                                <!-- 前綴 -->
+                                <!-- 命名樣板 -->
                                 <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="前綴"
+                                    <TextBlock Text="命名樣板"
                                                Style="{StaticResource FieldLabel}"
                                                Margin="0,0,8,0"
-                                               Grid.Column="0" />
+                                               Grid.Column="0"
+                                               ToolTip="[###] 為編號欄位，# 的數量即補零位數；[#] 表示不補零" />
                                     <TextBox Grid.Column="1"
                                              Margin="0"
-                                             Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding Template, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="[###] 為編號欄位，# 的數量即補零位數；[#] 表示不補零" />
                                 </Grid>
+
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="[###] 為編號欄位，# 的數量即補零位數。例：Symbol_[###] → Symbol_007.png" />
+
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Visibility="{Binding UseOriginalNumber, Converter={StaticResource BoolToVis}}"
+                                           Text="編號沿用原檔名，[###] 的位數不生效。找不到編號的檔案不處理。" />
 
                                 <!-- 起始編號 -->
                                 <Grid Margin="0,0,0,4">
@@ -369,25 +378,14 @@
                                                Grid.Column="0" />
                                     <TextBox Grid.Column="1"
                                              Margin="0"
+                                             IsEnabled="{Binding IsStartIndexEnabled}"
                                              Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
                                 </Grid>
 
-                                <!-- 補零位數 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="補零位數"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0"
-                                               ToolTip="輸入 0 時不補零" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             Text="{Binding ZeroPadding, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="輸入 0 時不補零" />
-                                </Grid>
+                                <CheckBox Content="沿用原檔名編號"
+                                          Margin="0,2,0,4"
+                                          ToolTip="取用原檔名（不含副檔名）最後一組連續數字，編號前的文字由樣板取代，編號後的文字原樣保留"
+                                          IsChecked="{Binding UseOriginalNumber}" />
 
                                 <TextBlock Text="輸出模式"
                                            Style="{StaticResource FieldLabel}" />

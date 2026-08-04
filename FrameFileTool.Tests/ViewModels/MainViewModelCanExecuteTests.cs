@@ -147,25 +147,25 @@ public sealed partial class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public void RenamePrefix_變更後_應清除既有預覽並停用執行()
+    public void Rename命名樣板_變更後_應清除既有預覽並停用執行()
     {
         var sut = CreateSut();
         sut.CurrentPreview = RenamePreview();
 
-        sut.RenameTool.Prefix = "New_";
+        sut.RenameTool.Template = "New_[#]";
 
         sut.CurrentPreview.Should().BeNull();
         sut.RenameTool.ExecuteCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
-    public void RenamePrefix_變更時_不應清除抽幀預覽()
+    public void Rename命名樣板_變更時_不應清除抽幀預覽()
     {
         var sut = CreateSut();
         var preview = DeletePreview();
         sut.CurrentPreview = preview;
 
-        sut.RenameTool.Prefix = "New_";
+        sut.RenameTool.Template = "New_[#]";
 
         sut.CurrentPreview.Should().BeSameAs(preview);
         sut.FrameDeleteTool.ExecuteCommand.CanExecute(null).Should().BeTrue();

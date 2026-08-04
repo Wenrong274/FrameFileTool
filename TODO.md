@@ -29,6 +29,63 @@
 
 ## 近期功能計劃
 
+### 批次改名命名樣板與沿用原編號
+
+ID：`rename-numbering`
+優先度：高
+分支：feat/rename-numbering（已建立）
+前置條件：無
+被依賴：無
+
+⚠ 影響範圍：新增 `Models/RenameOptions.cs` → `IRenamePlanner` / `RenamePlanner` 兩個方法簽章 →
+`RenameToolViewModel` 狀態與 `TriggerPreview` / `Execute` → `MainWindow.xaml` 改名面板欄位 →
+`RenamePlannerTests` 既有 17 個測試需改呼叫方式
+
+⚠ 邊界案例：副檔名本身含數字（`.mp3`、`.x264`）不得被誤判為編號、檔名完全無數字、
+檔名純數字（`0037.png`）、樣板無 `[###]` token、樣板含多個 token、
+樣板 token 後方文字與原檔名尾綴同時存在、跨資料夾合併複製時同編號撞名
+
+⚠ 已釐清（spec 階段結論，不再變動）：
+
+- 編號 = 檔名剝除副檔名後的**最後一組**連續數字。
+- 沿用原編號時，數字前文字由樣板取代，數字後尾綴原封不動保留，且 `[###]` 位數不生效。
+- 組合順序為「樣板完整展開 + 原尾綴 + 副檔名」。
+- `[` + 一個以上 `#` + `]` 才是 token，不提供跳脫語法，其餘字元一律字面。
+- 起始編號固定從 0 起算的需求已由現況滿足（`_startIndex` 無初始值即為 0，專案無設定持久化），不需改動。
+
+#### Model 與規劃層
+
+- [x] [Model] 新增 `RenameOptions` immutable record（`Template`、`StartIndex`、`UseOriginalNumber`、
+      `OutputMode`、`TargetFolderPath`），比照 `ResizeOptions`。
+- [x] [Test] 先補上 `RenamePlanner` 新行為的失敗測試：token 位數解析、多 token、缺 token 報錯、
+      最後一組數字擷取、副檔名含數字不誤抓、無數字判 `Keep`、尾綴保留與組合順序、
+      沿用原編號時忽略位數、兩種輸出模式 × 兩種編號模式。
+- [x] [Service] `IRenamePlanner.Plan` 與 `ProjectTargetPaths` 改為接受 `RenameOptions`，
+      確保兩者共用同一組命名公式。
+- [x] [Service] `RenamePlanner` 實作樣板展開與原編號擷取，缺 token 時每個項目回傳
+      `HasError` 與狀態「命名樣板缺少 [###] 編號欄位」，無數字時回傳 `Keep` 與狀態「無編號，不處理」。
+- [x] [Test] 改寫既有 17 個測試的呼叫方式，維持原有衝突偵測與逐資料夾計數的驗證。
+
+#### ViewModel 與 UI
+
+- [x] [ViewModel] `RenameToolViewModel` 以 `Template`（預設 `Symbol_[#]`）取代 `Prefix` 與 `ZeroPadding`，
+      新增 `UseOriginalNumber`，並建立 `RenameOptions` 傳入 planner。
+- [x] [Test] 補上 ViewModel 測試：`UseOriginalNumber` 變更會觸發預覽重算。
+- [x] [View] 改名面板以單一「命名樣板」欄位取代前綴與補零位數兩欄，
+      新增「沿用原檔名編號」CheckBox，勾選時停用（不隱藏）起始編號欄位，
+      並在樣板欄下方顯示「編號沿用原檔名，`[###]` 位數不生效」。
+- [x] [Docs] 更新 README 的批次改名功能說明與範例。
+
+完成判定：
+
+- [ ] [正常路徑] 樣板 `Symbol_[###]` 搭配重新編號，預覽產出 `Symbol_000.png` 起的連續檔名並可成功執行。
+- [ ] [正常路徑] 勾選「沿用原檔名編號」後，`frame_0037.png` 預覽為 `Symbol_0037.png`，
+      跳號檔案的編號完全保持不變。
+- [ ] [正常路徑] 樣板 token 後方有文字時，`frame_0037_final.png` 預覽為 `Symbol_0037_v2_final.png`。
+- [ ] [邊界] 資料夾內混入 `title.png` 時顯示「無編號，不處理」，且不阻擋其他檔案執行。
+- [ ] [錯誤狀態] 樣板未包含 `[###]` 時，預覽全部標記錯誤且執行按鈕停用。
+- [ ] [UI] 勾選沿用原編號時，起始編號欄位呈現明顯低對比的停用狀態且仍可看出用途。
+
 ### 分頁內底部來源列實作（已作廢）
 
 ID：`shared-source-bar`

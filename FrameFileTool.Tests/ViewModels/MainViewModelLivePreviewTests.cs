@@ -56,25 +56,57 @@ public sealed partial class MainViewModelCanExecuteTests
     }
 
     [Fact]
-    public void RenamePrefix_變更且有檔案_應即時更新預覽()
+    public void Rename命名樣板_變更且有檔案_應即時更新預覽()
     {
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
+                Arg.Any<RenameOptions>(),
                 Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
         var sut = CreateSut(renamePlanner: planner);
         sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
         sut.SelectedTool = PreviewTool.Rename;
 
-        sut.RenameTool.Prefix = "New_";
+        sut.RenameTool.Template = "New_[#]";
 
         sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
         sut.Logs.Should().Contain(log => log.Contains("改名預覽完成"));
         sut.RenameTool.ExecuteCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Rename沿用原編號_變更且有檔案_應以新設定重新規劃預覽()
+    {
+        var planner = Substitute.For<IRenamePlanner>();
+        planner.Plan(
+                Arg.Any<IReadOnlyList<FileItem>>(),
+                Arg.Is<RenameOptions>(o => o.UseOriginalNumber),
+                Arg.Any<IReadOnlySet<string>>())
+            .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
+        var sut = CreateSut(renamePlanner: planner);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+        sut.SelectedTool = PreviewTool.Rename;
+
+        sut.RenameTool.UseOriginalNumber = true;
+
+        sut.CurrentPreview.Should().BeOfType<RenamePreviewViewModel>();
+        planner.Received(1).Plan(
+            Arg.Any<IReadOnlyList<FileItem>>(),
+            Arg.Is<RenameOptions>(o => o.UseOriginalNumber),
+            Arg.Any<IReadOnlySet<string>>());
+    }
+
+    [Fact]
+    public void Rename沿用原編號_勾選時應停用起始編號欄位()
+    {
+        var sut = CreateSut();
+
+        sut.RenameTool.IsStartIndexEnabled.Should().BeTrue();
+
+        sut.RenameTool.UseOriginalNumber = true;
+
+        sut.RenameTool.IsStartIndexEnabled.Should().BeFalse();
     }
 
     [Fact]
@@ -83,12 +115,8 @@ public sealed partial class MainViewModelCanExecuteTests
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
-                Arg.Any<IReadOnlySet<string>>(),
-                RenameOutputMode.CopyToTargetFolder,
-                "")
+                Arg.Is<RenameOptions>(o => o.OutputMode == RenameOutputMode.CopyToTargetFolder && o.TargetFolderPath == ""),
+                Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy }]);
         var folderPicker = Substitute.For<IFolderPickerService>();
         var sut = CreateSut(renamePlanner: planner, folderPicker: folderPicker);
@@ -101,12 +129,8 @@ public sealed partial class MainViewModelCanExecuteTests
         folderPicker.DidNotReceive().PickFolder(Arg.Any<string>());
         planner.Received(1).Plan(
             Arg.Any<IReadOnlyList<FileItem>>(),
-            Arg.Any<string>(),
-            Arg.Any<int>(),
-            Arg.Any<int>(),
-            Arg.Any<IReadOnlySet<string>>(),
-            RenameOutputMode.CopyToTargetFolder,
-            "");
+            Arg.Is<RenameOptions>(o => o.OutputMode == RenameOutputMode.CopyToTargetFolder && o.TargetFolderPath == ""),
+            Arg.Any<IReadOnlySet<string>>());
     }
 
     [Fact]
@@ -218,9 +242,7 @@ public sealed partial class MainViewModelCanExecuteTests
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
+                Arg.Any<RenameOptions>(),
                 Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
         var sut = CreateSut(renamePlanner: planner);
@@ -298,9 +320,7 @@ public sealed partial class MainViewModelCanExecuteTests
         var renamePlanner = Substitute.For<IRenamePlanner>();
         renamePlanner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
+                Arg.Any<RenameOptions>(),
                 Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
 
