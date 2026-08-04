@@ -339,55 +339,33 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="12,10"
-                                        DataContext="{Binding RenameTool}"
-                                        Grid.IsSharedSizeScope="True">
+                                        DataContext="{Binding RenameTool}">
 
-                                <!-- 前綴 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="前綴"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
-                                </Grid>
+                                <CheckBox Content="沿用編號"
+                                          Margin="0,0,0,4"
+                                          IsChecked="{Binding UseOriginalNumber}" />
 
-                                <!-- 起始編號 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="起始編號"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}" />
-                                </Grid>
+                                <!-- 標籤置於上方，讓命名樣板欄取得整欄寬度。 -->
+                                <TextBlock Text="命名樣板"
+                                           Style="{StaticResource FieldLabel}" />
+                                <TextBox Margin="0,0,0,4"
+                                         Text="{Binding Template, UpdateSourceTrigger=PropertyChanged}" />
 
-                                <!-- 補零位數 -->
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="FieldLabel" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="補零位數"
-                                               Style="{StaticResource FieldLabel}"
-                                               Margin="0,0,8,0"
-                                               Grid.Column="0"
-                                               ToolTip="輸入 0 時不補零" />
-                                    <TextBox Grid.Column="1"
-                                             Margin="0"
-                                             Text="{Binding ZeroPadding, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="輸入 0 時不補零" />
-                                </Grid>
+                                <!-- 提示永遠保留一行，只依編號來源切換文字，避免控制項跳動。 -->
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Setter Property="Text"
+                                                    Value="[###]：三位數；[#]：不補零，編號從 0 開始。" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding UseOriginalNumber}" Value="True">
+                                                    <Setter Property="Text"
+                                                            Value="取用原檔名最後一組數字，忽略樣板位數。" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
                                 <TextBlock Text="輸出模式"
                                            Style="{StaticResource FieldLabel}" />

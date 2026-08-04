@@ -42,6 +42,7 @@ ID：`shared-source-bar`
 ID：`resize-denoise-advanced`
 優先度：低
 分支：feat/resize-denoise-advanced（開始時建立）
+發布範圍：不納入 v2.0.0
 前置條件：`denoise-tool` 已完成（降噪已自批次縮放獨立為專屬工具，進階引擎掛載於該工具）
 被依賴：無
 

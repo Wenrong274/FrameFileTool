@@ -70,9 +70,7 @@ public sealed class MainViewModelScanTests
         var renamePlanner = Substitute.For<IRenamePlanner>();
         renamePlanner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
+                Arg.Any<RenameOptions>(),
                 Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Rename }]);
 

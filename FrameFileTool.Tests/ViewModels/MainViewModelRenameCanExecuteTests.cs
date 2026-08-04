@@ -97,12 +97,8 @@ public sealed partial class MainViewModelCanExecuteTests
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
-                Arg.Any<IReadOnlySet<string>>(),
-                RenameOutputMode.CopyToTargetFolder,
-                @"D:\out")
+                Arg.Is<RenameOptions>(o => o.OutputMode == RenameOutputMode.CopyToTargetFolder && o.TargetFolderPath == @"D:\out"),
+                Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Copy, TargetPath = @"D:\out\F_0.png" }]);
         var executor = Substitute.For<IFileOperationExecutor>();
         executor.CopyRenamedFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>())
@@ -129,12 +125,8 @@ public sealed partial class MainViewModelCanExecuteTests
         folderPicker.Received(1).PickFolder(Arg.Any<string>());
         planner.Received(1).Plan(
             Arg.Any<IReadOnlyList<FileItem>>(),
-            Arg.Any<string>(),
-            Arg.Any<int>(),
-            Arg.Any<int>(),
-            Arg.Any<IReadOnlySet<string>>(),
-            RenameOutputMode.CopyToTargetFolder,
-            @"D:\out");
+            Arg.Is<RenameOptions>(o => o.OutputMode == RenameOutputMode.CopyToTargetFolder && o.TargetFolderPath == @"D:\out"),
+            Arg.Any<IReadOnlySet<string>>());
         executor.Received(1).CopyRenamedFilesToTargetFolder(Arg.Any<IEnumerable<OperationPreviewItem>>());
         executor.DidNotReceive().RenameFiles(Arg.Any<IEnumerable<OperationPreviewItem>>());
     }
@@ -163,12 +155,8 @@ public sealed partial class MainViewModelCanExecuteTests
         var planner = Substitute.For<IRenamePlanner>();
         planner.Plan(
                 Arg.Any<IReadOnlyList<FileItem>>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
-                Arg.Any<IReadOnlySet<string>>(),
-                RenameOutputMode.CopyToTargetFolder,
-                @"D:\out")
+                Arg.Is<RenameOptions>(o => o.OutputMode == RenameOutputMode.CopyToTargetFolder && o.TargetFolderPath == @"D:\out"),
+                Arg.Any<IReadOnlySet<string>>())
             .Returns([new OperationPreviewItem { ActionKind = OperationActionKind.Error, HasError = true }]);
         var executor = Substitute.For<IFileOperationExecutor>();
         var folderPicker = Substitute.For<IFolderPickerService>();
