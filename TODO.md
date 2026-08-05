@@ -29,6 +29,44 @@
 
 ## 近期功能計劃
 
+### 批次縮放指定資料夾輸出閃退修復
+
+ID：`resize-empty-source-crash`
+優先度：高
+分支：fix/resize-empty-source-crash
+發布範圍：下一個 PATCH 版本
+前置條件：無
+被依賴：無
+
+背景：使用者回報批次縮放選「指定資料夾」輸出時會閃退，開發者以「瀏覽資料夾」流程無法重現。
+根因為拖放匯入不會設定 `SelectedFolder`，`OutputFolderResolver` 拿空字串呼叫
+`Path.GetFullPath` 丟出 `ArgumentException`，經 `AsyncRelayCommand` 在 UI thread 重新拋出，
+且 `App` 未攔截 `DispatcherUnhandledException`，因此直接終止程式且無任何訊息。
+
+⚠ 影響範圍：`OutputFolderResolver` → `ResizeToolViewModel.Execute` →
+`MainViewModel.RescanKeepingExclusions` → `App` 全域例外處理
+
+⚠ 邊界案例：來源資料夾為空字串或全空白、拖放匯入後執行縮放、
+拖放匯入執行完成後的重新掃描、其他工具未來出現的未攔截例外
+
+#### 子任務
+
+- [x] [Test] `OutputFolderResolverTests` 補上來源資料夾為空字串與全空白的案例。
+- [x] [Service] `OutputFolderResolver.ResolveForResize` 在來源或目標為空時直接回傳
+      使用者選擇的資料夾，不再對空字串正規化路徑。
+- [x] [Test] `MainViewModelDropImportTests` 補上無來源資料夾時不得重新掃描的案例。
+- [x] [ViewModel] `MainViewModel` 的 `RescanKeepingExclusions` 在沒有來源資料夾時略過重掃，
+      避免拖放匯入的檔案清單在執行後被清空。
+- [x] [App] `App` 註冊 `DispatcherUnhandledException`，將 UI thread 未處理例外
+      改為顯示錯誤對話框並繼續執行，使用者可回報具體錯誤訊息。
+
+完成判定：
+
+- [ ] [正常路徑] 拖放匯入圖片後執行批次縮放並選擇指定資料夾輸出，程式不閃退且正常完成縮放。
+- [ ] [正常路徑] 以「瀏覽資料夾」選擇來源時，來源與目標相同仍會自動改導到命名子資料夾。
+- [ ] [邊界] 拖放匯入的檔案在縮放執行完成後仍留在清單中，不被重新掃描清空。
+- [ ] [錯誤狀態] 刻意觸發未預期例外時，顯示含例外型別與訊息的對話框，關閉後程式仍可繼續操作。
+
 ### 分頁內底部來源列實作（已作廢）
 
 ID：`shared-source-bar`
