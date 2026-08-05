@@ -74,6 +74,14 @@ public sealed class MainViewModelUpdateCheckTests
         sut.GoToDownloadPageCommand.CanExecute(null).Should().BeFalse();
     }
 
+    [Fact]
+    public void AppVersionText_應以v開頭並顯示三段版本號()
+    {
+        var sut = CreateSut(Substitute.For<IUpdateService>());
+
+        sut.AppVersionText.Should().MatchRegex(@"^v\d+\.\d+\.\d+$");
+    }
+
     private static MainViewModel CreateSut(
         IUpdateService updateService,
         IExternalLinkService? externalLinkService = null)

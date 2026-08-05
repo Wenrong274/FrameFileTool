@@ -29,6 +29,7 @@
 - [ ] CI 全部通過（build、unit tests、`dotnet format`、Markdown lint）
 - [ ] `README.md` 已反映本版新功能、限制或操作說明的變動
 - [ ] `.github/release-notes/vX.Y.Z.md` 已建立，內容符合本規範的格式
+- [ ] `Directory.Build.props` 的 `<Version>` 已更新為本次要發布的版本號
 - [ ] 確認 tag 尚未在遠端存在（`git tag` 清單中無重複）
 
 ---
