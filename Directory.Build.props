@@ -5,7 +5,7 @@
       本機 build 的版本號基準，須與最後一個已發布的 tag 一致。
       Release workflow 會用 /p:Version 從 git tag 覆寫這個值，發布包不受此處影響。
     -->
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;**\artifacts\**</DefaultItemExcludes>
