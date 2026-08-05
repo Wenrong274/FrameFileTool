@@ -560,7 +560,14 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
 
     void IToolContext.RefreshCommands() => RefreshCommands();
 
-    void IToolContext.RescanKeepingExclusions() => RefreshScanFilesCore(keepExclusions: true);
+    void IToolContext.RescanKeepingExclusions()
+    {
+        // 拖放匯入的檔案沒有來源資料夾，重掃只會把整份清單清空，此時維持現狀。
+        if (HasFolderPath)
+        {
+            RefreshScanFilesCore(keepExclusions: true);
+        }
+    }
 
     string? IToolContext.PickTargetFolderOrLogCancel(string operationName) =>
         PickTargetFolderOrLogCancel(operationName);

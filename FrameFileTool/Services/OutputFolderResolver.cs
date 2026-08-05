@@ -14,6 +14,12 @@ public sealed class OutputFolderResolver : IOutputFolderResolver
         string selectedTargetFolderPath,
         ResizeOptions options)
     {
+        // 拖放匯入的檔案沒有來源資料夾，此時不可能與目標相同，也不能拿空字串去正規化路徑。
+        if (string.IsNullOrWhiteSpace(sourceFolderPath) || string.IsNullOrWhiteSpace(selectedTargetFolderPath))
+        {
+            return new(selectedTargetFolderPath, WasAutoRedirected: false, LogMessage: null);
+        }
+
         var normalizedSource = NormalizeFolderPath(sourceFolderPath);
         var normalizedTarget = NormalizeFolderPath(selectedTargetFolderPath);
 

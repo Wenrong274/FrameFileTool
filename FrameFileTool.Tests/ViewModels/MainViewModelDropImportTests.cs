@@ -3,6 +3,7 @@ using FrameFileTool.Models;
 using FrameFileTool.Services.Interfaces;
 using FrameFileTool.ViewModels;
 using FrameFileTool.ViewModels.Previews;
+using FrameFileTool.ViewModels.Tools;
 using NSubstitute;
 
 namespace FrameFileTool.Tests.ViewModels;
@@ -141,10 +142,27 @@ public sealed class MainViewModelDropImportTests
             Arg.Any<IReadOnlySet<string>>());
     }
 
+    [Fact]
+    public void RescanKeepingExclusions_沒有來源資料夾_不應清空拖放匯入的檔案()
+    {
+        var scanner = Substitute.For<IFileScanner>();
+        scanner.Scan(Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<bool>())
+            .Returns(new FileScanResult([], []));
+
+        var sut = CreateSut(Substitute.For<IFileImportService>(), scanner: scanner);
+        sut.Files.Add(new FileItem(@"C:\imgs\a.png", @"C:\imgs", "a.png", ".png", 10));
+
+        ((IToolContext)sut).RescanKeepingExclusions();
+
+        sut.Files.Should().ContainSingle();
+        scanner.DidNotReceive().Scan(Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<bool>());
+    }
+
     private static MainViewModel CreateSut(
         IFileImportService importService,
-        IFrameDeletePlanner? frameDeletePlanner = null) => new(
-        Substitute.For<IFileScanner>(),
+        IFrameDeletePlanner? frameDeletePlanner = null,
+        IFileScanner? scanner = null) => new(
+        scanner ?? Substitute.For<IFileScanner>(),
         frameDeletePlanner ?? Substitute.For<IFrameDeletePlanner>(),
         Substitute.For<IRenamePlanner>(),
         Substitute.For<IFileOperationExecutor>(),

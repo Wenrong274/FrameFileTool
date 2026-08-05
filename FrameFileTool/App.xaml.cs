@@ -5,6 +5,7 @@ using FrameFileTool.Services.Interfaces;
 using FrameFileTool.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using WpfApplication = System.Windows.Application;
+using WpfMessageBox = System.Windows.MessageBox;
 
 namespace FrameFileTool;
 
@@ -58,7 +59,25 @@ public partial class App : WpfApplication
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
         _serviceProvider.GetRequiredService<MainWindow>().Show();
+    }
+
+    /// <summary>
+    /// UI 執行緒上未處理的例外預設會直接終止程式，使用者只看到閃退。
+    /// 這裡改為顯示可回報的錯誤內容並讓程式繼續執行。
+    /// </summary>
+    private static void OnDispatcherUnhandledException(
+        object sender,
+        System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        WpfMessageBox.Show(
+            $"發生未預期的錯誤，操作已中止：\n\n{e.Exception.GetType().Name}\n{e.Exception.Message}",
+            "影格整理工具",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+
+        e.Handled = true;
     }
 
     protected override void OnExit(ExitEventArgs e)

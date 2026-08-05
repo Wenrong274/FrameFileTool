@@ -111,6 +111,21 @@ public sealed class OutputFolderResolverTests
         result.TargetFolderPath.Should().Be(@"C:\root\root_x0.5");
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Resolve_來源資料夾為空_應保留使用者選擇的資料夾且不丟例外(string sourceFolder)
+    {
+        var sut = new OutputFolderResolver();
+        var options = ScaleOptions(0.5);
+
+        var result = sut.ResolveForResize(sourceFolder, @"D:\out", options);
+
+        result.TargetFolderPath.Should().Be(@"D:\out");
+        result.WasAutoRedirected.Should().BeFalse();
+        result.LogMessage.Should().BeNull();
+    }
+
     private static ResizeOptions ScaleOptions(double factor) =>
         new(
             Mode: ResizeMode.ScaleFactor,
