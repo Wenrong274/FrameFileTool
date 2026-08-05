@@ -143,6 +143,13 @@ public sealed partial class MainViewModel : ObservableObject, IToolContext, IDis
     /// <summary>是否已填入資料夾路徑，驅動「重新掃描」按鈕顯示。</summary>
     public bool HasFolderPath => !string.IsNullOrEmpty(SelectedFolder);
 
+    /// <summary>
+    /// 目前應用程式版本，顯示於視窗標題。
+    /// 版本來源與更新檢查一致（assembly version），避免顯示值與比對值不同步。
+    /// </summary>
+    public string AppVersionText { get; } =
+        $"v{(typeof(MainViewModel).Assembly.GetName().Version ?? new Version(1, 0, 0)).ToString(3)}";
+
     /// <summary>正在執行的更新檢查 Task，供測試層 await 結果。</summary>
     internal Task UpdateCheckTask { get; private set; } = Task.CompletedTask;
 

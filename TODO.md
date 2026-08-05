@@ -67,6 +67,41 @@ ID：`resize-empty-source-crash`
 - [ ] [邊界] 拖放匯入的檔案在縮放執行完成後仍留在清單中，不被重新掃描清空。
 - [ ] [錯誤狀態] 刻意觸發未預期例外時，顯示含例外型別與訊息的對話框，關閉後程式仍可繼續操作。
 
+### 視窗標題顯示應用程式版本號
+
+ID：`app-version-display`
+優先度：中
+分支：feat/app-version-display
+發布範圍：下一個 MINOR 版本
+前置條件：無
+被依賴：無
+
+背景：使用者回報問題時無法說明自己使用的版本，程式內也沒有任何版本資訊。
+另發現版本號只由 Release workflow 從 git tag 注入，專案檔本身沒有宣告 `<Version>`，
+因此所有本機 build 都是 `1.0.0`，連帶讓更新檢查誤判為有新版可下載。
+
+⚠ 影響範圍：`Directory.Build.props` → `MainViewModel` → `MainWindow` 標題 →
+`GitHubUpdateService` 的版本比對基準 → 發布前檢查清單
+
+⚠ 邊界案例：assembly version 讀取失敗、本機 build 與發布包版本不一致、
+發布時忘記同步更新 `Directory.Build.props`
+
+#### 版本號顯示子任務
+
+- [x] [Build] `Directory.Build.props` 加入 `<Version>` 作為本機 build 的版本基準，
+      並註明 Release workflow 會以 `/p:Version` 覆寫。
+- [x] [ViewModel] `MainViewModel` 新增 `AppVersionText`，來源與更新檢查同為 assembly version。
+- [x] [Test] `MainViewModelUpdateCheckTests` 補上版本字串格式的案例。
+- [x] [View] `MainWindow` 標題改為繫結 `AppVersionText`，顯示為「影格整理工具 vX.Y.Z」。
+- [x] [Docs] `README.md` 補上版本號顯示說明。
+- [x] [Docs] `RELEASE_CONVENTION.md` 發布前檢查清單加入同步更新 `<Version>` 的項目。
+
+完成判定：
+
+- [ ] [正常路徑] 啟動程式後，視窗標題顯示「影格整理工具 v2.0.0」。
+- [ ] [正常路徑] 本機 build 的版本與最後一個已發布 tag 一致，啟動後不再誤跳更新橫幅。
+- [ ] [邊界] Release workflow 產出的發布包版本仍由 git tag 決定，不受 `Directory.Build.props` 影響。
+
 ### 分頁內底部來源列實作（已作廢）
 
 ID：`shared-source-bar`
